@@ -19,6 +19,7 @@ private:
 	bool isStop;
 	MFPVideo* mFPVideo;
 	MFPFrameQueue<AVFrame>* frameQueue;
+	void clearFrameQueue();
 	cv::Mat AVFrameToMat(AVFrame* frame);
 };
 

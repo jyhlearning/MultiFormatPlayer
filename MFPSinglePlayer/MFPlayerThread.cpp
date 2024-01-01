@@ -40,7 +40,7 @@ void MFPlayerThread::onPlay() {
 			frameQueue->playEnd = false;
 			t1 = QTime::currentTime().addMSecs(-frame->pts);
 		}
-		QTime t2 = t1.addMSecs(frame->pts);
+		const QTime t2 = t1.addMSecs(frame->pts);
 		delay(QTime::currentTime().msecsTo(t2));
 		av_frame_unref(frame);
 		start = true;
@@ -48,6 +48,7 @@ void MFPlayerThread::onPlay() {
 	av_frame_free(&frame);
 	if(frameQueue->frameIsEnd && frameQueue->isEmpty()) {
 		frameQueue->playEnd = true;
+		frameQueue->frameIsEnd = false;
 	}
 	emit stateChange(PAUSE);
 }

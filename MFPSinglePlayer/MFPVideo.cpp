@@ -36,9 +36,8 @@ int MFPVideo::init()
     //获取视频流编码
     pAVctx = avcodec_alloc_context3(nullptr);
 
-    const AVStream* stream = pFormatCtx->streams[streamIndex];
     //获取视频帧数
-    frameRate = stream->avg_frame_rate.num / stream->avg_frame_rate.den;
+    frameRate = pFormatCtx->streams[streamIndex]->avg_frame_rate.num / pFormatCtx->streams[streamIndex]->avg_frame_rate.den;
 
     //查找解码器
     avcodec_parameters_to_context(pAVctx, pFormatCtx->streams[streamIndex]->codecpar);
@@ -64,10 +63,10 @@ int MFPVideo::init()
     //初始化数据帧空间
     pAVframe = av_frame_alloc();
 
-   
+    totalTime = pFormatCtx->streams[streamIndex]->duration * pFormatCtx->streams[streamIndex]->time_base.num / pFormatCtx->streams[streamIndex]->time_base.den;
+
     parse = true;
     hasFree = false;
-    //初始化延时
     return 0;
 }
 
@@ -126,16 +125,16 @@ int MFPVideo::getNextFrame(AVFrame* &frame){
             if (avcodec_send_packet(pAVctx, pAVpkt) == 0){
                 // 一个avPacket可能包含多帧数据，所以需要使用while循环一直读取
                 while(avcodec_receive_frame(pAVctx, pAVframe) == 0) {
-                    AVFrame* dst = av_frame_alloc();
-                    av_frame_move_ref(dst,pAVframe);
-                	queue.push_back(dst);
+	                    AVFrame* dst = av_frame_alloc();
+	                    av_frame_move_ref(dst,pAVframe);
+                		queue.push_back(dst);
                 }
             }else{
                 qDebug("Decode Error.\n");
                 return -1;
             }
         }
-        av_packet_unref(pAVpkt);
+		av_packet_unref(pAVpkt);
     }else {
         avcodec_send_packet(pAVctx, pAVpkt);
     }
@@ -144,11 +143,20 @@ int MFPVideo::getNextFrame(AVFrame* &frame){
         queue.pop_front();
     	totalFrame++;
         return 2;//正常帧
-    }else if(flag)
+    }else if(flag) {
+        jumpTo(0);
         return 0;//放完了
+    }
     return 1;//空帧
 
 }
+
+int MFPVideo::jumpTo(qint64 sec) {
+    int ret = av_seek_frame(pFormatCtx, streamIndex, sec * pFormatCtx->streams[streamIndex]->time_base.den/pFormatCtx->streams[streamIndex]->time_base.num, AVSEEK_FLAG_BACKWARD);
+    avcodec_flush_buffers(pAVctx);
+    return ret;
+}
+
 
 AVPixelFormat MFPVideo::getFmt() const{
     return pAVctx->pix_fmt;

@@ -31,17 +31,19 @@ private:
     struct SwsContext* pSwsCtx;
     QQueue<AVFrame* > queue;
     qint64 totalFrame;
+    qint64 totalTime;
     static qreal rationalToDouble(const AVRational* rational);
 
 public:
     MFPVideo();
     ~MFPVideo();
+    AVPixelFormat getFmt() const;
     int init();
     int getNextFrame(AVFrame* &frame);
-    void freeResources();
+    int jumpTo(qint64 sec);
     int getFrameRate() const;
     bool isParse() const;
-    AVPixelFormat getFmt() const;
+	void freeResources();
 	static QImage toQImage(const AVFrame &frame);
     static cv::Mat AVFrameToMat(const AVFrame* frame,const AVPixelFormat fmt);
 };
