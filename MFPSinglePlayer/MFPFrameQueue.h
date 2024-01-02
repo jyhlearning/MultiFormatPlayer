@@ -12,10 +12,14 @@ private:
 	QQueue<T> ptr;
 	qint64 capacity;
 	AVPixelFormat fmt;
+	qint64 totalTime;
+	qint64 lastPts;
+	bool quit;
 public:
 	QSemaphore freeArea;
 	QSemaphore usesArea;
-	bool frameIsEnd,playEnd;
+	QMutex decodeLock,playLock;
+	bool frameIsEnd,playEnd ,inited;
 	~MFPFrameQueue() {
 		
 	}
@@ -30,12 +34,22 @@ public:
 	bool isEmpty() const {
 		return ptr.length() == 0;
 	}
+	bool isQuit() const {
+		return quit;
+	}
+	void setQuit(bool flag) {
+		quit = flag;
+	}
 	void init() {
+		lastPts = 0;
+		inited = true;
+		quit = false;
 		ptr.clear();
 		frameIsEnd = false;
 		playEnd = true;
+		totalTime = 0;
 		int temp = freeArea.available();
-		freeArea.release(capacity - temp-1);
+		freeArea.release(capacity - temp - 1);
 		usesArea.acquire(usesArea.available());
 	}
 
@@ -47,10 +61,21 @@ public:
 	{
 		return fmt;
 	}
-
-
+	void setTotalTime(const qint64 msec){
+		totalTime = msec;
+	}
+	void setLastPts(const qint64 pts) {
+		lastPts = pts;
+	}
+	qint64 getTotalTime() const {
+		return totalTime;
+	}
+	qint64 getLastPts() const {
+		return lastPts;
+	}
 	int safePut(T data) {
 		freeArea.acquire();
+		if (quit)return -1;
 		ptr.enqueue(data);
 		usesArea.release();
 		return 0;
@@ -58,18 +83,29 @@ public:
 
 	int safeGet(T &data) {
 		usesArea.acquire();
+		if (quit)return -1;
 		data = ptr.front();
 		ptr.pop_front();
 		freeArea.release();
 		return 0;
 	}
 	T front() {
-		return ptr.front();;
+		return ptr.front();
 	}
 	int pop() {
 		ptr.pop_front();
 		return 0;
 	}
-
+	void forceOut() {
+		int temp = freeArea.available();
+		freeArea.release(capacity - temp - 1);
+		usesArea.acquire(usesArea.available());
+		quit = true;
+	}
+	void freeLock() {
+		int temp = freeArea.available();
+		freeArea.release(capacity - temp - 1);
+		usesArea.acquire(usesArea.available());
+	}
 };
 

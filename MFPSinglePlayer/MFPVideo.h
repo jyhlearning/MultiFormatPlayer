@@ -22,7 +22,7 @@ private:
     const char* videoPath;
     unsigned char* buf;
     int isVideo;
-    unsigned int streamIndex;
+    int streamIndex;
     const AVCodec* pCodec;
     AVPacket* pAVpkt;
     AVCodecContext* pAVctx;
@@ -32,7 +32,6 @@ private:
     QQueue<AVFrame* > queue;
     qint64 totalFrame;
     qint64 totalTime;
-    static qreal rationalToDouble(const AVRational* rational);
 
 public:
     MFPVideo();
@@ -40,11 +39,13 @@ public:
     AVPixelFormat getFmt() const;
     int init();
     int getNextFrame(AVFrame* &frame);
-    int jumpTo(qint64 sec);
+    int jumpTo(qint64 usec);
     int getFrameRate() const;
+    qint64 getTotalTime() const;
     bool isParse() const;
 	void freeResources();
 	static QImage toQImage(const AVFrame &frame);
     static cv::Mat AVFrameToMat(const AVFrame* frame,const AVPixelFormat fmt);
+    static qreal rationalToDouble(const AVRational* rational);
 };
 

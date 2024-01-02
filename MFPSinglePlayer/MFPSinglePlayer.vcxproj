@@ -101,8 +101,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="MFPControlSilder.cpp" />
     <ClCompile Include="MFPlayerThread.cpp" />
     <ClCompile Include="MFPVideo.cpp" />
+    <ClInclude Include="MFPControlSilder.h" />
     <ClInclude Include="MFPFrameQueue.h" />
     <QtMoc Include="MFPlayerThread.h" />
     <ClInclude Include="MFPVideo.h" />

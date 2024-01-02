@@ -16,6 +16,7 @@ class MFPlayerThread : public QObject {
 private:
 	bool isStop;
 	MFPFrameQueue<AVFrame>* frameQueue;
+	qint64 nowPts;
 	void delay(int msec);
 public:
 	void setFlag(bool flag);
@@ -26,4 +27,5 @@ public slots:
 signals:
 	void sendFrame(QImage image);
 	void stateChange(statement state);
+	void sendProgress(const qint64 sec,const qint64 totalTime);
 };

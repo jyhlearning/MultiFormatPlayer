@@ -17,38 +17,38 @@ void MFPlayerThread::setFlag(bool flag) { isStop = flag; }
 MFPlayerThread::MFPlayerThread(MFPFrameQueue<AVFrame>* frame) {
 	isStop = false;
 	frameQueue = frame;
+	nowPts = 0;
 }
 
 void MFPlayerThread::onPlay() {
 	if (isStop)
 		return;
-	int delayTime = 0;
+	frameQueue->playLock.lock();
 	bool start = false;
 	emit stateChange(PLAYING);
-	AVFrame *frame = av_frame_alloc();
-	int delta = 0;
+	AVFrame* frame = av_frame_alloc();
 	QTime t1;
-	while (!(frameQueue->frameIsEnd&&frameQueue->isEmpty()) && !isStop) {
+	while (!(frameQueue->frameIsEnd && frameQueue->isEmpty()) && !isStop) {
 		frameQueue->safeGet(*frame);
-		cv::Mat mat=MFPVideo::AVFrameToMat(frame,frameQueue->getFmt());
+		cv::Mat mat = MFPVideo::AVFrameToMat(frame, frameQueue->getFmt());
 
 		cv::cvtColor(mat, mat, cv::COLOR_BGR2RGB);
-		QImage image(mat.data,mat.cols,mat.rows,mat.step,QImage::Format_RGB888);
+		QImage image(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
 
 		emit sendFrame(image.copy(image.rect()));
-		if(!start) {
+		if (!start) {
 			frameQueue->playEnd = false;
 			t1 = QTime::currentTime().addMSecs(-frame->pts);
 		}
-		const QTime t2 = t1.addMSecs(frame->pts);
-		delay(QTime::currentTime().msecsTo(t2));
-		av_frame_unref(frame);
+		emit sendProgress(frame->pts, frameQueue->getTotalTime());
 		start = true;
+		delay(QTime::currentTime().msecsTo(t1.addMSecs(frame->pts)));
+		av_frame_unref(frame);
 	}
 	av_frame_free(&frame);
+	frameQueue->playLock.unlock();
 	if(frameQueue->frameIsEnd && frameQueue->isEmpty()) {
 		frameQueue->playEnd = true;
-		frameQueue->frameIsEnd = false;
 	}
 	emit stateChange(PAUSE);
 }

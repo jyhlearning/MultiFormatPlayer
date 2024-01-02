@@ -13,13 +13,14 @@ public:
 	~MFPlayerDecodeThread();
 
 	void setFlag(bool flag);
+	bool getFlag();
 public slots:
-	int decode();
+	void decode();
+	void onControlProgress(int msec);
 private:
 	bool isStop;
 	MFPVideo* mFPVideo;
 	MFPFrameQueue<AVFrame>* frameQueue;
 	void clearFrameQueue();
-	cv::Mat AVFrameToMat(AVFrame* frame);
 };
 

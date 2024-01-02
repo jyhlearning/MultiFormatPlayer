@@ -20,7 +20,10 @@ private:
     MFPlayerThread* mFPlayerThread;
     statement state;
     MFPFrameQueue<AVFrame> *frameQueue;
-    void stopThread();
+    void stopThreads();
+    void startThreads();
+    void startPlay();
+    void stopPlay();
 public:
     MFPSinglePlayer();
     ~MFPSinglePlayer();
@@ -28,10 +31,12 @@ public:
 public slots:
     void onPlay();
     void onStateChange(statement state);
+    void onProgress(int msec);
 private slots:
     void destroyThread();
-
 signals:
-    void startThread();
+    void startDecodeThread();
+    void startPlayThread();
     void flagChange(bool state);
+    void sendProgressChange(int msec);
 };

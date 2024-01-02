@@ -13,10 +13,13 @@ public:
 	void changeButton(QString qString);
 signals:
 	void play();
+	void progress(int msec);
 private:
 	Ui::MFPlayerWidgetClass ui;
 private slots:
 	void onPlayButton();
+	void onSliderMoved(int v);
 public slots:
 	void onFrameChange(QImage qImage);
+	void onProgressChange(const qint64 sec,const qint64 totalTime);
 };
