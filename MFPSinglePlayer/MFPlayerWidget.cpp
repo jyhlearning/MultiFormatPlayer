@@ -8,6 +8,7 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	ui.setupUi(this);
 	connect(ui.playButton,SIGNAL(clicked()), this,SLOT(onPlayButton()));
 	connect(ui.nextFrameButton,SIGNAL(clicked()),this,SLOT(onNextFrameButton()));
+	connect(ui.lastFrameButton, SIGNAL(clicked()), this, SLOT(onLastFrameButton()));
 	connect(ui.timeSlider,SIGNAL(sliderMoved(int)),this,SLOT(onSliderMoved(int)));
 }
 
@@ -19,6 +20,11 @@ void MFPlayerWidget::changeButton(QString qString) { ui.playButton->setText(qStr
 void MFPlayerWidget::onNextFrameButton()
 {
 	emit play(WidgetStete::NEXTFRAME);
+}
+
+void MFPlayerWidget::onLastFrameButton()
+{
+	emit play(WidgetStete::LASTFRAME);
 }
 
 void MFPlayerWidget::onSliderMoved(int v)

@@ -18,6 +18,7 @@ void MFPlayerThread::playNextFrame(AVFrame* frame)
 	cv::Mat mat = MFPVideo::AVFrameToMat(frame, frameQueue->getFmt());
 	cv::cvtColor(mat, mat, cv::COLOR_BGR2RGB);
 	QImage image(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
+	frameQueue->setLastPts(frame->pts);
 	emit sendFrame(image.copy(image.rect()));
 	emit sendProgress(frame->pts, frameQueue->getTotalTime());
 }
@@ -29,7 +30,6 @@ void MFPlayerThread::continousPlayBack(AVFrame* frame)
 	while (!(frameQueue->frameIsEnd && frameQueue->isEmpty()) && !isStop) {
 		playNextFrame(frame);
 		if (!start) {
-			frameQueue->playEnd = false;
 			t1 = QTime::currentTime().addMSecs(-frame->pts);
 		}
 		start = true;
@@ -50,6 +50,7 @@ void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
 	if (isStop)
 		return;
 	frameQueue->playLock.lock();
+	frameQueue->playEnd = false;
 	emit stateChange(MFPlayerThreadState::PLAYING);
 	AVFrame* frame = av_frame_alloc();
 
@@ -68,6 +69,7 @@ void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
 	frameQueue->playLock.unlock();
 	if(frameQueue->frameIsEnd && frameQueue->isEmpty()) {
 		frameQueue->playEnd = true;
+		//frameQueue->setLastPts(0);
 	}
 	emit stateChange(MFPlayerThreadState::PAUSE);
 }

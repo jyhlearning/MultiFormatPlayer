@@ -10,10 +10,11 @@ class MFPFrameQueue
 {
 private:
 	QQueue<T> ptr;
-	qint64 capacity;
 	AVPixelFormat fmt;
+	qint64 capacity;
 	qint64 totalTime;
 	qint64 lastPts;
+	qint64 frameRate;
 	bool quit;
 public:
 	QSemaphore freeArea;
@@ -27,6 +28,8 @@ public:
 	MFPFrameQueue(int c=30) {
 		capacity = c;
 		init();
+		totalTime = 0;
+		frameRate = 0;
 	}
 	bool isFull() const {
 		return ptr.length() == capacity;
@@ -47,7 +50,7 @@ public:
 		ptr.clear();
 		frameIsEnd = false;
 		playEnd = true;
-		totalTime = 0;
+		
 		int temp = freeArea.available();
 		freeArea.release(capacity - temp - 1);
 		usesArea.acquire(usesArea.available());
@@ -65,7 +68,8 @@ public:
 		totalTime = msec;
 	}
 	void setLastPts(const qint64 pts) {
-		lastPts = pts;
+		lastPts = pts > totalTime ? totalTime : pts;
+		lastPts = pts < 0 ? 0 : lastPts;
 	}
 	qint64 getTotalTime() const {
 		return totalTime;
@@ -106,6 +110,12 @@ public:
 		int temp = freeArea.available();
 		freeArea.release(capacity - temp - 1);
 		usesArea.acquire(usesArea.available());
+	}
+	void setFrameRate(qint64 rate) {
+		frameRate = rate;
+	}
+	qint64 getFrameRate() const{
+		return frameRate;
 	}
 };
 

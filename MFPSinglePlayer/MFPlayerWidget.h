@@ -6,7 +6,8 @@
 namespace WidgetStete {
 	enum statement {
 		PLAY,
-		NEXTFRAME
+		NEXTFRAME,
+		LASTFRAME
 	};
 }
 
@@ -19,7 +20,7 @@ public:
 	void changeButton(QString qString);
 signals:
 	void play(WidgetStete::statement sig);
-	void progress(int msec);
+	void progress(qint64 msec);
 
 private:
 	Ui::MFPlayerWidgetClass ui;
@@ -27,6 +28,7 @@ private:
 private slots:
 	void onPlayButton();
 	void onNextFrameButton();
+	void onLastFrameButton();
 	void onSliderMoved(int v);
 
 public slots:

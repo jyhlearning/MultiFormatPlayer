@@ -32,12 +32,11 @@ public slots:
     void onPlay();
     void action(WidgetStete::statement sig);
     void onStateChange(MFPlayerThreadState::statement state);
-    void onProgress(int msec);
+    void onProgress(qint64 msec);
 private slots:
     void destroyThread();
 signals:
     void startDecodeThread();
     void startPlayThread(MFPlayerThreadState::statement sig);
     void flagChange(bool state);
-    void sendProgressChange(int msec);
 };

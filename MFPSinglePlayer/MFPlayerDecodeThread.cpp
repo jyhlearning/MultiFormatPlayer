@@ -10,6 +10,11 @@ MFPlayerDecodeThread::MFPlayerDecodeThread(MFPFrameQueue<AVFrame>* frameQueue) {
 	isStop = false;
 	mFPVideo = new MFPVideo();
 	this->frameQueue = frameQueue;
+
+	mFPVideo->init();
+	frameQueue->setFmt(mFPVideo->getFmt());
+	frameQueue->setTotalTime(mFPVideo->getTotalTime());
+	frameQueue->setFrameRate(mFPVideo->getFrameRate());
 }
 
 MFPlayerDecodeThread::~MFPlayerDecodeThread() { 
@@ -26,15 +31,9 @@ void MFPlayerDecodeThread::decode() {
 	//循环读取视频数据
 	AVFrame* frame = nullptr;
 	int i = 0;
-	if (!mFPVideo->isParse()) {
-		mFPVideo->init();
-	}
 	//查看上一个pts
 	qint64 lPts = frameQueue->getLastPts();
 	frameQueue->init();
-	frameQueue->setFmt(mFPVideo->getFmt());
-	frameQueue->setTotalTime(mFPVideo->getTotalTime());
-
 	while (!isStop && temp>0) {
 		
 		temp = mFPVideo->getNextFrame(frame);
@@ -48,7 +47,6 @@ void MFPlayerDecodeThread::decode() {
 	
 	if (temp == 0) {
 		mFPVideo->jumpTo(0);
-		frameQueue->setLastPts(0);
 		frameQueue->frameIsEnd = true;
 	}else {
 		av_frame_unref(frame);
@@ -66,6 +64,7 @@ bool MFPlayerDecodeThread::getFlag()
 
 void MFPlayerDecodeThread::onControlProgress(int msec)
 {
+	msec = msec < 0 ? 0 : msec;
 	frameQueue->forceOut();
 	clearFrameQueue();
 	mFPVideo->jumpTo(msec);

@@ -35,10 +35,6 @@ int MFPVideo::init() {
 	//获取视频流编码
 	pAVctx = avcodec_alloc_context3(nullptr);
 
-	//获取视频帧数
-	frameRate = pFormatCtx->streams[streamIndex]->avg_frame_rate.num / pFormatCtx->streams[streamIndex]->avg_frame_rate.
-		den;
-
 	//查找解码器
 	avcodec_parameters_to_context(pAVctx, pFormatCtx->streams[streamIndex]->codecpar);
 	pCodec = avcodec_find_decoder(pAVctx->codec_id);
@@ -78,7 +74,6 @@ MFPVideo::MFPVideo() {
 	totalFrame = 0;
 	parse = false;
 	hasFree = true;
-	frameRate = 30;
 }
 
 MFPVideo::~MFPVideo() { freeResources(); }
@@ -99,7 +94,8 @@ qreal MFPVideo::rationalToDouble(const AVRational* rational) {
 }
 
 
-int MFPVideo::getFrameRate() const { return frameRate; }
+int MFPVideo::getFrameRate() const { return pFormatCtx->streams[streamIndex]->avg_frame_rate.num / pFormatCtx->streams[streamIndex]->avg_frame_rate.
+den;}
 
 qint64 MFPVideo::getTotalTime() const { return totalTime; }
 

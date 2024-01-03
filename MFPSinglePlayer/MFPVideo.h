@@ -18,7 +18,6 @@ class MFPVideo
 private:
     bool parse;
     bool hasFree;
-    int frameRate;
     const char* videoPath;
     unsigned char* buf;
     int isVideo;
