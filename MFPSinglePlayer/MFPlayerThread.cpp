@@ -12,6 +12,32 @@ void MFPlayerThread::delay(int msec) {
 		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
+void MFPlayerThread::playNextFrame(AVFrame* frame)
+{
+	frameQueue->safeGet(*frame);
+	cv::Mat mat = MFPVideo::AVFrameToMat(frame, frameQueue->getFmt());
+	cv::cvtColor(mat, mat, cv::COLOR_BGR2RGB);
+	QImage image(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
+	emit sendFrame(image.copy(image.rect()));
+	emit sendProgress(frame->pts, frameQueue->getTotalTime());
+}
+
+void MFPlayerThread::continousPlayBack(AVFrame* frame)
+{
+	QTime t1;
+	bool start = false;
+	while (!(frameQueue->frameIsEnd && frameQueue->isEmpty()) && !isStop) {
+		playNextFrame(frame);
+		if (!start) {
+			frameQueue->playEnd = false;
+			t1 = QTime::currentTime().addMSecs(-frame->pts);
+		}
+		start = true;
+		delay(QTime::currentTime().msecsTo(t1.addMSecs(frame->pts)));
+		av_frame_unref(frame);
+	}
+}
+
 void MFPlayerThread::setFlag(bool flag) { isStop = flag; }
 
 MFPlayerThread::MFPlayerThread(MFPFrameQueue<AVFrame>* frame) {
@@ -20,35 +46,28 @@ MFPlayerThread::MFPlayerThread(MFPFrameQueue<AVFrame>* frame) {
 	nowPts = 0;
 }
 
-void MFPlayerThread::onPlay() {
+void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
 	if (isStop)
 		return;
 	frameQueue->playLock.lock();
-	bool start = false;
-	emit stateChange(PLAYING);
+	emit stateChange(MFPlayerThreadState::PLAYING);
 	AVFrame* frame = av_frame_alloc();
-	QTime t1;
-	while (!(frameQueue->frameIsEnd && frameQueue->isEmpty()) && !isStop) {
-		frameQueue->safeGet(*frame);
-		cv::Mat mat = MFPVideo::AVFrameToMat(frame, frameQueue->getFmt());
 
-		cv::cvtColor(mat, mat, cv::COLOR_BGR2RGB);
-		QImage image(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
-
-		emit sendFrame(image.copy(image.rect()));
-		if (!start) {
-			frameQueue->playEnd = false;
-			t1 = QTime::currentTime().addMSecs(-frame->pts);
-		}
-		emit sendProgress(frame->pts, frameQueue->getTotalTime());
-		start = true;
-		delay(QTime::currentTime().msecsTo(t1.addMSecs(frame->pts)));
-		av_frame_unref(frame);
+	switch (sig) {
+	case MFPlayerThreadState::CONTINUEPLAY:
+		continousPlayBack(frame);
+		break;
+	case MFPlayerThreadState::NEXFRAME:
+		playNextFrame(frame);
+		break;
+		default:
+			break;
 	}
+
 	av_frame_free(&frame);
 	frameQueue->playLock.unlock();
 	if(frameQueue->frameIsEnd && frameQueue->isEmpty()) {
 		frameQueue->playEnd = true;
 	}
-	emit stateChange(PAUSE);
+	emit stateChange(MFPlayerThreadState::PAUSE);
 }

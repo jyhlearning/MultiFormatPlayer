@@ -166,6 +166,8 @@ int MFPVideo::jumpTo(qint64 msec) {
 	// 使用 avformat_seek_file 定位整个文件
 	qint64 min_timestamp = pFormatCtx->start_time != AV_NOPTS_VALUE ? pFormatCtx->start_time : 0;
 	qint64 max_timestamp = INT64_MAX;
+	//往前推1s,避免找到的关键帧太大
+	msec = msec - 1000<0?0:msec-1000;
 
 	int ret = avformat_seek_file(pFormatCtx, streamIndex, min_timestamp, av_rescale_q(msec, av_make_q(1, 1000),
 	pFormatCtx->streams[streamIndex]->time_base), max_timestamp, AVSEEK_FLAG_BACKWARD);

@@ -18,11 +18,11 @@ private:
     MFPlayerWidget* mFPlayerWidget;
     MFPlayerDecodeThread* mFPlayerDecodeThread;
     MFPlayerThread* mFPlayerThread;
-    statement state;
+    MFPlayerThreadState::statement state;
     MFPFrameQueue<AVFrame> *frameQueue;
     void stopThreads();
     void startThreads();
-    void startPlay();
+    void startPlay(MFPlayerThreadState::statement state);
     void stopPlay();
 public:
     MFPSinglePlayer();
@@ -30,13 +30,14 @@ public:
     void show() override;
 public slots:
     void onPlay();
-    void onStateChange(statement state);
+    void action(WidgetStete::statement sig);
+    void onStateChange(MFPlayerThreadState::statement state);
     void onProgress(int msec);
 private slots:
     void destroyThread();
 signals:
     void startDecodeThread();
-    void startPlayThread();
+    void startPlayThread(MFPlayerThreadState::statement sig);
     void flagChange(bool state);
     void sendProgressChange(int msec);
 };

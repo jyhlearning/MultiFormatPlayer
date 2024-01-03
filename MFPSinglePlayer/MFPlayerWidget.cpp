@@ -7,6 +7,7 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	: QWidget(parent) {
 	ui.setupUi(this);
 	connect(ui.playButton,SIGNAL(clicked()), this,SLOT(onPlayButton()));
+	connect(ui.nextFrameButton,SIGNAL(clicked()),this,SLOT(onNextFrameButton()));
 	connect(ui.timeSlider,SIGNAL(sliderMoved(int)),this,SLOT(onSliderMoved(int)));
 }
 
@@ -14,6 +15,11 @@ MFPlayerWidget::~MFPlayerWidget() {
 }
 
 void MFPlayerWidget::changeButton(QString qString) { ui.playButton->setText(qString); }
+
+void MFPlayerWidget::onNextFrameButton()
+{
+	emit play(WidgetStete::NEXTFRAME);
+}
 
 void MFPlayerWidget::onSliderMoved(int v)
 {
@@ -31,7 +37,7 @@ void MFPlayerWidget::onProgressChange(const qint64 sec,const qint64 totalTime) {
 
 
 void MFPlayerWidget::onPlayButton() {
-	emit play();
+	emit play(WidgetStete::PLAY);
 }
 
 void MFPlayerWidget::onFrameChange(QImage qImage) {

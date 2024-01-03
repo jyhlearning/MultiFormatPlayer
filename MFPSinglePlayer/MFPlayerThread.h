@@ -6,10 +6,16 @@
 #include "MFPFrameQueue.h"
 #include "QImage"
 
-enum statement {
-	PLAYING,
-	PAUSE
-};
+namespace MFPlayerThreadState {
+	enum statement {
+		PLAYING,
+		PAUSE,
+		NEXFRAME,
+		CONTINUEPLAY,
+		LASTFRAME
+	};
+	
+}
 class MFPlayerThread : public QObject {
 	Q_OBJECT
 
@@ -18,14 +24,16 @@ private:
 	MFPFrameQueue<AVFrame>* frameQueue;
 	qint64 nowPts;
 	void delay(int msec);
+	void playNextFrame(AVFrame* frame);
+	void continousPlayBack(AVFrame* frame);
 public:
 	void setFlag(bool flag);
 	MFPlayerThread(MFPFrameQueue<AVFrame>* frame);
 
 public slots:
-	void onPlay();
+	void onPlay(MFPlayerThreadState::statement sig);
 signals:
 	void sendFrame(QImage image);
-	void stateChange(statement state);
+	void stateChange(MFPlayerThreadState::statement state);
 	void sendProgress(const qint64 sec,const qint64 totalTime);
 };

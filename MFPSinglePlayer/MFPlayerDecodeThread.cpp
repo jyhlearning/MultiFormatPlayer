@@ -29,6 +29,8 @@ void MFPlayerDecodeThread::decode() {
 	if (!mFPVideo->isParse()) {
 		mFPVideo->init();
 	}
+	//查看上一个pts
+	qint64 lPts = frameQueue->getLastPts();
 	frameQueue->init();
 	frameQueue->setFmt(mFPVideo->getFmt());
 	frameQueue->setTotalTime(mFPVideo->getTotalTime());
@@ -36,13 +38,17 @@ void MFPlayerDecodeThread::decode() {
 	while (!isStop && temp>0) {
 		
 		temp = mFPVideo->getNextFrame(frame);
-		if (temp == 2 && !isStop) {
-			frameQueue->safePut(*frame);
+		if (temp == 2 && !isStop ) {
+			if (frame->pts >= lPts)
+				frameQueue->safePut(*frame);
+			else
+				av_frame_unref(frame);
 		}
 	}
 	
 	if (temp == 0) {
 		mFPVideo->jumpTo(0);
+		frameQueue->setLastPts(0);
 		frameQueue->frameIsEnd = true;
 	}else {
 		av_frame_unref(frame);
@@ -63,6 +69,7 @@ void MFPlayerDecodeThread::onControlProgress(int msec)
 	frameQueue->forceOut();
 	clearFrameQueue();
 	mFPVideo->jumpTo(msec);
+	frameQueue->setLastPts(msec);
 	//return 0;
 }
 
