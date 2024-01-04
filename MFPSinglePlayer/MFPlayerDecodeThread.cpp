@@ -30,16 +30,15 @@ void MFPlayerDecodeThread::decode() {
 	int temp=1;
 	//循环读取视频数据
 	AVFrame* frame = nullptr;
-	int i = 0;
 	//查看上一个pts
 	qint64 lPts = frameQueue->getLastPts();
 	frameQueue->init();
 	while (!isStop && temp>0) {
-		
 		temp = mFPVideo->getNextFrame(frame);
 		if (temp == 2 && !isStop ) {
-			if (frame->pts >= lPts)
+			if (frame->pts >= lPts) {
 				frameQueue->safePut(*frame);
+			}
 			else
 				av_frame_unref(frame);
 		}

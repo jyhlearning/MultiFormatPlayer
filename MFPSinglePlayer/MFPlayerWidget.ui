@@ -51,13 +51,13 @@
     <enum>QSlider::NoTicks</enum>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>480</x>
      <y>610</y>
-     <width>249</width>
-     <height>25</height>
+     <width>307</width>
+     <height>30</height>
     </rect>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout">
@@ -83,6 +83,22 @@
      </widget>
     </item>
    </layout>
+  </widget>
+  <widget class="QComboBox" name="speedComboBox">
+   <property name="geometry">
+    <rect>
+     <x>1110</x>
+     <y>610</y>
+     <width>87</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="currentText">
+    <string/>
+   </property>
+   <property name="modelColumn">
+    <number>0</number>
+   </property>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>

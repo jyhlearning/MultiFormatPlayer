@@ -15,6 +15,7 @@ private:
 	qint64 totalTime;
 	qint64 lastPts;
 	qint64 frameRate;
+	double speed;
 	bool quit;
 public:
 	QSemaphore freeArea;
@@ -30,6 +31,7 @@ public:
 		init();
 		totalTime = 0;
 		frameRate = 0;
+		speed = 1;
 	}
 	bool isFull() const {
 		return ptr.length() == capacity;
@@ -116,6 +118,12 @@ public:
 	}
 	qint64 getFrameRate() const{
 		return frameRate;
+	}
+	void setSpeed(double s) {
+		speed = s;
+	}
+	double getSpeed() const {
+		return speed;
 	}
 };
 

@@ -33,6 +33,7 @@ public slots:
     void action(WidgetStete::statement sig);
     void onStateChange(MFPlayerThreadState::statement state);
     void onProgress(qint64 msec);
+    void onSpeedChange(double speed);
 private slots:
     void destroyThread();
 signals:

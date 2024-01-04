@@ -27,8 +27,21 @@ void MFPlayerThread::continousPlayBack(AVFrame* frame)
 {
 	QTime t1;
 	bool start = false;
+	int index = 0;
+	const int delta = frameQueue->getFrameRate() / frameQueue->getSpeed();
 	while (!(frameQueue->frameIsEnd && frameQueue->isEmpty()) && !isStop) {
-		playNextFrame(frame);
+		if(frameQueue->getSpeed()<4) {
+			playNextFrame(frame);
+			frame->pts /= frameQueue->getSpeed();
+		}else {
+			if (index==0) {
+				playNextFrame(frame);
+				index=delta;
+			}else {
+				frameQueue->safeGet(*frame);
+				index--;
+			}
+		}
 		if (!start) {
 			t1 = QTime::currentTime().addMSecs(-frame->pts);
 		}

@@ -10,6 +10,13 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	connect(ui.nextFrameButton,SIGNAL(clicked()),this,SLOT(onNextFrameButton()));
 	connect(ui.lastFrameButton, SIGNAL(clicked()), this, SLOT(onLastFrameButton()));
 	connect(ui.timeSlider,SIGNAL(sliderMoved(int)),this,SLOT(onSliderMoved(int)));
+	connect(ui.speedComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onCurrentIndexChanged(int)));
+	ui.speedComboBox->addItem("0.5");
+	ui.speedComboBox->addItem("1");
+	ui.speedComboBox->addItem("2");
+	ui.speedComboBox->addItem("4");
+	ui.speedComboBox->setCurrentIndex(1);
+
 }
 
 MFPlayerWidget::~MFPlayerWidget() {
@@ -30,6 +37,25 @@ void MFPlayerWidget::onLastFrameButton()
 void MFPlayerWidget::onSliderMoved(int v)
 {
 	emit progress(v);
+}
+
+void MFPlayerWidget::onCurrentIndexChanged(int c)
+{
+	double temp = 1;
+	switch (c) {
+	case 0:
+		temp = 0.5;
+		break;
+	case 2:
+		temp = 2;
+		break;
+	case 3:
+		temp = 4;
+		break;
+		default: 
+			temp = 1;
+	}
+	emit speed(temp);
 }
 
 void MFPlayerWidget::onProgressChange(const qint64 sec,const qint64 totalTime) {

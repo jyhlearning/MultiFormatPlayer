@@ -21,7 +21,7 @@ public:
 signals:
 	void play(WidgetStete::statement sig);
 	void progress(qint64 msec);
-
+	void speed(double s);
 private:
 	Ui::MFPlayerWidgetClass ui;
 
@@ -30,7 +30,7 @@ private slots:
 	void onNextFrameButton();
 	void onLastFrameButton();
 	void onSliderMoved(int v);
-
+	void onCurrentIndexChanged(int c);
 public slots:
 	void onFrameChange(QImage qImage);
 	void onProgressChange(const qint64 sec, const qint64 totalTime);
