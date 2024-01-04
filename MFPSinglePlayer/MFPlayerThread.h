@@ -11,12 +11,12 @@ namespace MFPlayerThreadState {
 	enum statement {
 		PLAYING,
 		PAUSE,
-		NEXFRAME,
+		NEXTFRAME,
 		CONTINUEPLAY,
 		LASTFRAME
 	};
-	
 }
+
 class MFPlayerThread : public QObject {
 	Q_OBJECT
 
@@ -31,6 +31,7 @@ private:
 	void startDecode();
 	void stopDecode();
 	void clearFrameQueue();
+
 public:
 	void setFlag(bool flag);
 	MFPlayerThread(MFPFrameQueue<AVFrame>* frame);
@@ -42,5 +43,5 @@ signals:
 	void startDecodeThread();
 	void sendFrame(QImage image);
 	void stateChange(MFPlayerThreadState::statement state);
-	void sendProgress(const qint64 sec,const qint64 totalTime);
+	void sendProgress(const qint64 sec);
 };

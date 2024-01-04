@@ -94,8 +94,10 @@ qreal MFPVideo::rationalToDouble(const AVRational* rational) {
 }
 
 
-int MFPVideo::getFrameRate() const { return pFormatCtx->streams[streamIndex]->avg_frame_rate.num / pFormatCtx->streams[streamIndex]->avg_frame_rate.
-den;}
+int MFPVideo::getFrameRate() const {
+	return pFormatCtx->streams[streamIndex]->avg_frame_rate.num / pFormatCtx->streams[streamIndex]->avg_frame_rate.
+		den;
+}
 
 qint64 MFPVideo::getTotalTime() const { return totalTime; }
 
@@ -103,7 +105,7 @@ qint64 MFPVideo::getTotalTime() const { return totalTime; }
 bool MFPVideo::isParse() const { return parse; }
 
 int MFPVideo::getNextFrame(AVFrame* & frame) {
-	bool flag1 = true,flag2=true;
+	bool flag1 = true, flag2 = true;
 	if (av_read_frame(pFormatCtx, pAVpkt) >= 0) {
 		//读取一帧未解码的数据
 		flag1 = false;
@@ -129,7 +131,8 @@ int MFPVideo::getNextFrame(AVFrame* & frame) {
 			}
 		}
 		av_packet_unref(pAVpkt);
-	}else{
+	}
+	else {
 		//处理最后buffer中的最后几帧
 		pAVpkt->data = nullptr;
 		pAVpkt->size = 0;
@@ -147,7 +150,7 @@ int MFPVideo::getNextFrame(AVFrame* & frame) {
 		totalFrame++;
 		return 2; //正常帧
 	}
-	else if (flag1&&flag2) {
+	else if (flag1 && flag2) {
 		return 0; //放完了
 	}
 	return 1; //空帧
@@ -163,10 +166,10 @@ int MFPVideo::jumpTo(qint64 msec) {
 	qint64 min_timestamp = pFormatCtx->start_time != AV_NOPTS_VALUE ? pFormatCtx->start_time : 0;
 	qint64 max_timestamp = INT64_MAX;
 	//往前推1s,避免找到的关键帧太大
-	msec = msec - 1000<0?0:msec-1000;
+	msec = msec - 1000 < 0 ? 0 : msec - 1000;
 
 	int ret = avformat_seek_file(pFormatCtx, streamIndex, min_timestamp, av_rescale_q(msec, av_make_q(1, 1000),
-	pFormatCtx->streams[streamIndex]->time_base), max_timestamp, AVSEEK_FLAG_BACKWARD);
+		                             pFormatCtx->streams[streamIndex]->time_base), max_timestamp, AVSEEK_FLAG_BACKWARD);
 	avcodec_flush_buffers(pAVctx);
 
 	return ret;

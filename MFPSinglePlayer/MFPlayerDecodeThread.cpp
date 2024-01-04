@@ -17,46 +17,40 @@ MFPlayerDecodeThread::MFPlayerDecodeThread(MFPFrameQueue<AVFrame>* frameQueue) {
 	frameQueue->setFrameRate(mFPVideo->getFrameRate());
 }
 
-MFPlayerDecodeThread::~MFPlayerDecodeThread() { 
+MFPlayerDecodeThread::~MFPlayerDecodeThread() {
 	mFPVideo->freeResources();
 	delete mFPVideo;
 }
 
 void MFPlayerDecodeThread::decode() {
 	if (isStop)
-		return ;
+		return;
 	frameQueue->decodeLock.lock();
-	int temp=1;
+	int temp = 1;
 	//循环读取视频数据
 	AVFrame* frame = nullptr;
 	//查看上一个pts
 	qint64 lPts = frameQueue->getLastPts();
 	mFPVideo->jumpTo(lPts);
 	frameQueue->init();
-	while (!isStop && temp>0) {
+	while (!isStop && temp > 0) {
 		temp = mFPVideo->getNextFrame(frame);
-		if (temp == 2 && !isStop ) {
-			if (frame->pts >= lPts) {
-				frameQueue->safePut(*frame);
-			}
+		if (temp == 2 && !isStop) {
+			if (frame->pts >= lPts) { frameQueue->safePut(*frame); }
 			else
 				av_frame_unref(frame);
 		}
 	}
-	
+
 	if (temp == 0) {
 		//mFPVideo->jumpTo(0);
 		frameQueue->frameIsEnd = true;
-	}else {
-		av_frame_unref(frame);
 	}
+	else { av_frame_unref(frame); }
 	frameQueue->decodeLock.unlock();
 	//return 0;
 }
 
 void MFPlayerDecodeThread::setFlag(bool flag) { isStop = flag; }
 
-bool MFPlayerDecodeThread::getFlag()
-{
-	return isStop;
-}
+bool MFPlayerDecodeThread::getFlag() { return isStop; }

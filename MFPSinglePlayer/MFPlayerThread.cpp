@@ -1,4 +1,4 @@
-#include "MFPlayerThread.h"
+ï»¿#include "MFPlayerThread.h"
 #include <qeventloop.h>
 #include <QTime>
 #include <qcoreapplication.h>
@@ -13,60 +13,55 @@ void MFPlayerThread::delay(int msec) {
 		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void MFPlayerThread::playNextFrame(AVFrame* frame)
-{
+void MFPlayerThread::playNextFrame(AVFrame* frame) {
 	frameQueue->safeGet(*frame);
 	cv::Mat mat = MFPVideo::AVFrameToMat(frame, frameQueue->getFmt());
 	cv::cvtColor(mat, mat, cv::COLOR_BGR2RGB);
 	QImage image(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
 	frameQueue->setLastPts(frame->pts);
 	emit sendFrame(image.copy(image.rect()));
-	emit sendProgress(frame->pts, frameQueue->getTotalTime());
+	emit sendProgress(frame->pts);
 }
 
-void MFPlayerThread::continousPlayBack(AVFrame* frame)
-{
+void MFPlayerThread::continousPlayBack(AVFrame* frame) {
 	QTime t1;
 	bool start = false;
 	int index = 0;
 	const int delta = frameQueue->getFrameRate() / frameQueue->getSpeed();
 	while (!(frameQueue->frameIsEnd && frameQueue->isEmpty()) && !isStop) {
-		if(frameQueue->getSpeed()<4) {
+		if (frameQueue->getSpeed() < 4) {
 			playNextFrame(frame);
 			frame->pts /= frameQueue->getSpeed();
-		}else {
-			if (index==0) {
+		}
+		else {
+			if (index == 0) {
 				playNextFrame(frame);
-				index=delta;
-			}else {
+				index = delta;
+			}
+			else {
 				frameQueue->safeGet(*frame);
 				index--;
 			}
 		}
-		if (!start) {
-			t1 = QTime::currentTime().addMSecs(-frame->pts);
-		}
+		if (!start) { t1 = QTime::currentTime().addMSecs(-frame->pts); }
 		start = true;
 		delay(QTime::currentTime().msecsTo(t1.addMSecs(frame->pts)));
 		av_frame_unref(frame);
 	}
 }
 
-void MFPlayerThread::startDecode()
-{
+void MFPlayerThread::startDecode() {
 	mFPlayerDecodeThread->setFlag(false);
 	emit startDecodeThread();
 }
 
-void MFPlayerThread::stopDecode()
-{
-	frameQueue->forceOut();
+void MFPlayerThread::stopDecode() {
+	//frameQueue->forceOut();
 	mFPlayerDecodeThread->setFlag(true);
 }
 
-void MFPlayerThread::clearFrameQueue()
-{
-	//ÓÉ²¥·ÅÆ÷¸ºÔðÇåÀí
+void MFPlayerThread::clearFrameQueue() {
+	//ç”±æ’­æ”¾å™¨è´Ÿè´£æ¸…ç†
 	frameQueue->decodeLock.lock();
 	frameQueue->playLock.lock();
 	if (!frameQueue->isEmpty()) {
@@ -95,8 +90,7 @@ MFPlayerThread::MFPlayerThread(MFPFrameQueue<AVFrame>* frame) {
 	connect(this, SIGNAL(startDecodeThread()), mFPlayerDecodeThread, SLOT(decode()));
 }
 
-MFPlayerThread::~MFPlayerThread()
-{
+MFPlayerThread::~MFPlayerThread() {
 	stopDecode();
 	clearFrameQueue();
 	if (mFPlayerDecodeThread->thread()->isRunning()) {
@@ -110,7 +104,6 @@ void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
 	if (isStop)
 		return;
 	frameQueue->playLock.lock();
-	frameQueue->playEnd = false;
 
 	startDecode();
 	emit stateChange(MFPlayerThreadState::PLAYING);
@@ -120,11 +113,11 @@ void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
 	case MFPlayerThreadState::CONTINUEPLAY:
 		continousPlayBack(frame);
 		break;
-	case MFPlayerThreadState::NEXFRAME:
+	case MFPlayerThreadState::NEXTFRAME:
 		playNextFrame(frame);
 		break;
-		default:
-			break;
+	default:
+		break;
 	}
 	av_frame_free(&frame);
 	stopDecode();

@@ -16,8 +16,8 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	connect(mFPlayerThread,SIGNAL(sendFrame(QImage)), mFPlayerWidget,SLOT(onFrameChange(QImage)));
 	connect(mFPlayerThread,SIGNAL(stateChange(MFPlayerThreadState::statement)), this,
 	        SLOT(onStateChange(MFPlayerThreadState::statement)));
-	connect(mFPlayerThread,SIGNAL(sendProgress(const qint64, const qint64)), mFPlayerWidget,
-	        SLOT(onProgressChange(const qint64, const qint64)));
+	connect(mFPlayerThread,SIGNAL(sendProgress(const qint64)), mFPlayerWidget,
+	        SLOT(onProgressChange(const qint64)));
 
 	connect(mFPlayerWidget,SIGNAL(stop()), this,SLOT(onStop()));
 	connect(mFPlayerWidget,SIGNAL(play(WidgetStete::statement)), this,SLOT(action(WidgetStete::statement)));
@@ -25,6 +25,8 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	connect(mFPlayerWidget,SIGNAL(progress(qint64)), this, SLOT(onProgress(qint64)));
 	connect(mFPlayerWidget,SIGNAL(speed(double)), this, SLOT(onSpeedChange(double)));
 	mFPlayerThread->thread()->start();
+	mFPlayerWidget->setSliderRange(0, frameQueue->getTotalTime());
+	mFPlayerWidget->setBackwardLable(frameQueue->getTotalTime());
 }
 
 MFPSinglePlayer::~MFPSinglePlayer() {
@@ -49,8 +51,9 @@ void MFPSinglePlayer::startPlay(MFPlayerThreadState::statement state) {
 }
 
 void MFPSinglePlayer::stopPlay() {
-	mFPlayerThread->setFlag(true);
+	stateBefore = state;
 	frameQueue->forceOut();
+	mFPlayerThread->setFlag(true);
 }
 
 void MFPSinglePlayer::show() { mFPlayerWidget->show(); }
@@ -88,7 +91,7 @@ void MFPSinglePlayer::action(WidgetStete::statement sig) {
 			frameQueue->setLastPts(0);
 		else
 			frameQueue->setLastPts(frameQueue->getLastPts() + 1);
-		startPlay(MFPlayerThreadState::NEXFRAME);
+		startPlay(MFPlayerThreadState::NEXTFRAME);
 		break;
 	case WidgetStete::LASTFRAME:
 		stopPlay();
@@ -99,10 +102,9 @@ void MFPSinglePlayer::action(WidgetStete::statement sig) {
 		else
 			lastPts -= 1000 / frameQueue->getFrameRate() + 1;
 		frameQueue->setLastPts(lastPts);
-		startPlay(MFPlayerThreadState::NEXFRAME);
+		startPlay(MFPlayerThreadState::NEXTFRAME);
 		break;
-	default:
-		break;
+	default: ;
 	}
 }
 
@@ -115,19 +117,23 @@ void MFPSinglePlayer::onStateChange(MFPlayerThreadState::statement state) {
 	case MFPlayerThreadState::PLAYING:
 		mFPlayerWidget->changeButton("PAUSE");
 		break;
+	default: ;
 	}
 }
 
 void MFPSinglePlayer::onProgress(qint64 msec) {
-	stopPlay();
 	frameQueue->setLastPts(msec);
-	startPlay(MFPlayerThreadState::CONTINUEPLAY);
+	if (stateBefore == MFPlayerThreadState::PLAYING)
+		startPlay(MFPlayerThreadState::CONTINUEPLAY);
+	else {
+		frameQueue->setLastPts(msec);
+		startPlay(MFPlayerThreadState::NEXTFRAME);
+	}
 }
 
 void MFPSinglePlayer::onSpeedChange(double speed) {
-	MFPlayerThreadState::statement temp = state;
 	stopPlay();
 	frameQueue->setSpeed(speed);
-	if (temp == MFPlayerThreadState::PLAYING)
+	if (stateBefore == MFPlayerThreadState::PLAYING)
 		startPlay(MFPlayerThreadState::CONTINUEPLAY);
 }

@@ -117,6 +117,32 @@
     </item>
    </layout>
   </widget>
+  <widget class="QLabel" name="forwardLabel">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>580</y>
+     <width>62</width>
+     <height>19</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>00:00:00</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="backwardLabel">
+   <property name="geometry">
+    <rect>
+     <x>1140</x>
+     <y>580</y>
+     <width>62</width>
+     <height>19</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>00:00:00</string>
+   </property>
+  </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>

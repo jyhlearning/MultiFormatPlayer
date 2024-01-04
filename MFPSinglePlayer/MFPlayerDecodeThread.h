@@ -4,9 +4,9 @@
 #include "MFPVideo.h"
 #include "MFPFrameQueue.h"
 
-class MFPlayerDecodeThread:public QObject 
-{
+class MFPlayerDecodeThread : public QObject {
 	Q_OBJECT
+
 public:
 	MFPlayerDecodeThread();
 	MFPlayerDecodeThread(MFPFrameQueue<AVFrame>* frameQueue);
@@ -14,11 +14,12 @@ public:
 
 	void setFlag(bool flag);
 	bool getFlag();
+
 public slots:
 	void decode();
+
 private:
 	bool isStop;
 	MFPVideo* mFPVideo;
 	MFPFrameQueue<AVFrame>* frameQueue;
 };
-
