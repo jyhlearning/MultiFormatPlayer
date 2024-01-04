@@ -16,11 +16,9 @@ public:
 	bool getFlag();
 public slots:
 	void decode();
-	void onControlProgress(int msec);
 private:
 	bool isStop;
 	MFPVideo* mFPVideo;
 	MFPFrameQueue<AVFrame>* frameQueue;
-	void clearFrameQueue();
 };
 

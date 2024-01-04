@@ -5,26 +5,26 @@
 MFPSinglePlayer::MFPSinglePlayer() {
 	frameQueue = new MFPFrameQueue<AVFrame>();
 	mFPlayerWidget = new MFPlayerWidget();
-	mFPlayerDecodeThread = new MFPlayerDecodeThread(frameQueue);
-	mFPlayerDecodeThread->moveToThread(new QThread(this));
 
 	mFPlayerThread = new MFPlayerThread(frameQueue);
 	mFPlayerThread->moveToThread(new QThread(this));
 	state = MFPlayerThreadState::PAUSE;
 
-	connect(this,SIGNAL(startPlayThread(MFPlayerThreadState::statement)), mFPlayerThread,SLOT(onPlay(MFPlayerThreadState::statement)));
-	connect(this,SIGNAL(startDecodeThread()), mFPlayerDecodeThread,SLOT(decode()));
+	connect(this,SIGNAL(startPlayThread(MFPlayerThreadState::statement)), mFPlayerThread,
+	        SLOT(onPlay(MFPlayerThreadState::statement)));
 
 	connect(mFPlayerThread,SIGNAL(sendFrame(QImage)), mFPlayerWidget,SLOT(onFrameChange(QImage)));
-	connect(mFPlayerThread,SIGNAL(stateChange(MFPlayerThreadState::statement)), this,SLOT(onStateChange(MFPlayerThreadState::statement)));
+	connect(mFPlayerThread,SIGNAL(stateChange(MFPlayerThreadState::statement)), this,
+	        SLOT(onStateChange(MFPlayerThreadState::statement)));
 	connect(mFPlayerThread,SIGNAL(sendProgress(const qint64, const qint64)), mFPlayerWidget,
 	        SLOT(onProgressChange(const qint64, const qint64)));
 
+	connect(mFPlayerWidget,SIGNAL(stop()), this,SLOT(onStop()));
 	connect(mFPlayerWidget,SIGNAL(play(WidgetStete::statement)), this,SLOT(action(WidgetStete::statement)));
 	connect(mFPlayerWidget,SIGNAL(destroyed()), this, SLOT(destroyThread()));
 	connect(mFPlayerWidget,SIGNAL(progress(qint64)), this, SLOT(onProgress(qint64)));
 	connect(mFPlayerWidget,SIGNAL(speed(double)), this, SLOT(onSpeedChange(double)));
-	startThreads();
+	mFPlayerThread->thread()->start();
 }
 
 MFPSinglePlayer::~MFPSinglePlayer() {
@@ -33,41 +33,30 @@ MFPSinglePlayer::~MFPSinglePlayer() {
 }
 
 void MFPSinglePlayer::stopThreads() {
-	mFPlayerDecodeThread->setFlag(true);
-	mFPlayerThread->setFlag(true);
-	frameQueue->forceOut();
-	if (mFPlayerDecodeThread->thread()->isRunning()) {
-		mFPlayerDecodeThread->thread()->quit();
-		mFPlayerDecodeThread->thread()->wait();
-	}
+	stopPlay();
 	if (mFPlayerThread->thread()->isRunning()) {
 		mFPlayerThread->thread()->quit();
 		mFPlayerThread->thread()->wait();
 	}
 }
 
-void MFPSinglePlayer::startThreads() {
-	mFPlayerDecodeThread->thread()->start();
-	mFPlayerThread->thread()->start();
-}
-
 void MFPSinglePlayer::startPlay(MFPlayerThreadState::statement state) {
 	//确保完全退出后再执行启动
 	frameQueue->playLock.lock();
 	mFPlayerThread->setFlag(false);
-	mFPlayerDecodeThread->setFlag(false);
-	if (frameQueue->playEnd) { emit startDecodeThread(); }
 	emit startPlayThread(state);
 	frameQueue->playLock.unlock();
 }
 
-void MFPSinglePlayer::stopPlay() { mFPlayerThread->setFlag(true); }
+void MFPSinglePlayer::stopPlay() {
+	mFPlayerThread->setFlag(true);
+	frameQueue->forceOut();
+}
 
 void MFPSinglePlayer::show() { mFPlayerWidget->show(); }
 
 void MFPSinglePlayer::destroyThread() {
 	stopThreads();
-	delete mFPlayerDecodeThread;
 	delete mFPlayerThread;
 }
 
@@ -82,9 +71,10 @@ void MFPSinglePlayer::onPlay() {
 	}
 }
 
+void MFPSinglePlayer::onStop() { stopPlay(); }
+
 void MFPSinglePlayer::action(WidgetStete::statement sig) {
 	qint64 lastPts = 0;
-
 
 	switch (sig) {
 	case WidgetStete::PLAY:
@@ -93,20 +83,22 @@ void MFPSinglePlayer::action(WidgetStete::statement sig) {
 		onPlay();
 		break;
 	case WidgetStete::NEXTFRAME:
+		stopPlay();
 		if (frameQueue->getLastPts() == frameQueue->getTotalTime())
 			frameQueue->setLastPts(0);
-		stopPlay();
+		else
+			frameQueue->setLastPts(frameQueue->getLastPts() + 1);
 		startPlay(MFPlayerThreadState::NEXFRAME);
 		break;
 	case WidgetStete::LASTFRAME:
+		stopPlay();
 		lastPts = frameQueue->getLastPts();
-		if(lastPts == 0) {
-			lastPts = frameQueue->getTotalTime();
-		}else if(lastPts==frameQueue->getTotalTime())
+		if (lastPts == 0) { lastPts = frameQueue->getTotalTime(); }
+		else if (lastPts == frameQueue->getTotalTime())
 			lastPts -= 2000 / frameQueue->getFrameRate() + 1;
 		else
-			lastPts -= 1000 / frameQueue->getFrameRate() + 1 ;
-		onProgress(lastPts);
+			lastPts -= 1000 / frameQueue->getFrameRate() + 1;
+		frameQueue->setLastPts(lastPts);
 		startPlay(MFPlayerThreadState::NEXFRAME);
 		break;
 	default:
@@ -127,34 +119,15 @@ void MFPSinglePlayer::onStateChange(MFPlayerThreadState::statement state) {
 }
 
 void MFPSinglePlayer::onProgress(qint64 msec) {
-	mFPlayerDecodeThread->setFlag(true);
-	mFPlayerThread->setFlag(true);
-	mFPlayerDecodeThread->onControlProgress(msec);
-	//startPlay();
+	stopPlay();
+	frameQueue->setLastPts(msec);
+	startPlay(MFPlayerThreadState::CONTINUEPLAY);
 }
 
-void MFPSinglePlayer::onSpeedChange(double speed)
-{
+void MFPSinglePlayer::onSpeedChange(double speed) {
 	MFPlayerThreadState::statement temp = state;
-	mFPlayerDecodeThread->setFlag(true);
-	mFPlayerThread->setFlag(true);
-	frameQueue->forceOut();
-	frameQueue->decodeLock.lock();
-	frameQueue->playLock.lock();
-	if (!frameQueue->isEmpty()) {
-		AVFrame* frame = av_frame_alloc();
-		while (!frameQueue->isEmpty()) {
-			*frame = frameQueue->front();
-			av_frame_unref(frame);
-			frameQueue->pop();
-		}
-		av_frame_free(&frame);
-	}
-	frameQueue->init();
-	frameQueue->decodeLock.unlock();
-	frameQueue->playLock.unlock();
+	stopPlay();
 	frameQueue->setSpeed(speed);
-	if(temp==MFPlayerThreadState::PLAYING)
+	if (temp == MFPlayerThreadState::PLAYING)
 		startPlay(MFPlayerThreadState::CONTINUEPLAY);
-	
 }

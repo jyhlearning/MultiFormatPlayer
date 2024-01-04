@@ -16,12 +16,10 @@ class MFPSINGLEPLAYER_EXPORT MFPSinglePlayer:public QObject,public MFPluginBase
 
 private:
     MFPlayerWidget* mFPlayerWidget;
-    MFPlayerDecodeThread* mFPlayerDecodeThread;
     MFPlayerThread* mFPlayerThread;
     MFPlayerThreadState::statement state;
     MFPFrameQueue<AVFrame> *frameQueue;
     void stopThreads();
-    void startThreads();
     void startPlay(MFPlayerThreadState::statement state);
     void stopPlay();
 public:
@@ -30,6 +28,7 @@ public:
     void show() override;
 public slots:
     void onPlay();
+    void onStop();
     void action(WidgetStete::statement sig);
     void onStateChange(MFPlayerThreadState::statement state);
     void onProgress(qint64 msec);
@@ -37,7 +36,6 @@ public slots:
 private slots:
     void destroyThread();
 signals:
-    void startDecodeThread();
     void startPlayThread(MFPlayerThreadState::statement sig);
     void flagChange(bool state);
 };

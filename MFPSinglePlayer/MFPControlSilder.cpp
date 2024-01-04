@@ -1,6 +1,12 @@
 ﻿#include "MFPControlSilder.h"
 
 #include <qevent.h>
+#include <qstyle.h>
+
+int MFPControlSilder::round(double number)
+{
+	return (number > 0.0) ? (number + 0.5) : (number - 0.5);
+}
 
 MFPControlSilder::MFPControlSilder(QWidget* parent):QSlider(parent) {
 }
@@ -9,20 +15,12 @@ MFPControlSilder::~MFPControlSilder() {
 }
 
 void MFPControlSilder::mousePressEvent(QMouseEvent* event) {
-	//获取当前点击位置
 	const int currentX = event->pos().x();
-
-	//获取当前点击的位置占整个Slider的百分比
-	const double per = currentX * 1.0 / this->width();
-
-	//利用算得的百分比得到具体数字
-	const int value = per * (this->maximum() - this->minimum()) + this->minimum();
-
-	qDebug() << value;
-
-	//设定滑动条位置
-	this->setValue(value);
-	//滑动条移动事件等事件也用到了mousePressEvent,加这句话是为了不对其产生影响，是的Slider能正常相应其他鼠标事件
+	const double per = currentX * 1.0 / width();
+	const int v = round(per * (maximum() - minimum()) + minimum());
+	qDebug() << v;
+	this->setValue(v);
+	emit clicked();
 	QSlider::mousePressEvent(event);
-	emit sliderMoved(value);
 }
+

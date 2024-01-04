@@ -9,7 +9,12 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	connect(ui.playButton,SIGNAL(clicked()), this,SLOT(onPlayButton()));
 	connect(ui.nextFrameButton,SIGNAL(clicked()),this,SLOT(onNextFrameButton()));
 	connect(ui.lastFrameButton, SIGNAL(clicked()), this, SLOT(onLastFrameButton()));
-	connect(ui.timeSlider,SIGNAL(sliderMoved(int)),this,SLOT(onSliderMoved(int)));
+	connect(ui.forwardButton, SIGNAL(clicked()), this, SLOT(onForwardButton()));
+	connect(ui.backwardButton, SIGNAL(clicked()), this, SLOT(onBackwardButton()));
+
+	connect(ui.timeSlider, SIGNAL(clicked()), this, SLOT(onSliderPressed()));
+	connect(ui.timeSlider,SIGNAL(sliderPressed()), this, SLOT(onSliderPressed()));
+	connect(ui.timeSlider,SIGNAL(sliderReleased()),this,SLOT(onSliderReleased()));
 	connect(ui.speedComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onCurrentIndexChanged(int)));
 	ui.speedComboBox->addItem("0.5");
 	ui.speedComboBox->addItem("1");
@@ -34,10 +39,30 @@ void MFPlayerWidget::onLastFrameButton()
 	emit play(WidgetStete::LASTFRAME);
 }
 
-void MFPlayerWidget::onSliderMoved(int v)
+void MFPlayerWidget::onForwardButton()
 {
-	emit progress(v);
+	int value = ui.timeSlider->value() + 10 * 1000;
+	value = value > ui.timeSlider->maximum() ? ui.timeSlider->maximum() : value;
+	emit progress(value);
 }
+
+void MFPlayerWidget::onBackwardButton()
+{
+	int value = ui.timeSlider->value() - 10 * 1000;
+	value = value < 0 ? 0 : value;
+	emit progress(value);
+}
+
+void MFPlayerWidget::onSliderReleased()
+{
+	emit progress(ui.timeSlider->value());
+}
+
+void MFPlayerWidget::onSliderPressed()
+{
+	emit stop();
+}
+
 
 void MFPlayerWidget::onCurrentIndexChanged(int c)
 {
@@ -62,9 +87,7 @@ void MFPlayerWidget::onProgressChange(const qint64 sec,const qint64 totalTime) {
 	if(totalTime!=ui.timeSlider->maximum()) {
 		ui.timeSlider->setRange(0, totalTime);
 	}
-	//ui.timeSlider->blockSignals(true);
 	ui.timeSlider->setValue(sec);
-	//ui.timeSlider->blockSignals(false);
 }
 
 

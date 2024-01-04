@@ -35,9 +35,6 @@
     <ClInclude Include="MFPFrameQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MFPControlSilder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MFPSinglePlayer.h">
@@ -50,6 +47,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="MFPlayerThread.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="MFPControlSilder.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

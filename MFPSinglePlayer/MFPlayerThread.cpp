@@ -5,6 +5,7 @@
 #include <qmath.h>
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgproc/types_c.h"
+#include "QThread"
 
 void MFPlayerThread::delay(int msec) {
 	QTime dieTime = QTime::currentTime().addMSecs(msec);
@@ -51,12 +52,58 @@ void MFPlayerThread::continousPlayBack(AVFrame* frame)
 	}
 }
 
+void MFPlayerThread::startDecode()
+{
+	mFPlayerDecodeThread->setFlag(false);
+	emit startDecodeThread();
+}
+
+void MFPlayerThread::stopDecode()
+{
+	frameQueue->forceOut();
+	mFPlayerDecodeThread->setFlag(true);
+}
+
+void MFPlayerThread::clearFrameQueue()
+{
+	//由播放器负责清理
+	frameQueue->decodeLock.lock();
+	frameQueue->playLock.lock();
+	if (!frameQueue->isEmpty()) {
+		AVFrame* frame = av_frame_alloc();
+		while (!frameQueue->isEmpty()) {
+			*frame = frameQueue->front();
+			av_frame_unref(frame);
+			frameQueue->pop();
+		}
+		av_frame_free(&frame);
+	}
+	frameQueue->init();
+	frameQueue->decodeLock.unlock();
+	frameQueue->playLock.unlock();
+}
+
 void MFPlayerThread::setFlag(bool flag) { isStop = flag; }
 
 MFPlayerThread::MFPlayerThread(MFPFrameQueue<AVFrame>* frame) {
 	isStop = false;
 	frameQueue = frame;
 	nowPts = 0;
+	mFPlayerDecodeThread = new MFPlayerDecodeThread(frameQueue);
+	mFPlayerDecodeThread->moveToThread(new QThread(this));
+	mFPlayerDecodeThread->thread()->start();
+	connect(this, SIGNAL(startDecodeThread()), mFPlayerDecodeThread, SLOT(decode()));
+}
+
+MFPlayerThread::~MFPlayerThread()
+{
+	stopDecode();
+	clearFrameQueue();
+	if (mFPlayerDecodeThread->thread()->isRunning()) {
+		mFPlayerDecodeThread->thread()->quit();
+		mFPlayerDecodeThread->thread()->wait();
+	}
+	delete mFPlayerDecodeThread;
 }
 
 void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
@@ -64,6 +111,8 @@ void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
 		return;
 	frameQueue->playLock.lock();
 	frameQueue->playEnd = false;
+
+	startDecode();
 	emit stateChange(MFPlayerThreadState::PLAYING);
 	AVFrame* frame = av_frame_alloc();
 
@@ -77,12 +126,11 @@ void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
 		default:
 			break;
 	}
-
 	av_frame_free(&frame);
+	stopDecode();
 	frameQueue->playLock.unlock();
-	if(frameQueue->frameIsEnd && frameQueue->isEmpty()) {
-		frameQueue->playEnd = true;
-		//frameQueue->setLastPts(0);
-	}
+
+	clearFrameQueue();
+
 	emit stateChange(MFPlayerThreadState::PAUSE);
 }

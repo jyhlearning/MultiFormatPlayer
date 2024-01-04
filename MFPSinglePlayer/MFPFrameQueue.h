@@ -32,6 +32,7 @@ public:
 		totalTime = 0;
 		frameRate = 0;
 		speed = 1;
+		lastPts = 0;
 	}
 	bool isFull() const {
 		return ptr.length() == capacity;
@@ -46,7 +47,7 @@ public:
 		quit = flag;
 	}
 	void init() {
-		lastPts = 0;
+		//lastPts = 0;
 		inited = true;
 		quit = false;
 		ptr.clear();

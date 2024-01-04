@@ -5,6 +5,7 @@
 #include "MFPVideo.h"
 #include "MFPFrameQueue.h"
 #include "QImage"
+#include "MFPlayerDecodeThread.h"
 
 namespace MFPlayerThreadState {
 	enum statement {
@@ -22,17 +23,23 @@ class MFPlayerThread : public QObject {
 private:
 	bool isStop;
 	MFPFrameQueue<AVFrame>* frameQueue;
+	MFPlayerDecodeThread* mFPlayerDecodeThread;
 	qint64 nowPts;
 	void delay(int msec);
 	void playNextFrame(AVFrame* frame);
 	void continousPlayBack(AVFrame* frame);
+	void startDecode();
+	void stopDecode();
+	void clearFrameQueue();
 public:
 	void setFlag(bool flag);
 	MFPlayerThread(MFPFrameQueue<AVFrame>* frame);
+	~MFPlayerThread();
 
 public slots:
 	void onPlay(MFPlayerThreadState::statement sig);
 signals:
+	void startDecodeThread();
 	void sendFrame(QImage image);
 	void stateChange(MFPlayerThreadState::statement state);
 	void sendProgress(const qint64 sec,const qint64 totalTime);
