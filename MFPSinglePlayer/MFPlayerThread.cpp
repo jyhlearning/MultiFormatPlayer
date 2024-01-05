@@ -15,6 +15,8 @@ void MFPlayerThread::delay(int msec) {
 
 void MFPlayerThread::playNextFrame(AVFrame* frame) {
 	frameQueue->safeGet(*frame);
+	if (frameQueue->isQuit())
+		return;
 	cv::Mat mat = MFPVideo::AVFrameToMat(frame, frameQueue->getFmt());
 	cv::cvtColor(mat, mat, cv::COLOR_BGR2RGB);
 	QImage image(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
@@ -28,7 +30,7 @@ void MFPlayerThread::continousPlayBack(AVFrame* frame) {
 	bool start = false;
 	int index = 0;
 	const int delta = frameQueue->getFrameRate() / frameQueue->getSpeed();
-	while (!(frameQueue->frameIsEnd && frameQueue->isEmpty()) && !isStop) {
+	while (!(frameQueue->frameIsEnd && frameQueue->isEmpty()) && !isStop && !frameQueue->isQuit()) {
 		if (frameQueue->getSpeed() < 4) {
 			playNextFrame(frame);
 			frame->pts /= frameQueue->getSpeed();
@@ -62,8 +64,8 @@ void MFPlayerThread::stopDecode() {
 
 void MFPlayerThread::clearFrameQueue() {
 	//由播放器负责清理
+	//frameQueue->playLock.lock();
 	frameQueue->decodeLock.lock();
-	frameQueue->playLock.lock();
 	if (!frameQueue->isEmpty()) {
 		AVFrame* frame = av_frame_alloc();
 		while (!frameQueue->isEmpty()) {
@@ -75,7 +77,7 @@ void MFPlayerThread::clearFrameQueue() {
 	}
 	frameQueue->init();
 	frameQueue->decodeLock.unlock();
-	frameQueue->playLock.unlock();
+	//frameQueue->playLock.unlock();
 }
 
 void MFPlayerThread::setFlag(bool flag) { isStop = flag; }
@@ -101,7 +103,7 @@ MFPlayerThread::~MFPlayerThread() {
 }
 
 void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
-	if (isStop)
+	if (isStop || frameQueue->isQuit())
 		return;
 	frameQueue->playLock.lock();
 
@@ -121,9 +123,9 @@ void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
 	}
 	av_frame_free(&frame);
 	stopDecode();
+	clearFrameQueue();
 	frameQueue->playLock.unlock();
 
-	clearFrameQueue();
 
 	emit stateChange(MFPlayerThreadState::PAUSE);
 }

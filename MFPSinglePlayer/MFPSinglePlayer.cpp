@@ -46,6 +46,8 @@ void MFPSinglePlayer::startPlay(MFPlayerThreadState::statement state) {
 	//确保完全退出后再执行启动
 	frameQueue->playLock.lock();
 	mFPlayerThread->setFlag(false);
+	frameQueue->init();
+	frameQueue->setQuit(false);
 	emit startPlayThread(state);
 	frameQueue->playLock.unlock();
 }
