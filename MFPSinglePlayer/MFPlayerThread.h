@@ -5,6 +5,7 @@
 #include "MFPVideo.h"
 #include "MFPFrameQueue.h"
 #include "QImage"
+#include "MFPSTDClock.h"
 #include "MFPlayerDecodeThread.h"
 
 namespace MFPlayerThreadState {
@@ -23,13 +24,14 @@ class MFPlayerThread : public QObject {
 private:
 	bool isStop;
 	MFPFrameQueue* frameQueue;
+	MFPSTDClock* clock;
 	void delay(int msec);
 	void playNextFrame(AVFrame* frame);
 	void continousPlayBack(AVFrame* frame);
 	void clearFrameQueue();
 public:
 	void setFlag(bool flag);
-	MFPlayerThread(MFPFrameQueue* frame);
+	MFPlayerThread(MFPFrameQueue* frame, MFPSTDClock* clock);
 	~MFPlayerThread();
 
 public slots:

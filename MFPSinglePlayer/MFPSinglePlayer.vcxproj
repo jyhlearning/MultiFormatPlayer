@@ -106,6 +106,7 @@
     <ClCompile Include="MFPControlSilder.cpp" />
     <ClCompile Include="MFPFrameQueue.cpp" />
     <ClCompile Include="MFPlayerThread.cpp" />
+    <ClCompile Include="MFPSTDClock.cpp" />
     <ClCompile Include="MFPVideo.cpp" />
     <QtMoc Include="MFPControlSilder.h" />
     <ClInclude Include="MFPAudioQueue.h" />
@@ -113,6 +114,7 @@
     <ClInclude Include="MFPDataBase.h" />
     <ClInclude Include="MFPFrameQueue.h" />
     <QtMoc Include="MFPlayerThread.h" />
+    <ClInclude Include="MFPSTDClock.h" />
     <ClInclude Include="MFPVideo.h" />
     <QtMoc Include="MFPlayerWidget.h" />
     <QtMoc Include="MFPlayerDecodeThread.h" />

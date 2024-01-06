@@ -24,6 +24,7 @@ private:
 	MFPFrameQueue* frameQueue;
 	MFPAudioQueue* audioQueue;
 	MFPVideo* mFPVideo;
+	MFPSTDClock* clock;
 	void stopThreads();
 	void startPlay(MFPlayerThreadState::statement state);
 	void stopPlay();

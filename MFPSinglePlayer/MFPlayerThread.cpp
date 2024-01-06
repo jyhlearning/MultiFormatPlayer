@@ -25,7 +25,6 @@ void MFPlayerThread::playNextFrame(AVFrame* frame) {
 }
 
 void MFPlayerThread::continousPlayBack(AVFrame* frame) {
-	QTime t1;
 	bool start = false;
 	int index = 0;
 	const int delta = frameQueue->getFrameRate() / frameQueue->getSpeed();
@@ -46,9 +45,12 @@ void MFPlayerThread::continousPlayBack(AVFrame* frame) {
 				index--;
 			}
 		}
-		if (!start) { t1 = QTime::currentTime().addMSecs(-frame->pts); }
+		if (!start) {
+			clock->lock.lock();
+			clock->lock.unlock();
+		}
 		start = true;
-		delay(QTime::currentTime().msecsTo(t1.addMSecs(frame->pts)));
+		delay(QTime::currentTime().msecsTo(clock->getTime().addMSecs(frame->pts)));
 		av_frame_unref(frame);
 	}
 }
@@ -75,9 +77,10 @@ void MFPlayerThread::clearFrameQueue() {
 
 void MFPlayerThread::setFlag(bool flag) { isStop = flag; }
 
-MFPlayerThread::MFPlayerThread(MFPFrameQueue* frame) {
+MFPlayerThread::MFPlayerThread(MFPFrameQueue* frame,MFPSTDClock* clock) {
 	isStop = false;
 	frameQueue = frame;
+	this->clock = clock;
 }
 
 MFPlayerThread::~MFPlayerThread() {
@@ -106,5 +109,7 @@ void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
 	frameQueue->forcePutOut();
 	clearFrameQueue();
 	frameQueue->playLock.unlock();
+	clock->lock.tryLock();
+	clock->lock.unlock();
 	emit stateChange(MFPlayerThreadState::PAUSE);
 }

@@ -3,21 +3,24 @@
 
 
 MFPSinglePlayer::MFPSinglePlayer() {
-	frameQueue = new MFPFrameQueue();
+	frameQueue = new MFPFrameQueue;
 	audioQueue = new MFPAudioQueue;
-	mFPlayerWidget = new MFPlayerWidget();
-	mFPVideo = new MFPVideo();
+	mFPlayerWidget = new MFPlayerWidget;
+	clock = new MFPSTDClock;
+	mFPVideo = new MFPVideo;
 	mFPVideo->init();
+
+
 	frameQueue->setFmt(mFPVideo->getFmt());
 	frameQueue->setFrameRate(mFPVideo->getFrameRate());
 	frameQueue->setTotalTime(mFPVideo->getTotalTime());
 	audioQueue->setFrameRate(mFPVideo->getFrameRate());
 	audioQueue->setSwrctx(mFPVideo->getSwrctx());
 
-	mFPlayerThread = new MFPlayerThread(frameQueue);
+	mFPlayerThread = new MFPlayerThread(frameQueue,clock);
 	mFPlayerThread->moveToThread(new QThread(this));
 
-	mFPAudioThread = new MFPAudioThread(audioQueue);
+	mFPAudioThread = new MFPAudioThread(audioQueue,clock);
 	mFPAudioThread->moveToThread(new QThread(this));
 
 	mFPlayerDecodeThread = new MFPlayerDecodeThread(frameQueue,audioQueue, mFPVideo);
@@ -56,6 +59,7 @@ MFPSinglePlayer::~MFPSinglePlayer() {
 	delete frameQueue;
 	delete audioQueue;
 	delete mFPVideo;
+	delete clock;
 }
 
 void MFPSinglePlayer::stopThreads() {
@@ -67,6 +71,10 @@ void MFPSinglePlayer::stopThreads() {
 	if (mFPlayerDecodeThread->thread()->isRunning()) {
 		mFPlayerDecodeThread->thread()->quit();
 		mFPlayerDecodeThread->thread()->wait();
+	}
+	if (mFPAudioThread->thread()->isRunning()) {
+		mFPAudioThread->thread()->quit();
+		mFPAudioThread->thread()->wait();
 	}
 }
 
@@ -83,6 +91,7 @@ void MFPSinglePlayer::startPlay(MFPlayerThreadState::statement state) {
 	audioQueue->initQueue();
 	//查看上一个pts
 	mFPVideo->jumpTo(frameQueue->getLastPts());
+	clock->lock.lock();
 	emit startDecodeThread();
 	emit startPlayThread(state);
 	frameQueue->decodeLock.unlock();

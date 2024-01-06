@@ -1,7 +1,7 @@
 #pragma once
 #include "MFPAudioQueue.h"
 #include "MFPlayerThread.h"
-#include "MFPAudioDecodeThread.h"
+#include "MFPSTDClock.h"
 #include "QAudioSink"
 #include "QObject"
 class MFPAudioThread:public QObject
@@ -12,12 +12,13 @@ private:
 	QAudioSink *audioSink;
 	QIODevice* io;
 	MFPAudioQueue *audioQueue;
+	MFPSTDClock* clock;
 	void delay(int msec);
 	void playNextFrame(AVFrame* frame);
 	void continousPlayBack(AVFrame* frame);
 	void clearAudioQueue();
 public:
-	MFPAudioThread(MFPAudioQueue* audioQueue);
+	MFPAudioThread(MFPAudioQueue* audioQueue,MFPSTDClock *clock);
 	~MFPAudioThread();
 	void setFlag(bool flag);
 public slots:

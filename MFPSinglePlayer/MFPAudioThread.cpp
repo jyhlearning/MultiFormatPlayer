@@ -22,7 +22,6 @@ void MFPAudioThread::playNextFrame(AVFrame* frame)
 
 void MFPAudioThread::continousPlayBack(AVFrame* frame)
 {
-	QTime t1;
 	bool start = false;
 	int index = 0;
 	const int delta = audioQueue->getFrameRate() / audioQueue->getSpeed();
@@ -43,9 +42,12 @@ void MFPAudioThread::continousPlayBack(AVFrame* frame)
 				index--;
 			}
 		}
-		if (!start) { t1 = QTime::currentTime().addMSecs(-frame->pts); }
+		if (!start) {
+			clock->setTime( QTime::currentTime().addMSecs(-frame->pts));
+			clock->lock.unlock();
+		}
 		start = true;
-		delay(QTime::currentTime().msecsTo(t1.addMSecs(frame->pts)));
+		delay(QTime::currentTime().msecsTo(clock->getTime().addMSecs(frame->pts)));
 		av_frame_unref(frame);
 	}
 }
@@ -69,8 +71,9 @@ void MFPAudioThread::clearAudioQueue()
 	//audioQueue->playLock.unlock();
 }
 
-MFPAudioThread::MFPAudioThread(MFPAudioQueue* audioQueue) {
+MFPAudioThread::MFPAudioThread(MFPAudioQueue* audioQueue,MFPSTDClock* clock) {
 	this->audioQueue = audioQueue;
+	this->clock = clock;
 	QAudioFormat fmt;
 	fmt.setSampleRate(44100);
 	fmt.setChannelCount(2);
@@ -84,7 +87,6 @@ MFPAudioThread::~MFPAudioThread()
 	audioSink->stop();
 	clearAudioQueue();
 	delete audioSink;
-	delete io;
 }
 
 void MFPAudioThread::setFlag(bool flag)
