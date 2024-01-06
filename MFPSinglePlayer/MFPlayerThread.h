@@ -22,25 +22,19 @@ class MFPlayerThread : public QObject {
 
 private:
 	bool isStop;
-	MFPFrameQueue<AVFrame>* frameQueue;
-	MFPlayerDecodeThread* mFPlayerDecodeThread;
-	qint64 nowPts;
+	MFPFrameQueue* frameQueue;
 	void delay(int msec);
 	void playNextFrame(AVFrame* frame);
 	void continousPlayBack(AVFrame* frame);
-	void startDecode();
-	void stopDecode();
 	void clearFrameQueue();
-
 public:
 	void setFlag(bool flag);
-	MFPlayerThread(MFPFrameQueue<AVFrame>* frame);
+	MFPlayerThread(MFPFrameQueue* frame);
 	~MFPlayerThread();
 
 public slots:
 	void onPlay(MFPlayerThreadState::statement sig);
 signals:
-	void startDecodeThread();
 	void sendFrame(QImage image);
 	void stateChange(MFPlayerThreadState::statement state);
 	void sendProgress(const qint64 sec);

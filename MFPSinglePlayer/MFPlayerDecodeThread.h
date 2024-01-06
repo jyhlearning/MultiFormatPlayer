@@ -1,15 +1,14 @@
 #pragma once
 #include "qobject.h"
-#include "opencv2/highgui/highgui.hpp"
 #include "MFPVideo.h"
 #include "MFPFrameQueue.h"
-
+#include "MFPAudioQueue.h"
 class MFPlayerDecodeThread : public QObject {
 	Q_OBJECT
 
 public:
 	MFPlayerDecodeThread();
-	MFPlayerDecodeThread(MFPFrameQueue<AVFrame>* frameQueue);
+	MFPlayerDecodeThread(MFPFrameQueue* frameQueue, MFPAudioQueue* audioQueue,MFPVideo* mFPVideo);
 	~MFPlayerDecodeThread();
 
 	void setFlag(bool flag);
@@ -21,5 +20,6 @@ public slots:
 private:
 	bool isStop;
 	MFPVideo* mFPVideo;
-	MFPFrameQueue<AVFrame>* frameQueue;
+	MFPFrameQueue* frameQueue;
+	MFPAudioQueue* audioQueue;
 };

@@ -1,42 +1,37 @@
 ﻿#include "MFPlayerDecodeThread.h"
-
-#include <imgproc.hpp>
 #include <qcoreapplication.h>
-#include <QTime>
 
 MFPlayerDecodeThread::MFPlayerDecodeThread() { isStop = false; }
 
-MFPlayerDecodeThread::MFPlayerDecodeThread(MFPFrameQueue<AVFrame>* frameQueue) {
+MFPlayerDecodeThread::MFPlayerDecodeThread(MFPFrameQueue* frameQueue, MFPAudioQueue* audioQueue,MFPVideo* mFPVideo) {
 	isStop = false;
-	mFPVideo = new MFPVideo();
 	this->frameQueue = frameQueue;
-
-	mFPVideo->init();
-	frameQueue->setFmt(mFPVideo->getFmt());
-	frameQueue->setTotalTime(mFPVideo->getTotalTime());
-	frameQueue->setFrameRate(mFPVideo->getFrameRate());
+	this->mFPVideo = mFPVideo;
+	this->audioQueue = audioQueue;
 }
 
 MFPlayerDecodeThread::~MFPlayerDecodeThread() {
-	mFPVideo->freeResources();
-	delete mFPVideo;
 }
 
 void MFPlayerDecodeThread::decode() {
-	if (isStop||frameQueue->isQuit())
+	if (frameQueue->isQuit()||audioQueue->isQuit())
 		return;
 	frameQueue->decodeLock.lock();
+	audioQueue->decodeLock.lock();
 	int temp = 1;
 	//循环读取视频数据
 	AVFrame* frame = nullptr;
-	//查看上一个pts
 	qint64 lPts = frameQueue->getLastPts();
-	mFPVideo->jumpTo(lPts);
-	while (!isStop && temp > 0 &&!frameQueue->isQuit()) {
-		temp = mFPVideo->getNextFrame(frame);
-		if (temp == 2) {
-			if (frame->pts >= lPts && !isStop && !frameQueue->isQuit()) {
-				frameQueue->safePut(*frame);
+	while (temp > 0 && !(frameQueue->isQuit()&&audioQueue->isQuit())) {
+		temp = mFPVideo->getNextInfo(frame);
+		if (temp == 2||temp==3) {
+			if (frame->pts >= lPts && !(frameQueue->isQuit() && audioQueue->isQuit())) {
+				if (temp == 2 && !frameQueue->isQuit())
+					frameQueue->safePut(*frame);
+				else if (temp == 3 && !audioQueue->isQuit())
+					audioQueue->safePut(*frame);
+				else
+					av_frame_unref(frame);
 			}
 			else
 				av_frame_unref(frame);
@@ -44,11 +39,14 @@ void MFPlayerDecodeThread::decode() {
 	}
 
 	if (temp == 0) {
-		//mFPVideo->jumpTo(0);
 		frameQueue->frameIsEnd = true;
+		audioQueue->frameIsEnd = true;
+		frameQueue->forceGetOut();
+		audioQueue->forceGetOut();
 	}
 	else { av_frame_unref(frame); }
 	frameQueue->decodeLock.unlock();
+	audioQueue->decodeLock.unlock();
 	//return 0;
 }
 

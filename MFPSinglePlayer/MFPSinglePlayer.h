@@ -5,6 +5,8 @@
 #include "MFPlayerWidget.h"
 #include "MFPlayerDecodeThread.h"
 #include "MFPFrameQueue.h"
+#include "MFPAudioQueue.h"
+#include "MFPAudioThread.h"
 #include "MFPlayerThread.h"
 #include "opencv2/highgui/highgui.hpp"
 
@@ -16,12 +18,15 @@ class MFPSINGLEPLAYER_EXPORT MFPSinglePlayer : public QObject, public MFPluginBa
 private:
 	MFPlayerWidget* mFPlayerWidget;
 	MFPlayerThread* mFPlayerThread;
+	MFPAudioThread* mFPAudioThread;
+	MFPlayerDecodeThread* mFPlayerDecodeThread;
 	MFPlayerThreadState::statement state,stateBefore;
-	MFPFrameQueue<AVFrame>* frameQueue;
+	MFPFrameQueue* frameQueue;
+	MFPAudioQueue* audioQueue;
+	MFPVideo* mFPVideo;
 	void stopThreads();
 	void startPlay(MFPlayerThreadState::statement state);
 	void stopPlay();
-
 public:
 	MFPSinglePlayer();
 	~MFPSinglePlayer();
@@ -38,6 +43,7 @@ public slots:
 private slots:
 	void destroyThread();
 signals:
+	void startDecodeThread();
 	void startPlayThread(MFPlayerThreadState::statement sig);
 	void flagChange(bool state);
 };

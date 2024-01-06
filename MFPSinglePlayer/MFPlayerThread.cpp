@@ -2,7 +2,6 @@
 #include <qeventloop.h>
 #include <QTime>
 #include <qcoreapplication.h>
-#include <qmath.h>
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgproc/types_c.h"
 #include "QThread"
@@ -15,7 +14,7 @@ void MFPlayerThread::delay(int msec) {
 
 void MFPlayerThread::playNextFrame(AVFrame* frame) {
 	frameQueue->safeGet(*frame);
-	if (frameQueue->isQuit())
+	if (isStop || !frame->data[0])
 		return;
 	cv::Mat mat = MFPVideo::AVFrameToMat(frame, frameQueue->getFmt());
 	cv::cvtColor(mat, mat, cv::COLOR_BGR2RGB);
@@ -30,9 +29,11 @@ void MFPlayerThread::continousPlayBack(AVFrame* frame) {
 	bool start = false;
 	int index = 0;
 	const int delta = frameQueue->getFrameRate() / frameQueue->getSpeed();
-	while (!(frameQueue->frameIsEnd && frameQueue->isEmpty()) && !isStop && !frameQueue->isQuit()) {
+	while (!(frameQueue->frameIsEnd && frameQueue->isEmpty()) && !isStop) {
 		if (frameQueue->getSpeed() < 4) {
 			playNextFrame(frame);
+			if (isStop || !frame->data[0])
+				continue;
 			frame->pts /= frameQueue->getSpeed();
 		}
 		else {
@@ -52,15 +53,7 @@ void MFPlayerThread::continousPlayBack(AVFrame* frame) {
 	}
 }
 
-void MFPlayerThread::startDecode() {
-	mFPlayerDecodeThread->setFlag(false);
-	emit startDecodeThread();
-}
 
-void MFPlayerThread::stopDecode() {
-	//frameQueue->forceOut();
-	mFPlayerDecodeThread->setFlag(true);
-}
 
 void MFPlayerThread::clearFrameQueue() {
 	//由播放器负责清理
@@ -75,39 +68,26 @@ void MFPlayerThread::clearFrameQueue() {
 		}
 		av_frame_free(&frame);
 	}
-	frameQueue->init();
+	frameQueue->initQueue();
 	frameQueue->decodeLock.unlock();
 	//frameQueue->playLock.unlock();
 }
 
 void MFPlayerThread::setFlag(bool flag) { isStop = flag; }
 
-MFPlayerThread::MFPlayerThread(MFPFrameQueue<AVFrame>* frame) {
+MFPlayerThread::MFPlayerThread(MFPFrameQueue* frame) {
 	isStop = false;
 	frameQueue = frame;
-	nowPts = 0;
-	mFPlayerDecodeThread = new MFPlayerDecodeThread(frameQueue);
-	mFPlayerDecodeThread->moveToThread(new QThread(this));
-	mFPlayerDecodeThread->thread()->start();
-	connect(this, SIGNAL(startDecodeThread()), mFPlayerDecodeThread, SLOT(decode()));
 }
 
 MFPlayerThread::~MFPlayerThread() {
-	stopDecode();
 	clearFrameQueue();
-	if (mFPlayerDecodeThread->thread()->isRunning()) {
-		mFPlayerDecodeThread->thread()->quit();
-		mFPlayerDecodeThread->thread()->wait();
-	}
-	delete mFPlayerDecodeThread;
 }
 
 void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
-	if (isStop || frameQueue->isQuit())
+	if (isStop)
 		return;
 	frameQueue->playLock.lock();
-
-	startDecode();
 	emit stateChange(MFPlayerThreadState::PLAYING);
 	AVFrame* frame = av_frame_alloc();
 
@@ -117,15 +97,14 @@ void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
 		break;
 	case MFPlayerThreadState::NEXTFRAME:
 		playNextFrame(frame);
+		av_frame_unref(frame);
 		break;
 	default:
 		break;
 	}
 	av_frame_free(&frame);
-	stopDecode();
+	frameQueue->forcePutOut();
 	clearFrameQueue();
 	frameQueue->playLock.unlock();
-
-
 	emit stateChange(MFPlayerThreadState::PAUSE);
 }

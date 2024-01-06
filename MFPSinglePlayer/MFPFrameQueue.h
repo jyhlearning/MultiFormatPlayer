@@ -1,107 +1,44 @@
 #pragma once
-#include <QDir>
 
 #include "QMutex"
-#include "QSemaphore"
-#include "Qqueue"
+#include "MFPDataBase.h"
+#include <libavcodec/avcodec.h>
 
-template <typename T>
-class MFPFrameQueue {
+class MFPFrameQueue : public MFPDataBase<AVFrame> {
 private:
-	QQueue<T> ptr;
 	AVPixelFormat fmt;
-	qint64 capacity;
 	qint64 totalTime;
 	qint64 lastPts;
 	qint64 frameRate;
 	double speed;
-	bool quit;
 
 public:
-	QSemaphore freeArea;
-	QSemaphore usesArea;
 	QMutex decodeLock, playLock;
-	bool frameIsEnd, inited;
+	bool frameIsEnd;
 
-	~MFPFrameQueue() {
-	}
+	~MFPFrameQueue();
 
-	MFPFrameQueue(int c = 30) {
-		capacity = c;
-		init();
-		totalTime = 0;
-		frameRate = 0;
-		speed = 1;
-		lastPts = 0;
-	}
+	MFPFrameQueue(int c = 30);
 
-	bool isFull() const { return ptr.length() == capacity; }
-	bool isEmpty() const { return ptr.length() == 0; }
-	bool isQuit() const { return quit; }
-	void setQuit(bool flag) { quit = flag; }
+	void initQueue();
 
-	void init() {
-		inited = true;
-		quit = false;
-		frameIsEnd = false;
-		ptr.clear();
+	void setFmt(AVPixelFormat fmt);
 
-		int temp = freeArea.available();
-		freeArea.release(capacity - temp - 1);
-		usesArea.acquire(usesArea.available());
-	}
+	AVPixelFormat getFmt() const;
 
-	void setFmt(AVPixelFormat fmt) { this->fmt = fmt; }
-	AVPixelFormat getFmt() const { return fmt; }
-	void setTotalTime(const qint64 msec) { totalTime = msec; }
+	void setTotalTime(const qint64 msec);
 
-	void setLastPts(const qint64 pts) {
-		lastPts = pts > totalTime ? totalTime : pts;
-		lastPts = pts < 0 ? 0 : lastPts;
-	}
+	qint64 getTotalTime() const;
 
-	qint64 getTotalTime() const { return totalTime; }
-	qint64 getLastPts() const { return lastPts; }
+	void setLastPts(const qint64 pts);
 
-	int safePut(T data) {
-		freeArea.acquire();
-		if (quit)return -1;
-		ptr.enqueue(data);
-		usesArea.release();
-		return 0;
-	}
+	qint64 getLastPts() const;
 
-	int safeGet(T& data) {
-		usesArea.acquire();
-		if (quit)return -1;
-		data = ptr.front();
-		ptr.pop_front();
-		freeArea.release();
-		return 0;
-	}
+	void setFrameRate(qint64 rate);
 
-	T front() { return ptr.front(); }
+	qint64 getFrameRate() const;
 
-	int pop() {
-		ptr.pop_front();
-		return 0;
-	}
+	void setSpeed(double s);
 
-	void forceOut() {
-		int temp = freeArea.available();
-		freeArea.release(capacity - temp - 1);
-		usesArea.acquire(usesArea.available());
-		quit = true;
-	}
-
-	void freeLock() {
-		int temp = freeArea.available();
-		freeArea.release(capacity - temp - 1);
-		usesArea.acquire(usesArea.available());
-	}
-
-	void setFrameRate(qint64 rate) { frameRate = rate; }
-	qint64 getFrameRate() const { return frameRate; }
-	void setSpeed(double s) { speed = s; }
-	double getSpeed() const { return speed; }
+	double getSpeed() const;
 };
