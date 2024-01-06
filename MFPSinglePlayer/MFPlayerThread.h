@@ -26,8 +26,8 @@ private:
 	MFPFrameQueue* frameQueue;
 	MFPSTDClock* clock;
 	void delay(int msec);
-	void playNextFrame(AVFrame* frame);
-	void continousPlayBack(AVFrame* frame);
+	int playNextFrame(AVFrame* &frame);
+	void continousPlayBack();
 	void clearFrameQueue();
 public:
 	void setFlag(bool flag);

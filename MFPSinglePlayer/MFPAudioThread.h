@@ -14,8 +14,8 @@ private:
 	MFPAudioQueue *audioQueue;
 	MFPSTDClock* clock;
 	void delay(int msec);
-	void playNextFrame(AVFrame* frame);
-	void continousPlayBack(AVFrame* frame);
+	int playNextFrame(AVFrame* &frame);
+	void continousPlayBack();
 	void clearAudioQueue();
 public:
 	MFPAudioThread(MFPAudioQueue* audioQueue,MFPSTDClock *clock);

@@ -12,9 +12,9 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	connect(ui.forwardButton, SIGNAL(clicked()), this, SLOT(onForwardButton()));
 	connect(ui.backwardButton, SIGNAL(clicked()), this, SLOT(onBackwardButton()));
 
-	connect(ui.timeSlider, SIGNAL(clicked()), this, SLOT(onSliderPressed()));
+	connect(ui.timeSlider, SIGNAL(press()), this, SLOT(onSliderPressed()));
 	//connect(ui.timeSlider,SIGNAL(sliderPressed()), this, SLOT(onSliderPressed()));
-	connect(ui.timeSlider,SIGNAL(sliderReleased()), this,SLOT(onSliderReleased()));
+	connect(ui.timeSlider,SIGNAL(release()), this,SLOT(onSliderReleased()));
 	connect(ui.speedComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onCurrentIndexChanged(int)));
 	ui.speedComboBox->addItem("0.5");
 	ui.speedComboBox->addItem("1");

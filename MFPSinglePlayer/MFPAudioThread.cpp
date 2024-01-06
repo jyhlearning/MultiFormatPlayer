@@ -9,28 +9,25 @@ void MFPAudioThread::delay(int msec) {
 		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-void MFPAudioThread::playNextFrame(AVFrame* frame)
+int MFPAudioThread::playNextFrame(AVFrame* &frame)
 {
-	audioQueue->safeGet(*frame);
-	if (isStop|| !frame->data[0])
-		return;
-	QByteArray temp = MFPVideo::toQByteArray(*frame, audioQueue->getSwrctx());
-	io->write(temp);
+	if (isStop || audioQueue->safeGet(frame) == -1)
+		return -1;
+	io->write(MFPVideo::toQByteArray(frame, audioQueue->getSwrctx()));
 	audioQueue->setLastPts(frame->pts);
-	
+	return 0;
 }
 
-void MFPAudioThread::continousPlayBack(AVFrame* frame)
+void MFPAudioThread::continousPlayBack()
 {
 	bool start = false;
 	int index = 0;
+	AVFrame* frame;
 	const int delta = audioQueue->getFrameRate() / audioQueue->getSpeed();
 	while (!(audioQueue->frameIsEnd && audioQueue->isEmpty()) && !isStop) {
 		if (audioQueue->getSpeed() < 4) {
-			playNextFrame(frame);
-			if (isStop || !frame->data[0])
-				continue;
-			frame->pts /= audioQueue->getSpeed();
+			if (!isStop && !playNextFrame(frame))
+				frame->pts /= audioQueue->getSpeed();
 		}
 		else {
 			if (index == 0) {
@@ -38,17 +35,19 @@ void MFPAudioThread::continousPlayBack(AVFrame* frame)
 				index = delta;
 			}
 			else {
-				audioQueue->safeGet(*frame);
+				audioQueue->safeGet(frame);
 				index--;
 			}
 		}
+		const qint64 pts= frame?frame->pts:0;
 		if (!start) {
-			clock->setTime( QTime::currentTime().addMSecs(-frame->pts));
+			clock->setTime( QTime::currentTime().addMSecs(-pts));
 			clock->lock.unlock();
+			start = true;
 		}
-		start = true;
-		delay(QTime::currentTime().msecsTo(clock->getTime().addMSecs(frame->pts)));
-		av_frame_unref(frame);
+		delay(QTime::currentTime().msecsTo(clock->getTime().addMSecs(pts)));
+		if(frame)
+			av_frame_free(&frame);
 	}
 }
 
@@ -58,13 +57,11 @@ void MFPAudioThread::clearAudioQueue()
 //audioQueue->playLock.lock();
 	audioQueue->decodeLock.lock();
 	if (!audioQueue->isEmpty()) {
-		AVFrame* frame = av_frame_alloc();
 		while (!audioQueue->isEmpty()) {
-			*frame = audioQueue->front();
-			av_frame_unref(frame);
+			AVFrame* frame = audioQueue->front();
+			av_frame_free(&frame);
 			audioQueue->pop();
 		}
-		av_frame_free(&frame);
 	}
 	audioQueue->initQueue();
 	audioQueue->decodeLock.unlock();
@@ -76,7 +73,7 @@ MFPAudioThread::MFPAudioThread(MFPAudioQueue* audioQueue,MFPSTDClock* clock) {
 	this->clock = clock;
 	QAudioFormat fmt;
 	fmt.setSampleRate(44100);
-	fmt.setChannelCount(2);
+	fmt.setChannelCount(audioQueue->getChannels());
 	fmt.setSampleFormat(QAudioFormat::Int16);
 	audioSink = new QAudioSink(fmt);
 	io=audioSink->start();
@@ -98,20 +95,19 @@ void MFPAudioThread::onPlay(MFPlayerThreadState::statement sig) {
 	if (isStop)
 		return;
 	audioQueue->audioLock.lock();
-	AVFrame* frame = av_frame_alloc();
 
+	AVFrame* frame = nullptr;
 	switch (sig) {
 	case MFPlayerThreadState::CONTINUEPLAY:
-		continousPlayBack(frame);
+		continousPlayBack();
 		break;
 	case MFPlayerThreadState::NEXTFRAME:
 		playNextFrame(frame);
-		av_frame_unref(frame);
+		av_frame_free(&frame);
 		break;
 	default:
 		break;
 	}
-	av_frame_free(&frame);
 	audioQueue->forcePutOut();
 	clearAudioQueue();
 	audioQueue->audioLock.unlock();

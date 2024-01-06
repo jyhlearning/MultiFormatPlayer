@@ -12,6 +12,8 @@ public:
 	MFPControlSilder(QWidget* parent = nullptr);
 	~MFPControlSilder();
 	void mousePressEvent(QMouseEvent* event) override;
+	void mouseReleaseEvent(QMouseEvent* event) override;
 signals:
-	void clicked();
+	void press();
+	void release();
 };

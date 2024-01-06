@@ -11,12 +11,13 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	mFPVideo->init();
 
 
-	frameQueue->setFmt(mFPVideo->getFmt());
+	frameQueue->setSwsctx(mFPVideo->getSwsctx());
 	frameQueue->setFrameRate(mFPVideo->getFrameRate());
 	frameQueue->setTotalTime(mFPVideo->getTotalTime());
 	audioQueue->setFrameRate(mFPVideo->getFrameRate());
 	audioQueue->setSwrctx(mFPVideo->getSwrctx());
-
+	audioQueue->setChannels(mFPVideo->getChannels());
+	audioQueue->setSampleRate(mFPVideo->getSampleRate());
 	mFPlayerThread = new MFPlayerThread(frameQueue,clock);
 	mFPlayerThread->moveToThread(new QThread(this));
 

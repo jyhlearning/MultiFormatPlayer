@@ -3,7 +3,7 @@
 #include "QMutex"
 #include "MFPVideo.h"
 
-class MFPAudioQueue:public MFPDataBase<AVFrame>
+class MFPAudioQueue:public MFPDataBase<AVFrame*>
 {
 private:
 	int sampleRate, channels;
@@ -32,6 +32,15 @@ public:
 	double getSpeed() const;
 
 	void setSwrctx(SwrContext* swr_ctx);
+
+	void setChannels(int c);
+
+	int getChannels() const;
+
+	int getSampleRate() const;
+
+	void setSampleRate(int s);
+
 	SwrContext* getSwrctx();
 };
 

@@ -2,11 +2,11 @@
 
 #include "QMutex"
 #include "MFPDataBase.h"
-#include <libavcodec/avcodec.h>
+#include <libswscale/swscale.h>
 
-class MFPFrameQueue : public MFPDataBase<AVFrame> {
+class MFPFrameQueue : public MFPDataBase<AVFrame*> {
 private:
-	AVPixelFormat fmt;
+	SwsContext* ctx;
 	qint64 totalTime;
 	qint64 lastPts;
 	qint64 frameRate;
@@ -22,9 +22,9 @@ public:
 
 	void initQueue();
 
-	void setFmt(AVPixelFormat fmt);
+	void setSwsctx(SwsContext* ctx);
 
-	AVPixelFormat getFmt() const;
+	SwsContext* getSwsctx() const;
 
 	void setTotalTime(const qint64 msec);
 

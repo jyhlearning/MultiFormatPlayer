@@ -27,9 +27,9 @@ void MFPlayerDecodeThread::decode() {
 		if (temp == 2||temp==3) {
 			if (frame->pts >= lPts && !(frameQueue->isQuit() && audioQueue->isQuit())) {
 				if (temp == 2 && !frameQueue->isQuit())
-					frameQueue->safePut(*frame);
+					frameQueue->safePut(frame);
 				else if (temp == 3 && !audioQueue->isQuit())
-					audioQueue->safePut(*frame);
+					audioQueue->safePut(frame);
 				else
 					av_frame_unref(frame);
 			}

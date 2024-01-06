@@ -58,7 +58,7 @@ int MFPVideo::init() {
 	}
 
 	//初始化pAVctx,aAVctx
-	if (avcodec_open2(pAVctx, pCodec, nullptr) < 0||avcodec_open2(aAVctx,aCodec,nullptr)<0) {
+	if (avcodec_open2(pAVctx, pCodec, nullptr) < 0 || avcodec_open2(aAVctx, aCodec, nullptr) < 0) {
 		avcodec_close(pAVctx);
 		avformat_close_input(&pFormatCtx);
 		qDebug("avcodec_open2 err.");
@@ -70,6 +70,18 @@ int MFPVideo::init() {
 
 	//初始化数据帧空间
 	pAVframe = av_frame_alloc();
+
+
+	avFrameToOpenCVBGRSwsContext = sws_getContext(
+		pAVctx->width,
+		pAVctx->height,
+		pAVctx->pix_fmt,
+		pAVctx->width,
+		pAVctx->height,
+		AVPixelFormat::AV_PIX_FMT_BGR24,
+		SWS_FAST_BILINEAR,
+		nullptr, nullptr, nullptr
+	);
 
 
 	// 初始化音频重采样上下文
@@ -87,13 +99,11 @@ int MFPVideo::init() {
 	parse = true;
 	hasFree = false;
 	return 0;
-
-
 }
 
 MFPVideo::MFPVideo() {
 	videoPath =
-		"C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-44-50-992.mp4";
+		"C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-36-48-992.mp4";
 	videoIndex = -1;
 	audioIndex = -1;
 	parse = false;
@@ -105,6 +115,7 @@ MFPVideo::~MFPVideo() { freeResources(); }
 void MFPVideo::freeResources() {
 	if (!hasFree) {
 		swr_free(&swr_ctx);
+		sws_freeContext(avFrameToOpenCVBGRSwsContext);
 		av_frame_free(&pAVframe);
 		avcodec_close(pAVctx);
 		avformat_close_input(&pFormatCtx);
@@ -113,16 +124,17 @@ void MFPVideo::freeResources() {
 	}
 }
 
-SwrContext* MFPVideo::getSwrctx() const
-{
-	return swr_ctx;
-}
+SwrContext* MFPVideo::getSwrctx() const { return swr_ctx; }
+
+int MFPVideo::getChannels() const { return aAVctx->channels; }
+
+int MFPVideo::getSampleRate() const { return aAVctx->sample_rate; }
+
 
 qreal MFPVideo::rationalToDouble(const AVRational* rational) {
 	const qreal rate = (rational->den == 0) ? 0 : (qreal(rational->num) / rational->den);
 	return rate;
 }
-
 
 int MFPVideo::getFrameRate() const {
 	return pFormatCtx->streams[videoIndex]->avg_frame_rate.num / pFormatCtx->streams[videoIndex]->avg_frame_rate.
@@ -130,20 +142,18 @@ int MFPVideo::getFrameRate() const {
 }
 
 qint64 MFPVideo::getTotalTime() const { return totalTime; }
- 
 
-QByteArray MFPVideo::toQByteArray(const AVFrame &frame,SwrContext* swr_ctx)
-{
+QByteArray MFPVideo::toQByteArray(const AVFrame* frame, SwrContext* swr_ctx) {
 	uint8_t* buffer;
-	av_samples_alloc(&buffer, NULL, av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO),
-		frame.nb_samples, AV_SAMPLE_FMT_S16, 0);
-	swr_convert(swr_ctx, &buffer, frame.nb_samples, (const uint8_t**)frame.data, frame.nb_samples);
+	av_samples_alloc(&buffer, nullptr, av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO),
+	                 frame->nb_samples, AV_SAMPLE_FMT_S16, 0);
+	swr_convert(swr_ctx, &buffer, frame->nb_samples, (const uint8_t**)frame->data, frame->nb_samples);
 	QByteArray temp = QByteArray(reinterpret_cast<const char*>(buffer),
-		av_get_bytes_per_sample(AV_SAMPLE_FMT_S16) * av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO) * frame.nb_samples);
+	                             av_get_bytes_per_sample(AV_SAMPLE_FMT_S16) * av_get_channel_layout_nb_channels(
+		                             AV_CH_LAYOUT_STEREO) * frame->nb_samples);
 	av_freep(&buffer);
 	return temp;
 }
-
 
 bool MFPVideo::isParse() const { return parse; }
 
@@ -172,7 +182,8 @@ int MFPVideo::getNextInfo(AVFrame* & frame) {
 				av_packet_unref(pAVpkt);
 				return -1;
 			}
-		}else if(pAVpkt->stream_index==audioIndex) {
+		}
+		else if (pAVpkt->stream_index == audioIndex) {
 			//解码一帧音频数据
 			pAVpkt->pts = qRound64(
 				pAVpkt->pts * (1000 * rationalToDouble(&pFormatCtx->streams[audioIndex]->time_base)));
@@ -210,7 +221,8 @@ int MFPVideo::getNextInfo(AVFrame* & frame) {
 		frame = pQueue.front();
 		pQueue.pop_front();
 		return 2; //正常帧
-	}else if(!aQueue.isEmpty()) {
+	}
+	else if (!aQueue.isEmpty()) {
 		frame = aQueue.front();
 		aQueue.pop_front();
 		return 3; //正常帧
@@ -241,31 +253,20 @@ int MFPVideo::jumpTo(qint64 msec) {
 }
 
 
-AVPixelFormat MFPVideo::getFmt() const { return pAVctx->pix_fmt; }
+SwsContext* MFPVideo::getSwsctx() const { return avFrameToOpenCVBGRSwsContext; }
 
 
 QImage MFPVideo::toQImage(const AVFrame& frame) {
 	return QImage((uchar*)frame.data[0], frame.width, frame.height, QImage::Format_RGBA8888);
 }
 
-cv::Mat MFPVideo::AVFrameToMat(const AVFrame* frame, const AVPixelFormat fmt) {
+cv::Mat MFPVideo::AVFrameToMat(const AVFrame* frame, SwsContext* avFrameToOpenCVBGRSwsContext) {
 	const int image_width = frame->width;
 	const int image_height = frame->height;
 
 	cv::Mat resMat(image_height, image_width, CV_8UC3);
 	int cvLinesizes[1];
 	cvLinesizes[0] = resMat.step1();
-
-	SwsContext* avFrameToOpenCVBGRSwsContext = sws_getContext(
-		image_width,
-		image_height,
-		fmt,
-		image_width,
-		image_height,
-		AVPixelFormat::AV_PIX_FMT_BGR24,
-		SWS_FAST_BILINEAR,
-		nullptr, nullptr, nullptr
-	);
 
 	sws_scale(avFrameToOpenCVBGRSwsContext,
 	          frame->data,
@@ -274,11 +275,6 @@ cv::Mat MFPVideo::AVFrameToMat(const AVFrame* frame, const AVPixelFormat fmt) {
 	          image_height,
 	          &resMat.data,
 	          cvLinesizes);
-
-	if (avFrameToOpenCVBGRSwsContext != nullptr) {
-		sws_freeContext(avFrameToOpenCVBGRSwsContext);
-		avFrameToOpenCVBGRSwsContext = nullptr;
-	}
 
 	return resMat;
 }
