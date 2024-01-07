@@ -32,13 +32,17 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>6.6.1_msvc2019_64</QtInstall>
-    <QtModules>core;gui;widgets;multimedia</QtModules>
+    <QtModules>core;gui;widgets;openglwidgets;multimedia</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
+    <QMakeCodeLines>
+    </QMakeCodeLines>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>6.6.1_msvc2019_64</QtInstall>
-    <QtModules>core;gui;widgets;multimedia</QtModules>
+    <QtModules>core;gui;widgets;openglwidgets;multimedia</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
+    <QMakeCodeLines>
+    </QMakeCodeLines>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
     <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
@@ -69,12 +73,18 @@
       <AdditionalIncludeDirectories>D:\Code\Project\MultiFormatPlayer\MFPluginBase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x64\OpenGL32.Lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>D:\Code\Project\MultiFormatPlayer\MFPluginBase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x64\OpenGL32.Lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
@@ -108,6 +118,7 @@
     <ClCompile Include="MFPControlSilder.cpp" />
     <ClCompile Include="MFPFrameQueue.cpp" />
     <ClCompile Include="MFPlayerThread.cpp" />
+    <ClCompile Include="MFPOpenGLWidget.cpp" />
     <ClCompile Include="MFPSTDClock.cpp" />
     <ClCompile Include="MFPVideo.cpp" />
     <QtMoc Include="MFPControlSilder.h" />
@@ -116,6 +127,7 @@
     <ClInclude Include="MFPDataBase.h" />
     <ClInclude Include="MFPFrameQueue.h" />
     <QtMoc Include="MFPlayerThread.h" />
+    <QtMoc Include="MFPOpenGLWidget.h" />
     <ClInclude Include="MFPSTDClock.h" />
     <ClInclude Include="MFPVideo.h" />
     <QtMoc Include="MFPlayerWidget.h" />

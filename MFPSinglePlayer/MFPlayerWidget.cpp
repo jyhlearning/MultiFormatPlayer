@@ -123,12 +123,12 @@ void MFPlayerWidget::onPlayButton() {
 }
 
 void MFPlayerWidget::onFrameChange(QImage qImage) const {
-	int label_width = ui.videoLabel->width();
-	int label_height = ui.videoLabel->height();
-
+	
+	//int label_width = ui.videoLabel->width();
+	//int label_height = ui.videoLabel->height();
 	// 缩放图片以适应QLabel，保持纵横比
-	qImage = qImage.scaled(label_width, label_height, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+	//qImage = qImage.scaled(label_width, label_height, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+	//ui.videoLabel->setPixmap(QPixmap::fromImage(qImage));
 
-
-	ui.videoLabel->setPixmap(QPixmap::fromImage(qImage));
+	ui.videoWidget->setImage(qImage);
 }

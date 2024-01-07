@@ -18,8 +18,8 @@
     <rect>
      <x>11</x>
      <y>11</y>
-     <width>1201</width>
-     <height>511</height>
+     <width>251</width>
+     <height>211</height>
     </rect>
    </property>
    <property name="text">
@@ -146,6 +146,16 @@
     <string>00:00:00</string>
    </property>
   </widget>
+  <widget class="MFPOpenGLWidget" name="videoWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>40</y>
+     <width>1211</width>
+     <height>511</height>
+    </rect>
+   </property>
+  </widget>
   <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
@@ -185,6 +195,11 @@
    <class>MFPControlSilder</class>
    <extends>QSlider</extends>
    <header>mfpcontrolsilder.h</header>
+  </customwidget>
+  <customwidget>
+   <class>MFPOpenGLWidget</class>
+   <extends>QOpenGLWidget</extends>
+   <header>mfpopenglwidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
