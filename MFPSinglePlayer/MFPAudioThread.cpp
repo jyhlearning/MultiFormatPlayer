@@ -91,6 +91,11 @@ void MFPAudioThread::setFlag(bool flag)
 	isStop = flag;
 }
 
+void MFPAudioThread::onVolume(int v) const
+{
+	audioSink->setVolume(v*1.0/100);
+}
+
 void MFPAudioThread::onPlay(MFPlayerThreadState::statement sig) {
 	if (isStop)
 		return;

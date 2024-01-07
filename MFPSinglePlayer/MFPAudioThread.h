@@ -23,5 +23,6 @@ public:
 	void setFlag(bool flag);
 public slots:
 	void onPlay(MFPlayerThreadState::statement sig);
+	void onVolume(int v) const;
 };
 

@@ -13,8 +13,10 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	connect(ui.backwardButton, SIGNAL(clicked()), this, SLOT(onBackwardButton()));
 
 	connect(ui.timeSlider, SIGNAL(press()), this, SLOT(onSliderPressed()));
-	//connect(ui.timeSlider,SIGNAL(sliderPressed()), this, SLOT(onSliderPressed()));
 	connect(ui.timeSlider,SIGNAL(release()), this,SLOT(onSliderReleased()));
+
+	connect(ui.volumeSlider, SIGNAL(release()), this, SLOT(onSliderMoved()));
+	connect(ui.volumeSlider, SIGNAL(sliderMoved(int)), this, SLOT(onSliderMoved()));
 	connect(ui.speedComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onCurrentIndexChanged(int)));
 	ui.speedComboBox->addItem("0.5");
 	ui.speedComboBox->addItem("1");
@@ -51,6 +53,7 @@ void MFPlayerWidget::onBackwardButton() {
 }
 
 void MFPlayerWidget::onSliderReleased() {
+	int a = ui.timeSlider->value();
 	emit progress(ui.timeSlider->value());
 }
 
@@ -75,6 +78,12 @@ void MFPlayerWidget::onCurrentIndexChanged(int c) {
 		temp = 1;
 	}
 	emit speed(temp);
+}
+
+void MFPlayerWidget::onSliderMoved()
+{
+	emit volume(ui.volumeSlider->value());
+	ui.volumeLabel->setText(QString::number(ui.volumeSlider->value()));
 }
 
 void MFPlayerWidget::onProgressChange(const qint64 sec) const {

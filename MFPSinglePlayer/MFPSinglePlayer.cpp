@@ -41,11 +41,12 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	connect(mFPlayerThread,SIGNAL(sendProgress(const qint64)), mFPlayerWidget,
 	        SLOT(onProgressChange(const qint64)));
 
+	connect(mFPlayerWidget,SIGNAL(destroyed()), this, SLOT(destroyThread()));
 	connect(mFPlayerWidget,SIGNAL(stop()), this,SLOT(onStop()));
 	connect(mFPlayerWidget,SIGNAL(play(WidgetStete::statement)), this,SLOT(action(WidgetStete::statement)));
-	connect(mFPlayerWidget,SIGNAL(destroyed()), this, SLOT(destroyThread()));
 	connect(mFPlayerWidget,SIGNAL(progress(qint64)), this, SLOT(onProgress(qint64)));
 	connect(mFPlayerWidget,SIGNAL(speed(double)), this, SLOT(onSpeedChange(double)));
+	connect(mFPlayerWidget, SIGNAL(volume(int)), mFPAudioThread, SLOT(onVolume(int)));
 
 	mFPlayerDecodeThread->thread()->start();
 	mFPlayerThread->thread()->start();

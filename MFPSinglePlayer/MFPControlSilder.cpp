@@ -12,8 +12,13 @@ MFPControlSilder::~MFPControlSilder() {
 }
 
 void MFPControlSilder::mousePressEvent(QMouseEvent* event) {
-	emit press();
+	const int currentX = event->pos().x();
+	const double per = currentX * 1.0 / width();
+	const int v = round(per * (maximum() - minimum()) + minimum());
+	qDebug() << v;
+	this->setValue(v);
 	QSlider::mousePressEvent(event);
+	emit press();
 }
 
 void MFPControlSilder::mouseReleaseEvent(QMouseEvent* event)

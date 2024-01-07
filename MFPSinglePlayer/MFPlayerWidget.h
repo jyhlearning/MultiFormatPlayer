@@ -23,6 +23,7 @@ signals:
 	void progress(qint64 msec);
 	void speed(double s);
 	void stop();
+	void volume(int v);
 
 private:
 	Ui::MFPlayerWidgetClass ui;
@@ -36,7 +37,7 @@ private slots:
 	void onSliderReleased();
 	void onSliderPressed();
 	void onCurrentIndexChanged(int c);
-
+	void onSliderMoved();
 public slots:
 	void onFrameChange(QImage qImage) const;
 	void onProgressChange(const qint64 sec) const;
