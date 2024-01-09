@@ -11,6 +11,7 @@ private:
 	qint64 lastPts;
 	qint64 frameRate;
 	double speed;
+	double brightness, contrast, hue, saturation;
 
 public:
 	QMutex decodeLock, playLock;

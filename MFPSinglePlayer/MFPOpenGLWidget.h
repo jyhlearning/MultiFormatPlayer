@@ -20,6 +20,7 @@ private:
 
 	void initTextures();              //初始化纹理设置
 	void initShaders();
+	void scale(float& scaleX, float& scaleY, QOpenGLTexture* texture);
 public:
 	explicit MFPOpenGLWidget(QWidget* parent = nullptr);
 	~MFPOpenGLWidget();

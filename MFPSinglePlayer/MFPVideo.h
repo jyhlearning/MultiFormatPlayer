@@ -39,6 +39,7 @@ public:
 	SwrContext* getSwrctx() const;
 	int getSampleRate() const;
 	int getChannels() const;
+	std::pair<int, int> getResolution() const;
 
 	int init();
 	int getNextInfo(AVFrame* &frame);

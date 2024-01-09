@@ -5,30 +5,47 @@
 
 MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	: QWidget(parent) {
-	ui.setupUi(this);
-	connect(ui.playButton,SIGNAL(clicked()), this,SLOT(onPlayButton()));
-	connect(ui.nextFrameButton,SIGNAL(clicked()), this,SLOT(onNextFrameButton()));
-	connect(ui.lastFrameButton, SIGNAL(clicked()), this, SLOT(onLastFrameButton()));
-	connect(ui.forwardButton, SIGNAL(clicked()), this, SLOT(onForwardButton()));
-	connect(ui.backwardButton, SIGNAL(clicked()), this, SLOT(onBackwardButton()));
+	widgetUi.setupUi(this);
+	dialog = new QDialog;
+	dialogUi.setupUi(dialog);
+	connect(widgetUi.playButton,SIGNAL(clicked()), this,SLOT(onPlayButton()));
+	connect(widgetUi.nextFrameButton,SIGNAL(clicked()), this,SLOT(onNextFrameButton()));
+	connect(widgetUi.lastFrameButton, SIGNAL(clicked()), this, SLOT(onLastFrameButton()));
+	connect(widgetUi.forwardButton, SIGNAL(clicked()), this, SLOT(onForwardButton()));
+	connect(widgetUi.backwardButton, SIGNAL(clicked()), this, SLOT(onBackwardButton()));
 
-	connect(ui.timeSlider, SIGNAL(press()), this, SLOT(onSliderPressed()));
-	connect(ui.timeSlider,SIGNAL(release()), this,SLOT(onSliderReleased()));
+	connect(widgetUi.timeSlider, SIGNAL(press()), this, SLOT(onSliderPressed()));
+	connect(widgetUi.timeSlider,SIGNAL(release()), this,SLOT(onSliderReleased()));
 
-	connect(ui.volumeSlider, SIGNAL(release()), this, SLOT(onSliderMoved()));
-	connect(ui.volumeSlider, SIGNAL(sliderMoved(int)), this, SLOT(onSliderMoved()));
-	connect(ui.speedComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onCurrentIndexChanged(int)));
-	ui.speedComboBox->addItem("0.5");
-	ui.speedComboBox->addItem("1");
-	ui.speedComboBox->addItem("2");
-	ui.speedComboBox->addItem("4");
-	ui.speedComboBox->setCurrentIndex(1);
+	connect(widgetUi.volumeSlider, SIGNAL(release()), this, SLOT(onSliderMoved()));
+	connect(widgetUi.volumeSlider, SIGNAL(sliderMoved(int)), this, SLOT(onSliderMoved()));
+	connect(widgetUi.speedComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onCurrentIndexChanged(int)));
+	connect(widgetUi.infomationButton,SIGNAL(clicked()), this, SLOT(onInformationButton()));
+	widgetUi.speedComboBox->addItem("0.5");
+	widgetUi.speedComboBox->addItem("1");
+	widgetUi.speedComboBox->addItem("2");
+	widgetUi.speedComboBox->addItem("4");
+	widgetUi.speedComboBox->setCurrentIndex(1);
 }
 
 MFPlayerWidget::~MFPlayerWidget() {
+	delete dialog;
 }
 
-void MFPlayerWidget::changeButton(QString qString) { ui.playButton->setText(qString); }
+void MFPlayerWidget::changeButton(QString qString) { widgetUi.playButton->setText(qString); }
+
+
+void MFPlayerWidget::setInformationDialog(const informaion& info) const
+{
+	dialogUi.frameRate->setText(QString::number(info.frameRate));
+	dialogUi.channels->setText(QString::number(info.channels));
+	const QTime time = QTime::fromMSecsSinceStartOfDay(info.length);
+	dialogUi.length->setText(QString("%1:%2:%3")
+		.arg(time.hour(), 2, 10, QChar('0'))
+		.arg(time.minute(), 2, 10, QChar('0'))
+		.arg(time.second(), 2, 10, QChar('0')));
+	dialogUi.resolution->setText(QString::number(info.resolution.first)+" × " + QString::number(info.resolution.second));
+}
 
 void MFPlayerWidget::onNextFrameButton() {
 	emit play(WidgetStete::NEXTFRAME);
@@ -40,21 +57,26 @@ void MFPlayerWidget::onLastFrameButton() {
 
 void MFPlayerWidget::onForwardButton() {
 	emit stop();
-	int value = ui.timeSlider->value() + 10 * 1000;
-	value = value > ui.timeSlider->maximum() ? ui.timeSlider->maximum() : value;
+	int value = widgetUi.timeSlider->value() + 10 * 1000;
+	value = value > widgetUi.timeSlider->maximum() ? widgetUi.timeSlider->maximum() : value;
 	emit progress(value);
 }
 
 void MFPlayerWidget::onBackwardButton() {
 	emit stop();
-	int value = ui.timeSlider->value() - 10 * 1000;
+	int value = widgetUi.timeSlider->value() - 10 * 1000;
 	value = value < 0 ? 0 : value;
 	emit progress(value);
 }
 
+void MFPlayerWidget::onInformationButton()
+{
+	dialog->show();
+}
+
 void MFPlayerWidget::onSliderReleased() {
-	int a = ui.timeSlider->value();
-	emit progress(ui.timeSlider->value());
+	int a = widgetUi.timeSlider->value();
+	emit progress(widgetUi.timeSlider->value());
 }
 
 void MFPlayerWidget::onSliderPressed() {
@@ -82,18 +104,18 @@ void MFPlayerWidget::onCurrentIndexChanged(int c) {
 
 void MFPlayerWidget::onSliderMoved()
 {
-	emit volume(ui.volumeSlider->value());
-	ui.volumeLabel->setText(QString::number(ui.volumeSlider->value()));
+	emit volume(widgetUi.volumeSlider->value());
+	widgetUi.volumeLabel->setText(QString::number(widgetUi.volumeSlider->value()));
 }
 
 void MFPlayerWidget::onProgressChange(const qint64 sec) const {
-	ui.timeSlider->setValue(sec);
+	widgetUi.timeSlider->setValue(sec);
 	setForwardLable(sec);
-	setBackwardLable(ui.timeSlider->maximum()-sec);
+	setBackwardLable(widgetUi.timeSlider->maximum()-sec);
 }
 
 void MFPlayerWidget::setSliderRange(const qint64 min, const qint64 max) const {
-	ui.timeSlider->setRange(min, max);
+	widgetUi.timeSlider->setRange(min, max);
 	
 }
 
@@ -101,7 +123,7 @@ void MFPlayerWidget::setForwardLable(qint64 msec) const
 {
 	msec = msec < 0 ? 0 : msec;
 	const QTime time = QTime::fromMSecsSinceStartOfDay(msec);
-	ui.forwardLabel->setText(QString("%1:%2:%3")
+	widgetUi.forwardLabel->setText(QString("%1:%2:%3")
 		.arg(time.hour(), 2, 10, QChar('0'))
 		.arg(time.minute(), 2, 10, QChar('0'))
 		.arg(time.second(), 2, 10, QChar('0')));
@@ -111,7 +133,7 @@ void MFPlayerWidget::setBackwardLable(qint64 msec) const
 {
 	msec = msec < 0 ? 0 : msec;
 	const QTime time = QTime::fromMSecsSinceStartOfDay(msec);
-	ui.backwardLabel->setText(QString("%1:%2:%3")
+	widgetUi.backwardLabel->setText(QString("%1:%2:%3")
 		.arg(time.hour(), 2, 10, QChar('0'))
 		.arg(time.minute(), 2, 10, QChar('0'))
 		.arg(time.second(), 2, 10, QChar('0')));
@@ -124,11 +146,11 @@ void MFPlayerWidget::onPlayButton() {
 
 void MFPlayerWidget::onFrameChange(QImage qImage) const {
 	
-	//int label_width = ui.videoLabel->width();
-	//int label_height = ui.videoLabel->height();
-	// 缩放图片以适应QLabel，保持纵横比
+	//int label_width = widgetUi.videoLabel->width();
+	//int label_height = widgetUi.videoLabel->height();
+	//// 缩放图片以适应QLabel，保持纵横比
 	//qImage = qImage.scaled(label_width, label_height, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-	//ui.videoLabel->setPixmap(QPixmap::fromImage(qImage));
+	//widgetUi.videoLabel->setPixmap(QPixmap::fromImage(qImage));
 
-	ui.videoWidget->setImage(qImage);
+	widgetUi.videoWidget->setImage(qImage);
 }

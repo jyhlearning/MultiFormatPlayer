@@ -130,6 +130,10 @@ int MFPVideo::getChannels() const { return aAVctx->channels; }
 
 int MFPVideo::getSampleRate() const { return aAVctx->sample_rate; }
 
+std::pair<int, int> MFPVideo::getResolution() const {
+	return {pAVctx->width,pAVctx->height};
+}
+
 
 qreal MFPVideo::rationalToDouble(const AVRational* rational) {
 	const qreal rate = (rational->den == 0) ? 0 : (qreal(rational->num) / rational->den);

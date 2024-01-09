@@ -18,6 +18,9 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	audioQueue->setSwrctx(mFPVideo->getSwrctx());
 	audioQueue->setChannels(mFPVideo->getChannels());
 	audioQueue->setSampleRate(mFPVideo->getSampleRate());
+
+	mFPlayerWidget->setInformationDialog({ mFPVideo->getResolution(),mFPVideo->getTotalTime(),mFPVideo->getFrameRate(),mFPVideo->getChannels()});
+
 	mFPlayerThread = new MFPlayerThread(frameQueue,clock);
 	mFPlayerThread->moveToThread(new QThread(this));
 

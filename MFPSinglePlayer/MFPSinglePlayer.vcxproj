@@ -139,6 +139,7 @@
     <ClCompile Include="MFPSinglePlayer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="MFPInfomation.ui" />
     <QtUic Include="MFPlayerWidget.ui" />
   </ItemGroup>
   <ItemGroup>
