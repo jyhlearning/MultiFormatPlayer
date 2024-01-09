@@ -2,8 +2,6 @@
 #include <qeventloop.h>
 #include <QTime>
 #include <qcoreapplication.h>
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/imgproc/types_c.h"
 #include "QThread"
 
 void MFPlayerThread::delay(int msec) {
@@ -15,11 +13,11 @@ void MFPlayerThread::delay(int msec) {
 int MFPlayerThread::playNextFrame(AVFrame* &frame) {
 	if (isStop || frameQueue->safeGet(frame)==-1)
 		return -1;
-	cv::Mat mat = MFPVideo::AVFrameToMat(frame, frameQueue->getSwsctx());
+	/*cv::Mat mat = MFPVideo::AVFrameToMat(frame, frameQueue->getSwsctx());
 	cv::cvtColor(mat, mat, cv::COLOR_BGR2RGB);
-	QImage image(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);
+	QImage image(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);*/
 	frameQueue->setLastPts(frame->pts);
-	emit sendFrame(image.copy(image.rect()));
+	emit sendFrame(MFPVideo::toQImage(frame, frameQueue->getSwsctx()));
 	emit sendProgress(frame->pts);
 	return 0;
 }

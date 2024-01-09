@@ -3,6 +3,7 @@
 #include <QWidget>
 #include "ui_MFPlayerWidget.h"
 #include "ui_MFPInfomation.h"
+#include "ui_MFPSettings.h"
 namespace WidgetStete {
 	enum statement {
 		PLAY,
@@ -36,8 +37,9 @@ signals:
 
 private:
 	Ui::MFPlayerWidgetClass widgetUi;
-	Ui::infomationDialog dialogUi;
-	QDialog *dialog;
+	Ui::infomationDialog infomationDialogUi;
+	Ui::settingsDialog settingsUi;
+	QDialog *infomationDialog,*settingsDialog;
 private slots:
 	void onPlayButton();
 	void onNextFrameButton();
@@ -45,12 +47,19 @@ private slots:
 	void onForwardButton();
 	void onBackwardButton();
 	void onInformationButton();
+	void onResetButton();
+
+	void onCurrentIndexChanged(int c);
+
 	void onSliderReleased();
 	void onSliderPressed();
-	void onCurrentIndexChanged(int c);
 	void onSliderMoved();
+	void onSettingsButton();
+	void onBrightnessSlider();
+	void onContrastSlider();
+	void onSaturationSlider();
 public slots:
-	void onFrameChange(QImage qImage) const;
+	void onFrameChange(const QImage qImage) const;
 	void onProgressChange(const qint64 sec) const;
 	void setSliderRange(const qint64 min, const qint64 max) const;
 	void setForwardLable(qint64 msec) const;

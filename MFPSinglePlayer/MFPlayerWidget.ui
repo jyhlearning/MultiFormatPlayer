@@ -159,7 +159,7 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="60,10,0,0,0,0">
+    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="60,0,0,0,0,10,0">
      <property name="spacing">
       <number>0</number>
      </property>
@@ -198,6 +198,13 @@
        </property>
        <property name="modelColumn">
         <number>0</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="settingButton">
+       <property name="text">
+        <string>SETTINGS</string>
        </property>
       </widget>
      </item>

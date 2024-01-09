@@ -71,18 +71,28 @@ int MFPVideo::init() {
 	//初始化数据帧空间
 	pAVframe = av_frame_alloc();
 
+	//暂时用不到
+	//avFrameToOpenCVBGRSwsContext = sws_getContext(
+	//	pAVctx->width,
+	//	pAVctx->height,
+	//	pAVctx->pix_fmt,
+	//	pAVctx->width,
+	//	pAVctx->height,
+	//	AVPixelFormat::AV_PIX_FMT_BGR24,
+	//	SWS_FAST_BILINEAR,
+	//	nullptr, nullptr, nullptr
+	//);
 
-	avFrameToOpenCVBGRSwsContext = sws_getContext(
+	avFrameToQImageSwsContext = sws_getContext(
 		pAVctx->width,
 		pAVctx->height,
 		pAVctx->pix_fmt,
 		pAVctx->width,
 		pAVctx->height,
-		AVPixelFormat::AV_PIX_FMT_BGR24,
+		AVPixelFormat::AV_PIX_FMT_RGBA,
 		SWS_FAST_BILINEAR,
 		nullptr, nullptr, nullptr
 	);
-
 
 	// 初始化音频重采样上下文
 	swr_ctx = swr_alloc();
@@ -115,7 +125,8 @@ MFPVideo::~MFPVideo() { freeResources(); }
 void MFPVideo::freeResources() {
 	if (!hasFree) {
 		swr_free(&swr_ctx);
-		sws_freeContext(avFrameToOpenCVBGRSwsContext);
+		//sws_freeContext(avFrameToOpenCVBGRSwsContext);
+		sws_freeContext(avFrameToQImageSwsContext);
 		av_frame_free(&pAVframe);
 		avcodec_close(pAVctx);
 		avformat_close_input(&pFormatCtx);
@@ -257,11 +268,28 @@ int MFPVideo::jumpTo(qint64 msec) {
 }
 
 
-SwsContext* MFPVideo::getSwsctx() const { return avFrameToOpenCVBGRSwsContext; }
+SwsContext* MFPVideo::getSwsctx() const {
+	//return avFrameToOpenCVBGRSwsContext;
+	return avFrameToQImageSwsContext;
+}
 
 
-QImage MFPVideo::toQImage(const AVFrame& frame) {
-	return QImage((uchar*)frame.data[0], frame.width, frame.height, QImage::Format_RGBA8888);
+QImage MFPVideo::toQImage(const AVFrame* frame,SwsContext* avFrameToQImageSwsContext) {
+
+	uchar* buffer = (unsigned char*)av_malloc(av_image_get_buffer_size(AV_PIX_FMT_RGBA, frame->width, frame->height, 1));
+	uchar* data[] = {buffer};
+	int    lines[4];
+	av_image_fill_linesizes(lines, AV_PIX_FMT_RGBA, frame->width);  // 使用像素格式pix_fmt和宽度填充图像的平面线条大小。
+	sws_scale(avFrameToQImageSwsContext,             // 缩放上下文
+		frame->data,            // 原图像数组
+		frame->linesize,        // 包含源图像每个平面步幅的数组
+		0,                        // 开始位置
+		frame->height,          // 行数
+		data,                     // 目标图像数组
+		lines);                   // 包含目标图像每个平面的步幅的数组
+	const QImage re = QImage(buffer, frame->width, frame->height, QImage::Format_RGBA8888).copy();
+	av_free(buffer);
+	return re;
 }
 
 cv::Mat MFPVideo::AVFrameToMat(const AVFrame* frame, SwsContext* avFrameToOpenCVBGRSwsContext) {

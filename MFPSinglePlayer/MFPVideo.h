@@ -31,7 +31,8 @@ private:
 	QQueue<AVFrame*> pQueue, aQueue;
 	qint64 totalTime;
 	SwrContext* swr_ctx;
-	SwsContext* avFrameToOpenCVBGRSwsContext;
+	//SwsContext* avFrameToOpenCVBGRSwsContext;
+	SwsContext* avFrameToQImageSwsContext;
 public:
 	MFPVideo();
 	~MFPVideo();
@@ -49,7 +50,7 @@ public:
 	bool isParse() const;
 	void freeResources();
 	static QByteArray toQByteArray(const AVFrame* frame, SwrContext* swr_ctx);
-	static QImage toQImage(const AVFrame& frame);
-	static cv::Mat AVFrameToMat(const AVFrame* frame,SwsContext *fmt);
+	static QImage toQImage(const AVFrame* frame,SwsContext* avFrameToQImageSwsContext);
+	static cv::Mat AVFrameToMat(const AVFrame* frame,SwsContext * avFrameToOpenCVBGRSwsContext);
 	static qreal rationalToDouble(const AVRational* rational);
 };

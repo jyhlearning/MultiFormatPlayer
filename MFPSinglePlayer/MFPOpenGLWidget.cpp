@@ -40,21 +40,34 @@ void MFPOpenGLWidget::initShaders() {
 	const char* fsrc =
 		"uniform sampler2D texture;\n"
 		"varying vec2 texc;\n"
+		"uniform float brightness;\n"
+		"uniform float contrast;\n"
+		"uniform float saturation;\n"
 		"void main(void)\n"
 		"{\n"
-		"    gl_FragColor = texture2D(texture,texc);\n"
+		"    vec4 textureColor = texture2D(texture, texc);\n"
+		"	 const mediump vec3 luminanceWeighting = vec3(0.2125, 0.7154, 0.0721);\n"
+		"	 vec3 greyScaleColor = vec3(dot(textureColor.rgb, luminanceWeighting));"
+		"	 vec3 color = textureColor.rgb + vec3(brightness);\n"
+		"    vec3 color1 = (color - vec3(0.5)) * contrast + vec3(0.5);\n"
+		"	 vec3 color2 = vec3(dot(color1.rgb, luminanceWeighting));\n"
+		"    gl_FragColor = vec4(mix(color2, color1.rgb, saturation), textureColor.w);;\n"
 		"}\n";
 	fshader->compileSourceCode(fsrc); //编译纹理着色器代码
 	program.addShader(vshader); //添加顶点着色器    
 	program.addShader(fshader); //添加纹理碎片着色器
 	program.bindAttributeLocation("vertex", 0); //绑定顶点属性位置    
 	program.bindAttributeLocation("texCoord", 1); //绑定纹理属性位置
+
 	// 链接着色器管道  
 	if (!program.link())
 		close();
 	// 绑定着色器管道
 	if (!program.bind())
 		close();
+	setBrightness(0);
+	setContrast(1);
+	setSaturation(1);
 }
 
 void MFPOpenGLWidget::scale(float& scaleX, float& scaleY, QOpenGLTexture* texture) {
@@ -70,6 +83,9 @@ void MFPOpenGLWidget::scale(float& scaleX, float& scaleY, QOpenGLTexture* textur
 }
 
 MFPOpenGLWidget::MFPOpenGLWidget(QWidget* parent): QOpenGLWidget(parent) {
+	saturation = 1.0;
+	contrast = 1.0;
+	brightness = 0.0;
 }
 
 MFPOpenGLWidget::~MFPOpenGLWidget() { delete texture; }
@@ -96,12 +112,16 @@ void MFPOpenGLWidget::paintGL() {
 	texCoords.append(QVector2D(1 + scaleX, 1 + scaleY)); //右上    
 	texCoords.append(QVector2D(-scaleX, -scaleY)); //左下
 	texCoords.append(QVector2D(1 + scaleX, -scaleY)); //右下   
-
 	program.enableAttributeArray(0);
 	program.enableAttributeArray(1);
 	program.setAttributeArray(0, vertices.constData());
 	program.setAttributeArray(1, texCoords.constData());
+
 	program.setUniformValue("texture", 0);
+	program.setUniformValue("brightness", brightness);
+	program.setUniformValue("contrast", contrast);
+	program.setUniformValue("saturation", saturation);
+
 	texture->setWrapMode(QOpenGLTexture::ClampToBorder);
 	texture->bind(); //绑定纹理
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); //绘制纹理
@@ -126,6 +146,13 @@ void MFPOpenGLWidget::setImage(const QImage& image) {
 	//设置纹理细节
 	texture->setLevelofDetailBias(-1); //值越小，图像越清晰
 	texture->setSize(image.width(), image.height());
+
 	//更新图像
 	update();
 }
+
+void MFPOpenGLWidget::setContrast(const float v) { contrast = v; } //[0,2]
+
+void MFPOpenGLWidget::setSaturation(const float v) { saturation = v; } //[0,2]
+
+void MFPOpenGLWidget::setBrightness(const float v) { brightness = v; } //[-1,1]
