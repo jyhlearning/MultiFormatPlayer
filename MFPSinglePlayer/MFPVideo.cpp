@@ -105,7 +105,6 @@ int MFPVideo::init() {
 	swr_init(swr_ctx);
 
 	totalTime = 1000 * pFormatCtx->duration / AV_TIME_BASE;
-
 	parse = true;
 	hasFree = false;
 	return 0;
@@ -141,10 +140,18 @@ int MFPVideo::getChannels() const { return aAVctx->channels; }
 
 int MFPVideo::getSampleRate() const { return aAVctx->sample_rate; }
 
-std::pair<int, int> MFPVideo::getResolution() const {
-	return {pAVctx->width,pAVctx->height};
-}
+qint64 MFPVideo::getChannelsLayout() const { return aAVctx->channel_layout; }
 
+AVCodecContext* MFPVideo::getAudioCtx() const { return aAVctx; }
+
+AVCodecContext* MFPVideo::getVideoCtx() const { return pAVctx; }
+
+AVStream* MFPVideo::getVideoInStream() const { return pFormatCtx->streams[videoIndex]; }
+
+AVStream* MFPVideo::getAudioInStream() const { return pFormatCtx->streams[audioIndex]; }
+
+
+std::pair<int, int> MFPVideo::getResolution() const { return {pAVctx->width, pAVctx->height}; }
 
 qreal MFPVideo::rationalToDouble(const AVRational* rational) {
 	const qreal rate = (rational->den == 0) ? 0 : (qreal(rational->num) / rational->den);
@@ -172,7 +179,7 @@ QByteArray MFPVideo::toQByteArray(const AVFrame* frame, SwrContext* swr_ctx) {
 
 bool MFPVideo::isParse() const { return parse; }
 
-int MFPVideo::getNextInfo(AVFrame* & frame) {
+int MFPVideo::getNextInfo(AVFrame* & frame, int option) {
 	bool flag1 = true, flag2 = true;
 	if (av_read_frame(pFormatCtx, pAVpkt) >= 0) {
 		//读取一帧未解码的数据
@@ -180,10 +187,10 @@ int MFPVideo::getNextInfo(AVFrame* & frame) {
 		//如果是视频数据
 		if (pAVpkt->stream_index == videoIndex) {
 			//解码一帧视频数据
-			pAVpkt->pts = qRound64(
-				pAVpkt->pts * (1000 * rationalToDouble(&pFormatCtx->streams[videoIndex]->time_base)));
-			pAVpkt->dts = qRound64(
-				pAVpkt->dts * (1000 * rationalToDouble(&pFormatCtx->streams[videoIndex]->time_base)));
+			if (option == 0) {
+				pAVpkt->pts = toMsec(pAVpkt->pts, &pFormatCtx->streams[videoIndex]->time_base);
+				pAVpkt->dts = toMsec(pAVpkt->dts, &pFormatCtx->streams[videoIndex]->time_base);
+			}
 			if (avcodec_send_packet(pAVctx, pAVpkt) == 0) {
 				// 一个avPacket可能包含多帧数据，所以需要使用while循环一直读取
 				while (avcodec_receive_frame(pAVctx, pAVframe) == 0) {
@@ -200,10 +207,10 @@ int MFPVideo::getNextInfo(AVFrame* & frame) {
 		}
 		else if (pAVpkt->stream_index == audioIndex) {
 			//解码一帧音频数据
-			pAVpkt->pts = qRound64(
-				pAVpkt->pts * (1000 * rationalToDouble(&pFormatCtx->streams[audioIndex]->time_base)));
-			pAVpkt->dts = qRound64(
-				pAVpkt->dts * (1000 * rationalToDouble(&pFormatCtx->streams[audioIndex]->time_base)));
+			if (option == 0) {
+				pAVpkt->pts = toMsec(pAVpkt->pts,&pFormatCtx->streams[audioIndex]->time_base);
+				pAVpkt->dts = toMsec(pAVpkt->dts, &pFormatCtx->streams[audioIndex]->time_base);
+			}
 			if (avcodec_send_packet(aAVctx, pAVpkt) == 0) {
 				// 一个avPacket可能包含多帧数据，所以需要使用while循环一直读取
 				while (avcodec_receive_frame(aAVctx, pAVframe) == 0) {
@@ -261,12 +268,12 @@ int MFPVideo::jumpTo(qint64 msec) {
 	msec = msec - 1000 < 0 ? 0 : msec - 1000;
 
 	int ret = avformat_seek_file(pFormatCtx, videoIndex, min_timestamp, av_rescale_q(msec, av_make_q(1, 1000),
-		                             pFormatCtx->streams[videoIndex]->time_base), max_timestamp, AVSEEK_FLAG_BACKWARD);
+		                             pFormatCtx->streams[videoIndex]->time_base), max_timestamp,
+	                             AVSEEK_FLAG_BACKWARD);
 	avcodec_flush_buffers(pAVctx);
 
 	return ret;
 }
-
 
 SwsContext* MFPVideo::getSwsctx() const {
 	//return avFrameToOpenCVBGRSwsContext;
@@ -274,19 +281,19 @@ SwsContext* MFPVideo::getSwsctx() const {
 }
 
 
-QImage MFPVideo::toQImage(const AVFrame* frame,SwsContext* avFrameToQImageSwsContext) {
-
-	uchar* buffer = (unsigned char*)av_malloc(av_image_get_buffer_size(AV_PIX_FMT_RGBA, frame->width, frame->height, 1));
+QImage MFPVideo::toQImage(const AVFrame* frame, SwsContext* avFrameToQImageSwsContext) {
+	uchar* buffer = (unsigned char*)
+		av_malloc(av_image_get_buffer_size(AV_PIX_FMT_RGBA, frame->width, frame->height, 1));
 	uchar* data[] = {buffer};
-	int    lines[4];
-	av_image_fill_linesizes(lines, AV_PIX_FMT_RGBA, frame->width);  // 使用像素格式pix_fmt和宽度填充图像的平面线条大小。
-	sws_scale(avFrameToQImageSwsContext,             // 缩放上下文
-		frame->data,            // 原图像数组
-		frame->linesize,        // 包含源图像每个平面步幅的数组
-		0,                        // 开始位置
-		frame->height,          // 行数
-		data,                     // 目标图像数组
-		lines);                   // 包含目标图像每个平面的步幅的数组
+	int lines[4];
+	av_image_fill_linesizes(lines, AV_PIX_FMT_RGBA, frame->width); // 使用像素格式pix_fmt和宽度填充图像的平面线条大小。
+	sws_scale(avFrameToQImageSwsContext, // 缩放上下文
+	          frame->data, // 原图像数组
+	          frame->linesize, // 包含源图像每个平面步幅的数组
+	          0, // 开始位置
+	          frame->height, // 行数
+	          data, // 目标图像数组
+	          lines); // 包含目标图像每个平面的步幅的数组
 	const QImage re = QImage(buffer, frame->width, frame->height, QImage::Format_RGBA8888).copy();
 	av_free(buffer);
 	return re;
@@ -309,4 +316,9 @@ cv::Mat MFPVideo::AVFrameToMat(const AVFrame* frame, SwsContext* avFrameToOpenCV
 	          cvLinesizes);
 
 	return resMat;
+}
+
+qint64 MFPVideo::toMsec(const qint64 msec, const AVRational* rational) {
+	return qRound64(
+		msec * (1000 * MFPVideo::rationalToDouble(rational)));
 }

@@ -159,7 +159,7 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="60,0,0,0,0,10,0">
+    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,60,1,1,1,1,0,10,0">
      <property name="spacing">
       <number>0</number>
      </property>
@@ -179,6 +179,13 @@
       <number>0</number>
      </property>
      <item>
+      <widget class="QPushButton" name="outputButton">
+       <property name="text">
+        <string>OUTPUT</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_3">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -190,6 +197,13 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>SPEED</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QComboBox" name="speedComboBox">

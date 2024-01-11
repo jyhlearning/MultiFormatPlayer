@@ -4,6 +4,7 @@
 #include "MFPluginBase.h"
 #include "MFPlayerWidget.h"
 #include "MFPlayerDecodeThread.h"
+#include "MFPlayerEncoderThread.h"
 #include "MFPFrameQueue.h"
 #include "MFPAudioQueue.h"
 #include "MFPAudioThread.h"
@@ -16,15 +17,19 @@ class MFPSINGLEPLAYER_EXPORT MFPSinglePlayer : public QObject, public MFPluginBa
 	Q_INTERFACES(MFPluginBase)
 
 private:
-	MFPlayerWidget* mFPlayerWidget;
-	MFPlayerThread* mFPlayerThread;
-	MFPAudioThread* mFPAudioThread;
 	MFPlayerDecodeThread* mFPlayerDecodeThread;
-	MFPlayerThreadState::statement state,stateBefore;
+	MFPlayerEncoderThread* mFPlayerEncodeThread;
+	MFPAudioThread* mFPAudioThread;
+	MFPlayerThread* mFPlayerThread;
+	MFPlayerWidget* mFPlayerWidget;
 	MFPFrameQueue* frameQueue;
 	MFPAudioQueue* audioQueue;
 	MFPVideo* mFPVideo;
 	MFPSTDClock* clock;
+	QStringList* resolutions;
+	QStringList* audioBitrates;
+	QStringList* videoBitrates;
+	MFPlayerThreadState::statement state,stateBefore;
 	void stopThreads();
 	void startPlay(MFPlayerThreadState::statement state);
 	void stopPlay();
@@ -40,11 +45,13 @@ public slots:
 	void onStateChange(MFPlayerThreadState::statement state);
 	void onProgress(qint64 msec);
 	void onSpeedChange(double speed);
+	void onExports(settings s);
 
 private slots:
 	void destroyThread();
 signals:
 	void startDecodeThread();
 	void startPlayThread(MFPlayerThreadState::statement sig);
+	void startEncodeThread();
 	void flagChange(bool state);
 };

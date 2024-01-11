@@ -38,12 +38,17 @@ public:
 	~MFPVideo();
 	SwsContext* getSwsctx() const;
 	SwrContext* getSwrctx() const;
+	AVCodecContext *getVideoCtx() const;
+	AVCodecContext* getAudioCtx() const;
+	AVStream* getVideoInStream() const;
+	AVStream* getAudioInStream() const;
 	int getSampleRate() const;
 	int getChannels() const;
+	qint64 getChannelsLayout() const;
 	std::pair<int, int> getResolution() const;
 
 	int init();
-	int getNextInfo(AVFrame* &frame);
+	int getNextInfo(AVFrame* &frame,int option=0);
 	int jumpTo(qint64 usec);
 	int getFrameRate() const;
 	qint64 getTotalTime() const;
@@ -53,4 +58,5 @@ public:
 	static QImage toQImage(const AVFrame* frame,SwsContext* avFrameToQImageSwsContext);
 	static cv::Mat AVFrameToMat(const AVFrame* frame,SwsContext * avFrameToOpenCVBGRSwsContext);
 	static qreal rationalToDouble(const AVRational* rational);
+	static qint64 toMsec(const qint64 msec, const AVRational* rational);
 };

@@ -1,15 +1,22 @@
 ﻿#include "MFPlayerWidget.h"
 #include <QCloseEvent>
+#include <QMessageBox>
 
 #include "QTime"
 
 MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	: QWidget(parent) {
 	widgetUi.setupUi(this);
-	infomationDialog = new QDialog;
+	infomationDialog = new QDialog(this);
 	infomationDialogUi.setupUi(infomationDialog);
-	settingsDialog = new QDialog;
+	settingsDialog = new QDialog(this);
 	settingsUi.setupUi(settingsDialog);
+	exportDialog = new QDialog(this);
+	exportDialog->setModal(true);
+	exportUi.setupUi(exportDialog);
+	fileOpenDialog = new QFileDialog(exportDialog);
+	fileOpenDialog->setModal(true);
+	fileOpenDialog->setFileMode(QFileDialog::Directory);
 	connect(widgetUi.playButton,SIGNAL(clicked()), this,SLOT(onPlayButton()));
 	connect(widgetUi.nextFrameButton,SIGNAL(clicked()), this,SLOT(onNextFrameButton()));
 	connect(widgetUi.lastFrameButton, SIGNAL(clicked()), this, SLOT(onLastFrameButton()));
@@ -17,6 +24,7 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	connect(widgetUi.backwardButton, SIGNAL(clicked()), this, SLOT(onBackwardButton()));
 	connect(widgetUi.infomationButton,SIGNAL(clicked()), this, SLOT(onInformationButton()));
 	connect(widgetUi.settingButton, SIGNAL(clicked()), this, SLOT(onSettingsButton()));
+	connect(widgetUi.outputButton,SIGNAL(clicked()), this,SLOT(onOutputButton()));
 
 	connect(widgetUi.timeSlider, SIGNAL(press()), this, SLOT(onSliderPressed()));
 	connect(widgetUi.timeSlider,SIGNAL(release()), this,SLOT(onSliderReleased()));
@@ -32,8 +40,10 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	connect(settingsUi.saturationSlider, SIGNAL(sliderMoved(int)), this, SLOT(onSaturationSlider()));
 	connect(settingsUi.saturationSlider, SIGNAL(release()), this, SLOT(onSaturationSlider()));
 
-	connect(settingsUi.resetButton,SIGNAL(clicked()),this,SLOT(onResetButton()));
+	connect(settingsUi.resetButton,SIGNAL(clicked()), this,SLOT(onResetButton()));
 
+	connect(exportUi.exportButton,SIGNAL(clicked()), this,SLOT(onExportButton()));
+	connect(exportUi.openFileButton,SIGNAL(clicked()), this,SLOT(onOpenFileButton()));
 	widgetUi.speedComboBox->addItem("0.5");
 	widgetUi.speedComboBox->addItem("1");
 	widgetUi.speedComboBox->addItem("2");
@@ -56,6 +66,49 @@ void MFPlayerWidget::setInformationDialog(const informaion& info) const {
 	                                   .arg(time.second(), 2, 10, QChar('0')));
 	infomationDialogUi.resolution->setText(
 		QString::number(info.resolution.first) + " × " + QString::number(info.resolution.second));
+}
+
+void MFPlayerWidget::setExportDialogResolution(const QStringList& list) const {
+	exportUi.resolutionComboBox->addItems(list);
+}
+
+void MFPlayerWidget::setExportDialogVideoBitRates(const QStringList& list) const {
+	exportUi.videoBitRatecomboBox->addItems(list);
+}
+
+void MFPlayerWidget::setExportDialogAudioBitRates(const QStringList& list) const {
+	exportUi.audioBitRateComboBox->addItems(list);
+}
+
+void MFPlayerWidget::setExportDefaultSettings(const settings& s) const {
+	exportUi.onlyVideoCheckBox->setChecked(!s.closeVideo);
+	exportUi.onlyAudioCheckBox->setChecked(!s.closeAudio);
+	exportUi.startTimeEdit->setTime(QTime(0, 0, 0).addMSecs(s.startPts));
+	exportUi.endTimeEdit->setTime(QTime(0, 0, 0).addMSecs(s.endPts));
+	addExportItem(exportUi.audioBitRateComboBox, QString::number(s.audioBitRate));
+	addExportItem(exportUi.videoBitRatecomboBox, QString::number(s.videoBitRate));
+	addExportItem(exportUi.resolutionComboBox, QString::number(s.outWidth) + "*" + QString::number(s.outHeight));
+	for (int i = 0; i < exportUi.resolutionComboBox->count(); i++) {
+		QStringList resolutions = exportUi.resolutionComboBox->itemText(i).split('*');
+		if (resolutions.size() == 2 && s.outWidth < resolutions[0].toInt() && s.outHeight < resolutions[1].toInt()) {
+			exportUi.resolutionComboBox->setItemData(i, 0, Qt::UserRole - 1);
+		}
+	}
+}
+
+void MFPlayerWidget::addExportItem(QComboBox* combox, const QString& text) const {
+	bool flag = false;
+	for (int i = 0; i < combox->count(); i++) {
+		if (combox->itemText(i) == text) {
+			flag = true;
+			combox->setCurrentIndex(i);
+			break;
+		}
+	}
+	if (!flag) {
+		combox->addItem(text);
+		combox->setCurrentIndex(combox->count() - 1);
+	}
 }
 
 void MFPlayerWidget::onNextFrameButton() {
@@ -82,8 +135,7 @@ void MFPlayerWidget::onBackwardButton() {
 
 void MFPlayerWidget::onInformationButton() { infomationDialog->show(); }
 
-void MFPlayerWidget::onResetButton()
-{
+void MFPlayerWidget::onResetButton() {
 	settingsUi.brightnessSlider->setValue(50);
 	settingsUi.contrastSlider->setValue(50);
 	settingsUi.saturationSlider->setValue(50);
@@ -95,7 +147,36 @@ void MFPlayerWidget::onResetButton()
 	widgetUi.videoWidget->setBrightness(0);
 	widgetUi.videoWidget->setSaturation(1);
 	widgetUi.videoWidget->setContrast(1);
+}
 
+void MFPlayerWidget::onOutputButton() { exportDialog->show(); }
+
+void MFPlayerWidget::onExportButton() {
+	settings s;
+	s.URL = exportUi.fileEdit->text();
+	if (s.URL.size() == 0) {
+		QMessageBox::critical(this, tr("error"), tr("请设置正确的文件名或文件路径"), QMessageBox::Discard);
+		return;
+	}
+	s.closeAudio = !exportUi.onlyAudioCheckBox->isChecked();
+	s.closeVideo = !exportUi.onlyVideoCheckBox->isChecked();
+	s.startPts = exportUi.startTimeEdit->time().msecsSinceStartOfDay();
+	s.endPts = exportUi.endTimeEdit->time().msecsSinceStartOfDay();
+	s.audioBitRate = exportUi.audioBitRateComboBox->currentText().toLongLong();
+	s.videoBitRate = exportUi.videoBitRatecomboBox->currentText().toLongLong();
+	QStringList resolutions = exportUi.resolutionComboBox->currentText().split('*');
+	if (resolutions.size() == 2) {
+		s.outWidth = resolutions[0].toInt();
+		s.outHeight = resolutions[1].toInt();
+		emit exports(s);
+	}
+	else
+		QMessageBox::critical(this, tr("error"), tr("请检查分辨率的配置文件"), QMessageBox::Discard);
+}
+
+void MFPlayerWidget::onOpenFileButton() {
+	exportUi.fileEdit->setText(
+		QFileDialog::getExistingDirectory(this, tr("选择文件保存路径"), "../../", QFileDialog::ShowDirsOnly) + '/');
 }
 
 void MFPlayerWidget::onSliderReleased() {
@@ -135,17 +216,20 @@ void MFPlayerWidget::onSettingsButton() { settingsDialog->show(); }
 
 void MFPlayerWidget::onBrightnessSlider() {
 	settingsUi.brightnessLabel->setText(QString::number(settingsUi.brightnessSlider->value()));
-	widgetUi.videoWidget->setBrightness((settingsUi.brightnessSlider->value()-50)*1.0/50);
+	widgetUi.videoWidget->setBrightness((settingsUi.brightnessSlider->value() - 50) * 1.0 / 50);
 }
 
 void MFPlayerWidget::onContrastSlider() {
 	settingsUi.contrastLabel->setText(QString::number(settingsUi.contrastSlider->value()));
-	widgetUi.videoWidget->setContrast(settingsUi.contrastSlider->value()  * 2.0 / 100);
+	widgetUi.videoWidget->setContrast(settingsUi.contrastSlider->value() * 2.0 / 100);
 }
 
 void MFPlayerWidget::onSaturationSlider() {
 	settingsUi.saturationLabel->setText(QString::number(settingsUi.saturationSlider->value()));
 	widgetUi.videoWidget->setSaturation(settingsUi.saturationSlider->value() * 2.0 / 100);
+}
+
+void MFPlayerWidget::onFileChoose() {
 }
 
 void MFPlayerWidget::onProgressChange(const qint64 sec) const {

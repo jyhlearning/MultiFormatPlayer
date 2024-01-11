@@ -117,6 +117,7 @@
     <ClCompile Include="MFPAudioThread.cpp" />
     <ClCompile Include="MFPControlSilder.cpp" />
     <ClCompile Include="MFPFrameQueue.cpp" />
+    <ClCompile Include="MFPlayerEncoderThread.cpp" />
     <ClCompile Include="MFPlayerThread.cpp" />
     <ClCompile Include="MFPOpenGLWidget.cpp" />
     <ClCompile Include="MFPSTDClock.cpp" />
@@ -125,9 +126,11 @@
     <ClInclude Include="MFPAudioQueue.h" />
     <QtMoc Include="MFPAudioThread.h" />
     <ClInclude Include="MFPDataBase.h" />
+    <ClInclude Include="MFPExportSettings.h" />
     <ClInclude Include="MFPFrameQueue.h" />
     <QtMoc Include="MFPlayerThread.h" />
     <QtMoc Include="MFPOpenGLWidget.h" />
+    <QtMoc Include="MFPlayerEncoderThread.h" />
     <ClInclude Include="MFPSTDClock.h" />
     <ClInclude Include="MFPVideo.h" />
     <QtMoc Include="MFPlayerWidget.h" />
@@ -139,6 +142,7 @@
     <ClCompile Include="MFPSinglePlayer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="MFPExport.ui" />
     <QtUic Include="MFPInfomation.ui" />
     <QtUic Include="MFPlayerWidget.ui" />
     <QtUic Include="MFPSettings.ui" />
@@ -147,9 +151,6 @@
     <ProjectReference Include="..\MFPluginBase\MFPluginBase.vcxproj">
       <Project>{343b7337-621b-4109-bbe2-271e8026f579}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="cpp.hint" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

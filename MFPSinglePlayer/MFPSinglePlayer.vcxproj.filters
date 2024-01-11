@@ -44,6 +44,9 @@
     <ClInclude Include="MFPSTDClock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MFPExportSettings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MFPSinglePlayer.h">
@@ -65,6 +68,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="MFPOpenGLWidget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="MFPlayerEncoderThread.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -99,6 +105,9 @@
     <ClCompile Include="MFPOpenGLWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MFPlayerEncoderThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="MFPlayerWidget.ui">
@@ -110,8 +119,8 @@
     <QtUic Include="MFPSettings.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="cpp.hint" />
+    <QtUic Include="MFPExport.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
 </Project>

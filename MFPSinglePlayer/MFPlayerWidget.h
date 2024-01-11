@@ -4,6 +4,9 @@
 #include "ui_MFPlayerWidget.h"
 #include "ui_MFPInfomation.h"
 #include "ui_MFPSettings.h"
+#include "ui_MFPExport.h"
+#include "MFPExportSettings.h"
+#include "QFileDialog"
 namespace WidgetStete {
 	enum statement {
 		PLAY,
@@ -28,18 +31,25 @@ public:
 	~MFPlayerWidget();
 	void changeButton(QString qString);
 	void setInformationDialog(const informaion &info) const;
+	void setExportDialogResolution(const QStringList& list)const;
+	void setExportDialogVideoBitRates(const QStringList& list)const;
+	void setExportDialogAudioBitRates(const QStringList& list)const;
+	void setExportDefaultSettings(const settings &s) const;
 signals:
 	void play(WidgetStete::statement sig);
 	void progress(qint64 msec);
 	void speed(double s);
 	void stop();
 	void volume(int v);
-
+	void exports(settings s);
 private:
 	Ui::MFPlayerWidgetClass widgetUi;
 	Ui::infomationDialog infomationDialogUi;
 	Ui::settingsDialog settingsUi;
-	QDialog *infomationDialog,*settingsDialog;
+	Ui::exportDialog exportUi;
+	QDialog* infomationDialog, * settingsDialog, * exportDialog;
+	QFileDialog *fileOpenDialog;
+	void addExportItem(QComboBox* combox,const QString & text) const;
 private slots:
 	void onPlayButton();
 	void onNextFrameButton();
@@ -48,6 +58,9 @@ private slots:
 	void onBackwardButton();
 	void onInformationButton();
 	void onResetButton();
+	void onOutputButton();
+	void onExportButton();
+	void onOpenFileButton();
 
 	void onCurrentIndexChanged(int c);
 
@@ -58,6 +71,8 @@ private slots:
 	void onBrightnessSlider();
 	void onContrastSlider();
 	void onSaturationSlider();
+
+	void onFileChoose();
 public slots:
 	void onFrameChange(const QImage qImage) const;
 	void onProgressChange(const qint64 sec) const;
