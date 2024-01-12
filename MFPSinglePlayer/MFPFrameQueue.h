@@ -6,7 +6,6 @@
 
 class MFPFrameQueue : public MFPDataBase<AVFrame*> {
 private:
-	SwsContext* ctx;
 	qint64 totalTime;
 	qint64 lastPts;
 	qint64 frameRate;
@@ -22,10 +21,6 @@ public:
 	MFPFrameQueue(int c = 30);
 
 	void initQueue();
-
-	void setSwsctx(SwsContext* ctx);
-
-	SwsContext* getSwsctx() const;
 
 	void setTotalTime(const qint64 msec);
 

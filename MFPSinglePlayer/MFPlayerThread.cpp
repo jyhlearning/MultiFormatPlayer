@@ -9,7 +9,7 @@ void MFPlayerThread::delay(int msec) {
 	while (QTime::currentTime() < dieTime && !isStop)
 		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
-
+int temp = 0;
 int MFPlayerThread::playNextFrame(AVFrame* &frame) {
 	if (isStop || frameQueue->safeGet(frame)==-1)
 		return -1;
@@ -17,7 +17,7 @@ int MFPlayerThread::playNextFrame(AVFrame* &frame) {
 	cv::cvtColor(mat, mat, cv::COLOR_BGR2RGB);
 	QImage image(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);*/
 	frameQueue->setLastPts(frame->pts);
-	emit sendFrame(MFPVideo::toQImage(frame, frameQueue->getSwsctx()));
+	emit sendFrame(MFPVideo::toQImage(frame, initSwsctx(frame)));
 	emit sendProgress(frame->pts);
 	return 0;
 }
@@ -71,16 +71,36 @@ void MFPlayerThread::clearFrameQueue() {
 	//frameQueue->playLock.unlock();
 }
 
+SwsContext* MFPlayerThread::initSwsctx(AVFrame* frame)
+{
+	if (!avFrameToQImageSwsContext) {
+		avFrameToQImageSwsContext = sws_getContext(
+			frame->width,
+			frame->height,
+			(AVPixelFormat)frame->format,
+			frame->width,
+			frame->height,
+			AVPixelFormat::AV_PIX_FMT_RGBA,
+			SWS_FAST_BILINEAR,
+			nullptr, nullptr, nullptr
+		);
+	}
+	return avFrameToQImageSwsContext;
+}
+
 void MFPlayerThread::setFlag(bool flag) { isStop = flag; }
 
 MFPlayerThread::MFPlayerThread(MFPFrameQueue* frame,MFPSTDClock* clock) {
 	isStop = false;
 	frameQueue = frame;
 	this->clock = clock;
+	avFrameToQImageSwsContext = nullptr;
 }
 
 MFPlayerThread::~MFPlayerThread() {
 	clearFrameQueue();
+	if(avFrameToQImageSwsContext)
+		sws_freeContext(avFrameToQImageSwsContext);
 }
 
 void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {

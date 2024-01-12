@@ -25,10 +25,13 @@ private:
 	bool isStop;
 	MFPFrameQueue* frameQueue;
 	MFPSTDClock* clock;
+	SwsContext* avFrameToQImageSwsContext;
 	void delay(int msec);
-	int playNextFrame(AVFrame* &frame);
+	int playNextFrame(AVFrame* & frame);
 	void continousPlayBack();
 	void clearFrameQueue();
+	SwsContext* initSwsctx(AVFrame* frame);
+
 public:
 	void setFlag(bool flag);
 	MFPlayerThread(MFPFrameQueue* frame, MFPSTDClock* clock);

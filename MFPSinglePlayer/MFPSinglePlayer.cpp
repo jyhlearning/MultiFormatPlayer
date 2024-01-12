@@ -20,13 +20,12 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	audioBitrates = new QStringList({"320000", "128000", "64000"}); //kbps
 
 
-	frameQueue->setSwsctx(mFPVideo->getSwsctx());
 	frameQueue->setFrameRate(mFPVideo->getFrameRate());
 	frameQueue->setTotalTime(mFPVideo->getTotalTime());
 	audioQueue->setFrameRate(mFPVideo->getFrameRate());
-	audioQueue->setSwrctx(mFPVideo->getSwrctx());
 	audioQueue->setChannels(mFPVideo->getChannels());
 	audioQueue->setSampleRate(mFPVideo->getSampleRate());
+	audioQueue->setSampleFmt(mFPVideo->getSampleFmt());
 
 	mFPlayerWidget->setInformationDialog({
 		mFPVideo->getResolution(), mFPVideo->getTotalTime(), mFPVideo->getFrameRate(), mFPVideo->getChannels()

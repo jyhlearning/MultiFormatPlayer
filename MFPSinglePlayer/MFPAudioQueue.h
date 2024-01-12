@@ -9,8 +9,8 @@ private:
 	int sampleRate, channels;
 	qint64 lastPts;
 	qint64 frameRate;
-	SwrContext* swr_ctx;
 	double speed;
+	AVSampleFormat sampleFmt;
 public:
 	bool frameIsEnd;
 	QMutex decodeLock, audioLock;
@@ -31,8 +31,6 @@ public:
 
 	double getSpeed() const;
 
-	void setSwrctx(SwrContext* swr_ctx);
-
 	void setChannels(int c);
 
 	int getChannels() const;
@@ -41,6 +39,8 @@ public:
 
 	void setSampleRate(int s);
 
-	SwrContext* getSwrctx();
+	void setSampleFmt(const AVSampleFormat fmt);
+
+	AVSampleFormat getSampleFmt()const;
 };
 

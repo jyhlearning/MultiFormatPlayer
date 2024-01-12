@@ -15,7 +15,7 @@ extern "C" {
 #include <libavutil/imgutils.h>
 #include <libswresample/swresample.h>
 }
-
+static enum AVPixelFormat g_pixelFormat;
 class MFPVideo {
 private:
 	bool parse;
@@ -30,18 +30,19 @@ private:
 	AVFormatContext* pFormatCtx;
 	QQueue<AVFrame*> pQueue, aQueue;
 	qint64 totalTime;
-	SwrContext* swr_ctx;
 	//SwsContext* avFrameToOpenCVBGRSwsContext;
-	SwsContext* avFrameToQImageSwsContext;
+	
+	QList<int> m_HWDeviceTypes;
+	AVBufferRef* hw_device_ctx = nullptr;
+	void initHWDecoder(const AVCodec* codec, AVCodecContext *ctx);
 public:
 	MFPVideo();
 	~MFPVideo();
-	SwsContext* getSwsctx() const;
-	SwrContext* getSwrctx() const;
 	AVCodecContext *getVideoCtx() const;
 	AVCodecContext* getAudioCtx() const;
 	AVStream* getVideoInStream() const;
 	AVStream* getAudioInStream() const;
+	AVSampleFormat getSampleFmt() const;
 	int getSampleRate() const;
 	int getChannels() const;
 	qint64 getChannelsLayout() const;

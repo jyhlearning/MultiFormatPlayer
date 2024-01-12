@@ -146,7 +146,6 @@ void MFPOpenGLWidget::setImage(const QImage& image) {
 	//设置纹理细节
 	texture->setLevelofDetailBias(-1); //值越小，图像越清晰
 	texture->setSize(image.width(), image.height());
-
 	//更新图像
 	update();
 }

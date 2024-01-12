@@ -13,10 +13,12 @@ private:
 	QIODevice* io;
 	MFPAudioQueue *audioQueue;
 	MFPSTDClock* clock;
+	SwrContext* swr_ctx;
 	void delay(int msec);
 	int playNextFrame(AVFrame* &frame);
 	void continousPlayBack();
 	void clearAudioQueue();
+	SwrContext* initSwrctx(AVFrame* frame,AVSampleFormat fmt);
 public:
 	MFPAudioThread(MFPAudioQueue* audioQueue,MFPSTDClock *clock);
 	~MFPAudioThread();

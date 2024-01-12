@@ -16,8 +16,6 @@ void MFPFrameQueue::initQueue() {
 	init();
 }
 
-void MFPFrameQueue::setSwsctx(SwsContext* ctx) { this->ctx = ctx; }
-SwsContext* MFPFrameQueue::getSwsctx() const { return ctx; }
 void MFPFrameQueue::setTotalTime(const qint64 msec) { totalTime = msec; }
 
 void MFPFrameQueue::setLastPts(const qint64 pts) {

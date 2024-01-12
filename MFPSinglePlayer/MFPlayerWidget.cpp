@@ -63,8 +63,6 @@ MFPlayerWidget::~MFPlayerWidget() {
 	delete infomationDialog;
 	delete settingsDialog;
 	delete exportDialog;
-	delete fileOpenDialog;
-	delete progressDialog;
 }
 
 void MFPlayerWidget::changeButton(QString qString) { widgetUi.playButton->setText(qString); }

@@ -43,13 +43,21 @@ int MFPVideo::init() {
 	pAVctx = avcodec_alloc_context3(nullptr);
 	aAVctx = avcodec_alloc_context3(nullptr);
 
+	pAVctx->thread_count = 4;
+	pAVctx->flags2 |= AV_CODEC_FLAG2_FAST;
+	aAVctx->thread_count = 4;
+	aAVctx->flags2 |= AV_CODEC_FLAG2_FAST;
+
+
 	//查找解码器
 	avcodec_parameters_to_context(pAVctx, pFormatCtx->streams[videoIndex]->codecpar);
 	avcodec_parameters_to_context(aAVctx, pFormatCtx->streams[audioIndex]->codecpar);
 
 	pCodec = avcodec_find_decoder(pAVctx->codec_id);
 	aCodec = avcodec_find_decoder(aAVctx->codec_id);
-
+	
+	initHWDecoder(pCodec,pAVctx);
+	initHWDecoder(aCodec,aAVctx);
 	if (pCodec == nullptr || aCodec == nullptr) {
 		avcodec_close(pAVctx);
 		avformat_close_input(&pFormatCtx);
@@ -82,28 +90,7 @@ int MFPVideo::init() {
 	//	SWS_FAST_BILINEAR,
 	//	nullptr, nullptr, nullptr
 	//);
-
-	avFrameToQImageSwsContext = sws_getContext(
-		pAVctx->width,
-		pAVctx->height,
-		pAVctx->pix_fmt,
-		pAVctx->width,
-		pAVctx->height,
-		AVPixelFormat::AV_PIX_FMT_RGBA,
-		SWS_FAST_BILINEAR,
-		nullptr, nullptr, nullptr
-	);
-
-	// 初始化音频重采样上下文
-	swr_ctx = swr_alloc();
-	av_opt_set_int(swr_ctx, "in_channel_layout", aAVctx->channel_layout, 0);
-	av_opt_set_int(swr_ctx, "out_channel_layout", AV_CH_LAYOUT_STEREO, 0);
-	av_opt_set_int(swr_ctx, "in_sample_rate", aAVctx->sample_rate, 0);
-	av_opt_set_int(swr_ctx, "out_sample_rate", 44100, 0);
-	av_opt_set_sample_fmt(swr_ctx, "in_sample_fmt", aAVctx->sample_fmt, 0);
-	av_opt_set_sample_fmt(swr_ctx, "out_sample_fmt", AV_SAMPLE_FMT_S16, 0);
-	swr_init(swr_ctx);
-
+	
 	totalTime = 1000 * pFormatCtx->duration / AV_TIME_BASE;
 	parse = true;
 	hasFree = false;
@@ -123,9 +110,9 @@ MFPVideo::~MFPVideo() { freeResources(); }
 
 void MFPVideo::freeResources() {
 	if (!hasFree) {
-		swr_free(&swr_ctx);
+		
 		//sws_freeContext(avFrameToOpenCVBGRSwsContext);
-		sws_freeContext(avFrameToQImageSwsContext);
+		
 		av_frame_free(&pAVframe);
 		avcodec_close(pAVctx);
 		avformat_close_input(&pFormatCtx);
@@ -134,11 +121,70 @@ void MFPVideo::freeResources() {
 	}
 }
 
-SwrContext* MFPVideo::getSwrctx() const { return swr_ctx; }
+AVPixelFormat get_hw_format(AVCodecContext* s, const enum AVPixelFormat* fmt)
+{
+	Q_UNUSED(s)
+		const enum AVPixelFormat* p;
+
+	for (p = fmt; *p != -1; p++)
+	{
+		if (*p == g_pixelFormat)
+		{
+			return *p;
+		}
+	}
+
+	// 当同时打开太多路视频时，如果超过了GPU的能力，可能会返回找不到解码帧格式
+	return AV_PIX_FMT_NONE;
+}
+
+void MFPVideo::initHWDecoder(const AVCodec* codec, AVCodecContext *ctx) {
+	if (!codec) return;
+
+	for (int i = 0; ; i++) {
+		const AVCodecHWConfig* config = avcodec_get_hw_config(codec, i); // 检索编解码器支持的硬件配置。
+
+		AVHWDeviceType type = AV_HWDEVICE_TYPE_NONE;      // ffmpeg支持的硬件解码器
+		QStringList strTypes;
+		while ((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE)       // 遍历支持的设备类型。
+		{
+			m_HWDeviceTypes.append(type);
+			const char* ctype = av_hwdevice_get_type_name(type);  // 获取AVHWDeviceType的字符串名称。
+			if (ctype)
+			{
+				strTypes.append(QString(ctype));
+			}
+		}
+		if (!config) {
+			return; // 没有找到支持的硬件配置
+		}
+
+		if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX) // 判断是否是设备类型
+		{
+			for (auto i : m_HWDeviceTypes) {
+				if (config->device_type == AVHWDeviceType(i)) // 判断设备类型是否是支持的硬件解码器
+				{
+					g_pixelFormat = config->pix_fmt;
+
+					// 打开指定类型的设备，并为其创建AVHWDeviceContext。
+					int ret = av_hwdevice_ctx_create(&hw_device_ctx, config->device_type, nullptr, nullptr, 0);
+					if (ret < 0) {
+						return;
+					}
+					ctx->hw_device_ctx = av_buffer_ref(hw_device_ctx); // 创建一个对AVBuffer的新引用。
+					ctx->get_format = get_hw_format; // 由一些解码器调用，以选择将用于输出帧的像素格式
+					return;
+				}
+			}
+		}
+	}
+}
 
 int MFPVideo::getChannels() const { return aAVctx->channels; }
 
 int MFPVideo::getSampleRate() const { return aAVctx->sample_rate; }
+
+AVSampleFormat MFPVideo::getSampleFmt() const { return aAVctx->sample_fmt; }
 
 qint64 MFPVideo::getChannelsLayout() const { return aAVctx->channel_layout; }
 
@@ -195,7 +241,13 @@ int MFPVideo::getNextInfo(AVFrame* & frame, int option) {
 				// 一个avPacket可能包含多帧数据，所以需要使用while循环一直读取
 				while (avcodec_receive_frame(pAVctx, pAVframe) == 0) {
 					AVFrame* dst = av_frame_alloc();
-					av_frame_move_ref(dst, pAVframe);
+					if(pAVframe->data[0])
+						av_frame_move_ref(dst, pAVframe);
+					else {
+						int ret = av_hwframe_transfer_data(dst, pAVframe, 0);
+						av_frame_copy_props(dst, pAVframe);
+						av_frame_unref(pAVframe);
+					}
 					pQueue.push_back(dst);
 				}
 			}
@@ -208,14 +260,20 @@ int MFPVideo::getNextInfo(AVFrame* & frame, int option) {
 		else if (pAVpkt->stream_index == audioIndex) {
 			//解码一帧音频数据
 			if (option == 0) {
-				pAVpkt->pts = toMsec(pAVpkt->pts,&pFormatCtx->streams[audioIndex]->time_base);
+				pAVpkt->pts = toMsec(pAVpkt->pts, &pFormatCtx->streams[audioIndex]->time_base);
 				pAVpkt->dts = toMsec(pAVpkt->dts, &pFormatCtx->streams[audioIndex]->time_base);
 			}
 			if (avcodec_send_packet(aAVctx, pAVpkt) == 0) {
 				// 一个avPacket可能包含多帧数据，所以需要使用while循环一直读取
 				while (avcodec_receive_frame(aAVctx, pAVframe) == 0) {
 					AVFrame* dst = av_frame_alloc();
-					av_frame_move_ref(dst, pAVframe);
+					if (pAVframe->data[0])
+						av_frame_move_ref(dst, pAVframe);
+					else {
+						int ret = av_hwframe_transfer_data(dst, pAVframe, 0);
+						av_frame_copy_props(dst, pAVframe);
+						av_frame_unref(pAVframe);
+					}
 					aQueue.push_back(dst);
 				}
 			}
@@ -235,7 +293,13 @@ int MFPVideo::getNextInfo(AVFrame* & frame, int option) {
 		while (avcodec_receive_frame(pAVctx, pAVframe) == 0) {
 			flag2 = false;
 			AVFrame* dst = av_frame_alloc();
-			av_frame_move_ref(dst, pAVframe);
+			if (pAVframe->data[0])
+				av_frame_move_ref(dst, pAVframe);
+			else {
+				int ret = av_hwframe_transfer_data(dst, pAVframe, 0);
+				av_frame_copy_props(dst, pAVframe);
+				av_frame_unref(pAVframe);
+			}
 			pQueue.push_back(dst);
 		}
 	}
@@ -273,11 +337,6 @@ int MFPVideo::jumpTo(qint64 msec) {
 	avcodec_flush_buffers(pAVctx);
 
 	return ret;
-}
-
-SwsContext* MFPVideo::getSwsctx() const {
-	//return avFrameToOpenCVBGRSwsContext;
-	return avFrameToQImageSwsContext;
 }
 
 

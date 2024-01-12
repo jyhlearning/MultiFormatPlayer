@@ -26,8 +26,6 @@ void MFPAudioQueue::setSpeed(double s) { speed = s; }
 
 double MFPAudioQueue::getSpeed() const { return speed; }
 
-void MFPAudioQueue::setSwrctx(SwrContext* swr_ctx) { this->swr_ctx = swr_ctx; }
-
 void MFPAudioQueue::setChannels(int c) { channels = c; }
 
 int MFPAudioQueue::getChannels() const { return channels; }
@@ -36,4 +34,13 @@ int MFPAudioQueue::getSampleRate() const { return sampleRate; }
 
 void MFPAudioQueue::setSampleRate(int s) { sampleRate = s; }
 
-SwrContext* MFPAudioQueue::getSwrctx() { return swr_ctx; }
+void MFPAudioQueue::setSampleFmt(const AVSampleFormat fmt) 
+{
+	sampleFmt = fmt;
+}
+
+AVSampleFormat MFPAudioQueue::getSampleFmt() const
+{
+	return sampleFmt;
+}
+
