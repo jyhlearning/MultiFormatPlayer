@@ -10,15 +10,14 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	mFPVideo->init();
 
 	mFPlayerWidget = new MFPlayerWidget;
-	mFPlayerThread = new MFPlayerThread(frameQueue,clock);
-	mFPAudioThread = new MFPAudioThread(audioQueue,clock);
-	mFPlayerDecodeThread = new MFPlayerDecodeThread(frameQueue,audioQueue, mFPVideo);
+	mFPlayerThread = new MFPlayerThread(frameQueue, clock);
+	mFPAudioThread = new MFPAudioThread(audioQueue, clock);
+	mFPlayerDecodeThread = new MFPlayerDecodeThread(frameQueue, audioQueue, mFPVideo);
 	mFPlayerEncodeThread = new MFPlayerEncoderThread(mFPVideo);
 
-	resolutions = new QStringList({"320*240","640*480","720*480","1280*720","1920*1080","2560*1440"});
-	videoBitrates = new QStringList({ "20000000","7552000","4992000","3072000","2496000" });//kbps
-	audioBitrates = new QStringList({ "320000","128000","64000" });//kbps
-
+	resolutions = new QStringList({"320*240", "640*480", "720*480", "1280*720", "1920*1080", "2560*1440"});
+	videoBitrates = new QStringList({"20000000", "7552000", "4992000", "3072000", "2496000"}); //kbps
+	audioBitrates = new QStringList({"320000", "128000", "64000"}); //kbps
 
 
 	frameQueue->setSwsctx(mFPVideo->getSwsctx());
@@ -29,7 +28,9 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	audioQueue->setChannels(mFPVideo->getChannels());
 	audioQueue->setSampleRate(mFPVideo->getSampleRate());
 
-	mFPlayerWidget->setInformationDialog({ mFPVideo->getResolution(),mFPVideo->getTotalTime(),mFPVideo->getFrameRate(),mFPVideo->getChannels()});
+	mFPlayerWidget->setInformationDialog({
+		mFPVideo->getResolution(), mFPVideo->getTotalTime(), mFPVideo->getFrameRate(), mFPVideo->getChannels()
+	});
 	mFPlayerWidget->setExportDialogAudioBitRates(*audioBitrates);
 	mFPlayerWidget->setExportDialogVideoBitRates(*videoBitrates);
 	mFPlayerWidget->setExportDialogResolution(*resolutions);
@@ -48,8 +49,8 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	connect(this, SIGNAL(startEncodeThread()), mFPlayerEncodeThread, SLOT(encode()));
 	connect(this, SIGNAL(startDecodeThread()), mFPlayerDecodeThread, SLOT(decode()));
 	connect(this, SIGNAL(startPlayThread(MFPlayerThreadState::statement)), mFPAudioThread,
-		SLOT(onPlay(MFPlayerThreadState::statement)));
-	connect(this,SIGNAL(startPlayThread(MFPlayerThreadState::statement)), mFPlayerThread,
+	        SLOT(onPlay(MFPlayerThreadState::statement)));
+	connect(this, SIGNAL(startPlayThread(MFPlayerThreadState::statement)), mFPlayerThread,
 	        SLOT(onPlay(MFPlayerThreadState::statement)));
 	connect(mFPlayerThread,SIGNAL(sendFrame(QImage)), mFPlayerWidget,SLOT(onFrameChange(QImage)));
 	connect(mFPlayerThread,SIGNAL(stateChange(MFPlayerThreadState::statement)), this,
@@ -62,8 +63,11 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	connect(mFPlayerWidget,SIGNAL(play(WidgetStete::statement)), this,SLOT(action(WidgetStete::statement)));
 	connect(mFPlayerWidget,SIGNAL(progress(qint64)), this, SLOT(onProgress(qint64)));
 	connect(mFPlayerWidget,SIGNAL(speed(double)), this, SLOT(onSpeedChange(double)));
-	connect(mFPlayerWidget,SIGNAL(exports(settings)),this,SLOT(onExports(settings)));
-	connect(mFPlayerWidget, SIGNAL(volume(int)), mFPAudioThread, SLOT(onVolume(int)));
+	connect(mFPlayerWidget,SIGNAL(exports(settings)), this,SLOT(onExports(settings)));
+	connect(mFPlayerWidget,SIGNAL(volume(int)), mFPAudioThread, SLOT(onVolume(int)));
+	connect(mFPlayerWidget,SIGNAL(cancel()), this, SLOT(onCancel()));
+
+	connect(mFPlayerEncodeThread, SIGNAL(progress(qint64)), mFPlayerWidget, SLOT(onProgress(qint64)));
 
 	mFPlayerDecodeThread->thread()->start();
 	mFPlayerThread->thread()->start();
@@ -100,7 +104,7 @@ void MFPSinglePlayer::stopThreads() {
 		mFPAudioThread->thread()->quit();
 		mFPAudioThread->thread()->wait();
 	}
-	if(mFPlayerEncodeThread->thread()->isRunning()) {
+	if (mFPlayerEncodeThread->thread()->isRunning()) {
 		mFPlayerEncodeThread->thread()->quit();
 		mFPlayerEncodeThread->thread()->wait();
 	}
@@ -214,9 +218,7 @@ void MFPSinglePlayer::onProgress(qint64 msec) {
 	audioQueue->setLastPts(msec);
 	if (stateBefore == MFPlayerThreadState::PLAYING)
 		startPlay(MFPlayerThreadState::CONTINUEPLAY);
-	else {
-		startPlay(MFPlayerThreadState::NEXTFRAME);
-	}
+	else { startPlay(MFPlayerThreadState::NEXTFRAME); }
 }
 
 void MFPSinglePlayer::onSpeedChange(double speed) {
@@ -227,13 +229,14 @@ void MFPSinglePlayer::onSpeedChange(double speed) {
 		startPlay(MFPlayerThreadState::CONTINUEPLAY);
 }
 
-void MFPSinglePlayer::onExports(settings s)
-{
+void MFPSinglePlayer::onExports(settings s) {
 	stopPlay();
-	frameQueue->setLastPts(s.startPts);
-	audioQueue->setLastPts(s.startPts);
 	mFPVideo->jumpTo(frameQueue->getLastPts());
 	mFPlayerEncodeThread->setProfile(s);
 	mFPlayerEncodeThread->setFlag(false);
 	emit startEncodeThread();
+}
+
+void MFPSinglePlayer::onCancel() {
+	mFPlayerEncodeThread->setFlag(true);
 }

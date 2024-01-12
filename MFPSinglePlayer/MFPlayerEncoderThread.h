@@ -18,5 +18,8 @@ public:
 	MFPlayerEncoderThread(MFPVideo* mFPVideo);
 public slots:
 	int encode();
+signals:
+	void progress(qint64 p);
+
 };
 

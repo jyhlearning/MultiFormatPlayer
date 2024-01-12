@@ -46,6 +46,7 @@ public slots:
 	void onProgress(qint64 msec);
 	void onSpeedChange(double speed);
 	void onExports(settings s);
+	void onCancel();
 
 private slots:
 	void destroyThread();

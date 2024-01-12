@@ -136,8 +136,10 @@ int MFPlayerEncoderThread::encode() {
 		temp = frame
 			       ? MFPVideo::toMsec(frame->pts, &(ret == 2 ? videoInStream->time_base : audioInStream->time_base))
 			       : temp;
+		emit progress(temp);
 	}
 	//防止中途退出造成内存泄漏
+	emit progress(s.endPts);
 	if (ret > 0)
 		av_frame_free(&frame);
 	writeFrame(packet, nullptr, videoInStream, videoStream, videoEncodeContext, outputFormatContext);

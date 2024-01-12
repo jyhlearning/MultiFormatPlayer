@@ -7,6 +7,7 @@
 #include "ui_MFPExport.h"
 #include "MFPExportSettings.h"
 #include "QFileDialog"
+#include "QProgressDialog"
 namespace WidgetStete {
 	enum statement {
 		PLAY,
@@ -42,6 +43,7 @@ signals:
 	void stop();
 	void volume(int v);
 	void exports(settings s);
+	void cancel();
 private:
 	Ui::MFPlayerWidgetClass widgetUi;
 	Ui::infomationDialog infomationDialogUi;
@@ -49,6 +51,7 @@ private:
 	Ui::exportDialog exportUi;
 	QDialog* infomationDialog, * settingsDialog, * exportDialog;
 	QFileDialog *fileOpenDialog;
+	QProgressDialog* progressDialog;
 	void addExportItem(QComboBox* combox,const QString & text) const;
 private slots:
 	void onPlayButton();
@@ -73,10 +76,13 @@ private slots:
 	void onSaturationSlider();
 
 	void onFileChoose();
+
 public slots:
 	void onFrameChange(const QImage qImage) const;
 	void onProgressChange(const qint64 sec) const;
 	void setSliderRange(const qint64 min, const qint64 max) const;
 	void setForwardLable(qint64 msec) const;
 	void setBackwardLable(qint64 msec) const;
+	void onProgress(qint64 p);
+	void onCancel();
 };

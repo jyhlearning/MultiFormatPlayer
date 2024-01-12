@@ -17,6 +17,12 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	fileOpenDialog = new QFileDialog(exportDialog);
 	fileOpenDialog->setModal(true);
 	fileOpenDialog->setFileMode(QFileDialog::Directory);
+	progressDialog = new QProgressDialog(exportDialog);
+	progressDialog->close();
+	progressDialog->setModal(true);
+	progressDialog->setWindowTitle(tr("请等待"));
+	progressDialog->setLabelText(tr("导出中..."));
+	progressDialog->setCancelButtonText(tr("终止"));
 	connect(widgetUi.playButton,SIGNAL(clicked()), this,SLOT(onPlayButton()));
 	connect(widgetUi.nextFrameButton,SIGNAL(clicked()), this,SLOT(onNextFrameButton()));
 	connect(widgetUi.lastFrameButton, SIGNAL(clicked()), this, SLOT(onLastFrameButton()));
@@ -44,6 +50,8 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 
 	connect(exportUi.exportButton,SIGNAL(clicked()), this,SLOT(onExportButton()));
 	connect(exportUi.openFileButton,SIGNAL(clicked()), this,SLOT(onOpenFileButton()));
+
+	connect(progressDialog, SIGNAL(canceled()), this, SLOT(onCancel()));
 	widgetUi.speedComboBox->addItem("0.5");
 	widgetUi.speedComboBox->addItem("1");
 	widgetUi.speedComboBox->addItem("2");
@@ -51,7 +59,13 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	widgetUi.speedComboBox->setCurrentIndex(1);
 }
 
-MFPlayerWidget::~MFPlayerWidget() { delete infomationDialog; }
+MFPlayerWidget::~MFPlayerWidget() {
+	delete infomationDialog;
+	delete settingsDialog;
+	delete exportDialog;
+	delete fileOpenDialog;
+	delete progressDialog;
+}
 
 void MFPlayerWidget::changeButton(QString qString) { widgetUi.playButton->setText(qString); }
 
@@ -166,6 +180,8 @@ void MFPlayerWidget::onExportButton() {
 	s.videoBitRate = exportUi.videoBitRatecomboBox->currentText().toLongLong();
 	QStringList resolutions = exportUi.resolutionComboBox->currentText().split('*');
 	if (resolutions.size() == 2) {
+		progressDialog->setRange(s.startPts, s.endPts);
+		progressDialog->show();
 		s.outWidth = resolutions[0].toInt();
 		s.outHeight = resolutions[1].toInt();
 		emit exports(s);
@@ -258,6 +274,12 @@ void MFPlayerWidget::setBackwardLable(qint64 msec) const {
 	                                .arg(time.hour(), 2, 10, QChar('0'))
 	                                .arg(time.minute(), 2, 10, QChar('0'))
 	                                .arg(time.second(), 2, 10, QChar('0')));
+}
+
+void MFPlayerWidget::onProgress(qint64 p) { progressDialog->setValue(p); }
+
+void MFPlayerWidget::onCancel() {
+	emit cancel();
 }
 
 
