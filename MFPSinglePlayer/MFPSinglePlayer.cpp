@@ -230,7 +230,7 @@ void MFPSinglePlayer::onSpeedChange(double speed) {
 
 void MFPSinglePlayer::onExports(settings s) {
 	stopPlay();
-	mFPVideo->jumpTo(frameQueue->getLastPts());
+	mFPVideo->jumpTo(s.startPts);
 	mFPlayerEncodeThread->setProfile(s);
 	mFPlayerEncodeThread->setFlag(false);
 	emit startEncodeThread();

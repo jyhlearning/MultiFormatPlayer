@@ -57,7 +57,6 @@ int MFPVideo::init() {
 	aCodec = avcodec_find_decoder(aAVctx->codec_id);
 	
 	initHWDecoder(pCodec,pAVctx);
-	initHWDecoder(aCodec,aAVctx);
 	if (pCodec == nullptr || aCodec == nullptr) {
 		avcodec_close(pAVctx);
 		avformat_close_input(&pFormatCtx);
@@ -227,81 +226,28 @@ bool MFPVideo::isParse() const { return parse; }
 
 int MFPVideo::getNextInfo(AVFrame* & frame, int option) {
 	bool flag1 = true, flag2 = true;
+	int ret = 0;
 	if (av_read_frame(pFormatCtx, pAVpkt) >= 0) {
 		//读取一帧未解码的数据
 		flag1 = false;
 		//如果是视频数据
 		if (pAVpkt->stream_index == videoIndex) {
 			//解码一帧视频数据
-			if (option == 0) {
-				pAVpkt->pts = toMsec(pAVpkt->pts, &pFormatCtx->streams[videoIndex]->time_base);
-				pAVpkt->dts = toMsec(pAVpkt->dts, &pFormatCtx->streams[videoIndex]->time_base);
-			}
-			if (avcodec_send_packet(pAVctx, pAVpkt) == 0) {
-				// 一个avPacket可能包含多帧数据，所以需要使用while循环一直读取
-				while (avcodec_receive_frame(pAVctx, pAVframe) == 0) {
-					AVFrame* dst = av_frame_alloc();
-					if(pAVframe->data[0])
-						av_frame_move_ref(dst, pAVframe);
-					else {
-						int ret = av_hwframe_transfer_data(dst, pAVframe, 0);
-						av_frame_copy_props(dst, pAVframe);
-						av_frame_unref(pAVframe);
-					}
-					pQueue.push_back(dst);
-				}
-			}
-			else {
-				qDebug("Decode Error.\n");
-				av_packet_unref(pAVpkt);
-				return -1;
-			}
+			ret = readFrame(videoIndex,option,pAVctx,pQueue);
 		}
 		else if (pAVpkt->stream_index == audioIndex) {
 			//解码一帧音频数据
-			if (option == 0) {
-				pAVpkt->pts = toMsec(pAVpkt->pts, &pFormatCtx->streams[audioIndex]->time_base);
-				pAVpkt->dts = toMsec(pAVpkt->dts, &pFormatCtx->streams[audioIndex]->time_base);
-			}
-			if (avcodec_send_packet(aAVctx, pAVpkt) == 0) {
-				// 一个avPacket可能包含多帧数据，所以需要使用while循环一直读取
-				while (avcodec_receive_frame(aAVctx, pAVframe) == 0) {
-					AVFrame* dst = av_frame_alloc();
-					if (pAVframe->data[0])
-						av_frame_move_ref(dst, pAVframe);
-					else {
-						int ret = av_hwframe_transfer_data(dst, pAVframe, 0);
-						av_frame_copy_props(dst, pAVframe);
-						av_frame_unref(pAVframe);
-					}
-					aQueue.push_back(dst);
-				}
-			}
-			else {
-				qDebug("Decode Error.\n");
-				av_packet_unref(pAVpkt);
-				return -1;
-			}
+			ret = readFrame(audioIndex, option, aAVctx, aQueue);
 		}
 		av_packet_unref(pAVpkt);
+		if (ret < 0)
+			return -1;
 	}
 	else {
 		//处理最后buffer中的最后几帧
 		pAVpkt->data = nullptr;
 		pAVpkt->size = 0;
-		avcodec_send_packet(pAVctx, pAVpkt);
-		while (avcodec_receive_frame(pAVctx, pAVframe) == 0) {
-			flag2 = false;
-			AVFrame* dst = av_frame_alloc();
-			if (pAVframe->data[0])
-				av_frame_move_ref(dst, pAVframe);
-			else {
-				int ret = av_hwframe_transfer_data(dst, pAVframe, 0);
-				av_frame_copy_props(dst, pAVframe);
-				av_frame_unref(pAVframe);
-			}
-			pQueue.push_back(dst);
-		}
+		readFrame(videoIndex,option,pAVctx,pQueue);
 	}
 	if (!pQueue.isEmpty()) {
 		frame = pQueue.front();
@@ -337,6 +283,35 @@ int MFPVideo::jumpTo(qint64 msec) {
 	avcodec_flush_buffers(pAVctx);
 
 	return ret;
+}
+
+int MFPVideo::readFrame(int index,int option, AVCodecContext* ctx, QQueue<AVFrame*> &queue) const{
+	if (option == 0) {
+		pAVpkt->pts = toMsec(pAVpkt->pts, &pFormatCtx->streams[index]->time_base);
+		pAVpkt->dts = toMsec(pAVpkt->dts, &pFormatCtx->streams[index]->time_base);
+	}
+	if (avcodec_send_packet(ctx, pAVpkt) == 0) {
+		// 一个avPacket可能包含多帧数据，所以需要使用while循环一直读取
+		while (avcodec_receive_frame(ctx, pAVframe) == 0) {
+			AVFrame* dst = av_frame_alloc();
+			if (pAVframe->data[0])
+				av_frame_move_ref(dst, pAVframe);
+			else {
+				av_hwframe_map(dst, pAVframe, 0);
+				av_hwframe_transfer_data(dst, pAVframe, 0);
+				av_frame_copy_props(dst, pAVframe);
+				dst->width = pAVframe->width;
+				dst->height = pAVframe->height;
+				av_frame_unref(pAVframe);
+			}
+			queue.push_back(dst);
+		}
+	}
+	else {
+		qDebug("Decode Error.\n");
+		return -1;
+	}
+	return 0;
 }
 
 

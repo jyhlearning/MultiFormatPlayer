@@ -50,6 +50,7 @@ public:
 
 	int init();
 	int getNextInfo(AVFrame* &frame,int option=0);
+	int readFrame(int index, int option,AVCodecContext* ctx, QQueue<AVFrame*> &queue) const;
 	int jumpTo(qint64 usec);
 	int getFrameRate() const;
 	qint64 getTotalTime() const;

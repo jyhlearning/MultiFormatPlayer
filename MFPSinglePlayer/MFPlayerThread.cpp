@@ -48,12 +48,10 @@ void MFPlayerThread::continousPlayBack() {
 			start = true;
 		}
 		delay(QTime::currentTime().msecsTo(clock->getTime().addMSecs(frame ? frame->pts : 0)));
-		if (frame)
+		if (frame->data[0])
 			av_frame_free(&frame);
 	}
 }
-
-
 
 void MFPlayerThread::clearFrameQueue() {
 	//由播放器负责清理

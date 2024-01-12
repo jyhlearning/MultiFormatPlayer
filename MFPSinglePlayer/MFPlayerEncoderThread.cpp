@@ -26,7 +26,6 @@ int MFPlayerEncoderThread::writeFrame(AVPacket* packet, AVFrame* frame, AVStream
 		av_interleaved_write_frame(fmtCtx, packet);
 		av_packet_unref(packet);
 	}
-	av_frame_free(&frame);
 	return 0;
 }
 
@@ -95,16 +94,7 @@ int MFPlayerEncoderThread::encode() {
 		return -1;
 	if (avformat_write_header(outputFormatContext, nullptr) < 0)return -1;
 	//创建缩放上下文
-	SwsContext* sws = sws_getContext(
-		mFPVideo->getVideoCtx()->width,
-		mFPVideo->getVideoCtx()->height,
-		mFPVideo->getVideoCtx()->pix_fmt,
-		videoEncodeContext->width,
-		videoEncodeContext->height,
-		videoEncodeContext->pix_fmt,
-		SWS_FAST_BILINEAR,
-		nullptr, nullptr, nullptr
-	);
+	SwsContext* sws = nullptr;
 	//写入
 	AVFrame* frame = nullptr;
 	AVPacket* packet = av_packet_alloc();
@@ -114,20 +104,44 @@ int MFPlayerEncoderThread::encode() {
 		              : 0;
 	bool b1 = true, b2 = true;
 	qint64 s1 = 0, s2 = 0;
+
+	AVFrame* dst = av_frame_alloc();
+	av_image_alloc(dst->data, dst->linesize, videoEncodeContext->width, videoEncodeContext->height, videoEncodeContext->pix_fmt, 32);
+
 	while (ret > 0 && !isStop && temp < s.endPts) {
-		if (ret > 1 && av_frame_make_writable(frame) < 0) { return -1; }
+		if (ret > 1 && av_frame_make_writable(frame) < 0) { break; }
 
 		if (ret == 2 && !s.closeVideo && temp >= s.startPts) {
 			if (b1)s1 = frame->pts;
 			frame->pts -= s1;
-			sws_scale(sws, frame->data, frame->linesize, 0, frame->height, frame->data, frame->linesize);
-			writeFrame(packet, frame, videoInStream, videoStream, videoEncodeContext, outputFormatContext);
+			if (!sws) {
+				sws = sws_getContext(
+					frame->width,
+					frame->height,
+					(AVPixelFormat)frame->format,
+					videoEncodeContext->width,
+					videoEncodeContext->height,
+					videoEncodeContext->pix_fmt,
+					SWS_FAST_BILINEAR,
+					nullptr, nullptr, nullptr
+				);
+			}
+			ret = sws_scale(sws, frame->data, frame->linesize, 0, frame->height, dst->data, dst->linesize);
+			if (ret < 0)break;
+			av_frame_copy_props(dst,frame);
+			dst->width = videoEncodeContext->width;
+			dst->height = videoEncodeContext->height;
+			dst->format = videoEncodeContext->pix_fmt;
+			writeFrame(packet, dst, videoInStream, videoStream, videoEncodeContext, outputFormatContext);
+			av_frame_free(&frame);
+			
 			b1 = false;
 		}
 		else if (ret == 3 && !s.closeAudio && temp >= s.startPts) {
 			if (b2)s2 = frame->pts;
 			frame->pts -= s2;
 			writeFrame(packet, frame, audioInStream, audioStream, audioEncodeContext, outputFormatContext);
+			av_frame_free(&frame);
 			b2 = false;
 		}
 		else if (ret > 1)
@@ -153,5 +167,6 @@ int MFPlayerEncoderThread::encode() {
 	avformat_free_context(outputFormatContext);
 	av_packet_free(&packet);
 	sws_freeContext(sws);
+	av_frame_free(&dst);
 	return 0;
 }

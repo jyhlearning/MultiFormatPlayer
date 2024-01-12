@@ -11,6 +11,7 @@ private:
 	settings s;
 	void init();
 	int writeFrame(AVPacket* packet,AVFrame* frame, AVStream* inStream,AVStream* outStream,AVCodecContext* context,AVFormatContext* fmtCtx);
+
 public:
 	void setFlag(bool flag);
 	void setProfile(const settings& s);
