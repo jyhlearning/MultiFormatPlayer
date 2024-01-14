@@ -16,5 +16,4 @@ private:
     MFPluginBase* mFPluginBase;
     bool loadPlugin();
 private slots:
-    void onButtonClick();
 };

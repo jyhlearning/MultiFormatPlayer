@@ -7,6 +7,10 @@
 MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	: QWidget(parent) {
 	widgetUi.setupUi(this);
+
+	setWindowFlags(Qt::CustomizeWindowHint | Qt::FramelessWindowHint);
+	hide();
+
 	infomationDialog = new QDialog(this);
 	infomationDialogUi.setupUi(infomationDialog);
 	settingsDialog = new QDialog(this);

@@ -37,7 +37,8 @@ public:
 	MFPSinglePlayer();
 	~MFPSinglePlayer();
 	void show() override;
-
+	void setParent(QWidget* parent) override;
+	QWidget* getParent() override;
 public slots:
 	void onPlay();
 	void onStop();

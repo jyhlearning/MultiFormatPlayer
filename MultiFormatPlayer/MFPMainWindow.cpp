@@ -10,7 +10,9 @@ MFPMainWindow::MFPMainWindow(QWidget *parent)
     if (!loadPlugin()) {
         QMessageBox::information(this, "Error", "Could not load the plugin");
     }
-    connect(ui.pushButton,SIGNAL(clicked()),this,SLOT(onButtonClick()));
+    mFPluginBase->setParent(this);
+    ui.verticalLayout->addWidget(mFPluginBase->getParent());
+    mFPluginBase->show();
 }
 
 MFPMainWindow::~MFPMainWindow() {
@@ -18,10 +20,6 @@ MFPMainWindow::~MFPMainWindow() {
         delete mFPluginBase;
 }
 
-void MFPMainWindow::onButtonClick()
-{
-    mFPluginBase->show();
-}
 bool MFPMainWindow::loadPlugin()
 {
     QDir pluginsDir(QCoreApplication::applicationDirPath());

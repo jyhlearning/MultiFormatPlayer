@@ -9,6 +9,8 @@ public:
     MFPluginBase();
     virtual ~MFPluginBase() = default;
     virtual void show() = 0;
+    virtual void setParent(QWidget* parent) = 0;
+    virtual QWidget* getParent() = 0;
 };
 
 QT_BEGIN_NAMESPACE

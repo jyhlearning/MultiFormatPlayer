@@ -142,6 +142,11 @@ void MFPSinglePlayer::stopPlay() {
 
 void MFPSinglePlayer::show() { mFPlayerWidget->show(); }
 
+void MFPSinglePlayer::setParent(QWidget* parent) { mFPlayerWidget->setParent(parent); }
+
+QWidget* MFPSinglePlayer::getParent() { return mFPlayerWidget; }
+
+
 void MFPSinglePlayer::destroyThread() {
 	stopThreads();
 	delete mFPlayerThread;
