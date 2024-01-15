@@ -37,7 +37,8 @@ bool MFPMain::loadPlugin() {
 
 void MFPMain::init() {
 	read();
-	w->loadHistory(history);
+	w->setHistory(&history);
+	w->loadHistory();
 }
 
 void MFPMain::read() {
@@ -59,25 +60,50 @@ void MFPMain::read() {
 	history = obj.value("history").toArray();
 }
 
+void MFPMain::write()
+{
+	obj["history"] = history;
+	QFile file(path);
+	if (!file.open(QIODevice::WriteOnly)) {
+		QMessageBox::about(NULL, "提示", "请检查settings.json文件");
+		return;
+	}
+	file.write(QJsonDocument(obj).toJson());
+	file.close();
+}
 
 MFPMain::MFPMain() {
 	w = new MFPMainWindow;
 	path = "settings.json";
 	if(loadPlugin()) {
 		w->addPluginWidget(mFPluginBase->getInstance());
+		mFPluginBase->moveToThread(new QThread(this));
+		mFPluginBase->thread()->start();
 		mFPluginBase->show();
 	}
+	
 	init();
 	connect(w,SIGNAL(play(int)), this,SLOT(onPlay(int)));
+	connect(w, SIGNAL(destroyed()), this, SLOT(destroyThread()));
 }
 
 MFPMain::~MFPMain() {
+	write();
 	delete w;
-	if (mFPluginBase)
-		delete mFPluginBase;
 }
 
 void MFPMain::show() { w->show(); }
+
+void MFPMain::destroyThread()
+{
+	if(mFPluginBase) {
+		if(mFPluginBase->thread()->isRunning()) {
+			mFPluginBase->thread()->quit();
+			mFPluginBase->thread()->wait();
+			mFPluginBase->deleteLater();
+		}
+	}
+}
 
 void MFPMain::onPlay(int index) {
 	const QString url = history[index].toString();

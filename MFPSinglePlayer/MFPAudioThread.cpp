@@ -1,6 +1,7 @@
 ﻿#include "MFPAudioThread.h"
 #include <qeventloop.h>
 #include <qcoreapplication.h>
+
 #include "QMediaDevices"
 #include "QThread"
 void MFPAudioThread::delay(int msec) {
@@ -46,7 +47,7 @@ void MFPAudioThread::continousPlayBack()
 			start = true;
 		}
 		delay(QTime::currentTime().msecsTo(clock->getTime().addMSecs(pts)));
-		if (frame->data[0])
+		if (frame&&frame->data[0])
 			av_frame_free(&frame);
 	}
 }
@@ -86,20 +87,15 @@ SwrContext* MFPAudioThread::initSwrctx(AVFrame* frame, AVSampleFormat fmt)
 MFPAudioThread::MFPAudioThread(MFPAudioQueue* audioQueue,MFPSTDClock* clock) {
 	this->audioQueue = audioQueue;
 	this->clock = clock;
-	QAudioFormat fmt;
 	fmt.setSampleRate(44100);
 	fmt.setChannelCount(audioQueue->getChannels());
 	fmt.setSampleFormat(QAudioFormat::Int16);
-	audioSink = new QAudioSink(fmt);
-	io=audioSink->start();
 	swr_ctx = nullptr;
 }
 
 MFPAudioThread::~MFPAudioThread()
 {
-	audioSink->stop();
 	clearAudioQueue();
-	delete audioSink;
 	swr_free(&swr_ctx);
 }
 
@@ -117,7 +113,8 @@ void MFPAudioThread::onPlay(MFPlayerThreadState::statement sig) {
 	if (isStop)
 		return;
 	audioQueue->audioLock.lock();
-
+	audioSink = new QAudioSink(fmt);
+	io = audioSink->start();
 	AVFrame* frame = nullptr;
 	switch (sig) {
 	case MFPlayerThreadState::CONTINUEPLAY:
@@ -130,6 +127,8 @@ void MFPAudioThread::onPlay(MFPlayerThreadState::statement sig) {
 	default:
 		break;
 	}
+	audioSink->stop();
+	delete audioSink;
 	audioQueue->forcePutOut();
 	clearAudioQueue();
 	audioQueue->audioLock.unlock();

@@ -9,8 +9,9 @@ class MFPAudioThread:public QObject
 	Q_OBJECT
 private:
 	bool isStop;
-	QAudioSink *audioSink;
+	QAudioFormat fmt;
 	QIODevice* io;
+	QAudioSink* audioSink;
 	MFPAudioQueue *audioQueue;
 	MFPSTDClock* clock;
 	SwrContext* swr_ctx;

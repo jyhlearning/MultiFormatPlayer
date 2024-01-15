@@ -7,11 +7,6 @@ void MFPOpenGLWidget::initTextures() {
 	texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear); //滤波
 	// 设置双线性过滤模式，以放大纹理
 	texture->setMagnificationFilter(QOpenGLTexture::Linear);
-	// 重复使用纹理坐标    
-	// 纹理坐标(1.1, 1.2)与(0.1, 0.2)相同
-	texture->setWrapMode(QOpenGLTexture::ClampToBorder);
-	//分配储存空间
-	texture->allocateStorage();
 }
 
 void MFPOpenGLWidget::initShaders() {
@@ -122,12 +117,9 @@ void MFPOpenGLWidget::paintGL() {
 	program.setUniformValue("contrast", contrast);
 	program.setUniformValue("saturation", saturation);
 
-	texture->setWrapMode(QOpenGLTexture::ClampToBorder);
 	texture->bind(); //绑定纹理
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); //绘制纹理
 	texture->release(); //释放绑定的纹理
-	texture->destroy(); //消耗底层的纹理对象
-	texture->create(); //重新创建纹理对象
 }
 
 void MFPOpenGLWidget::resizeGL(int w, int h) {
@@ -142,10 +134,12 @@ void MFPOpenGLWidget::resizeGL(int w, int h) {
 }
 
 void MFPOpenGLWidget::setImage(const QImage& image) {
-	texture->setData(image); //设置纹理图像
+	texture->destroy(); //消耗底层的纹理对象
+	texture->create(); //重新创建纹理对象
 	//设置纹理细节
 	texture->setLevelofDetailBias(-1); //值越小，图像越清晰
-	texture->setSize(image.width(), image.height());
+	texture->setWrapMode(QOpenGLTexture::ClampToBorder);
+	texture->setData(image); //设置纹理图像
 	//更新图像
 	update();
 }

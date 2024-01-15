@@ -49,9 +49,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="MFPSinglePlayer.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="MFPlayerWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -71,6 +68,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="MFPlayerEncoderThread.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="MFPSinglePlayer.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

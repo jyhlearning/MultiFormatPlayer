@@ -10,8 +10,19 @@
 MFPMainWindow::MFPMainWindow(QWidget* parent)
 	: QMainWindow(parent) {
 	ui.setupUi(this);
+	ItemModel = new QStandardItemModel(this);
+	actionDelete = new QAction(tr("Delete"), this);
+	actionClear = new QAction(tr("Clear"), this);
+	menu = new QMenu(this);
+	menu->addAction(actionClear);
+	menu->addAction(actionDelete);
+	ui.historyListView->setProperty("contextMenuPolicy", Qt::CustomContextMenu);
 	connect(ui.historyListView,SIGNAL(doubleClicked(QModelIndex)), this,SLOT(onDoubleClicked(QModelIndex)));
 	connect(ui.openfileButton, SIGNAL(clicked()), this, SLOT(onOpenFileButton()));
+	connect(actionDelete, SIGNAL(triggered()), this, SLOT(onActionDelete()));
+	connect(actionClear, SIGNAL(triggered()), this, SLOT(onActionClear()));
+	connect(ui.historyListView, SIGNAL(customContextMenuRequested(const QPoint&)), this,
+	        SLOT(onListViewRightClickRequest(const QPoint&)));
 }
 
 MFPMainWindow::~MFPMainWindow() {
@@ -19,17 +30,44 @@ MFPMainWindow::~MFPMainWindow() {
 
 void MFPMainWindow::addPluginWidget(QWidget* widget) { ui.verticalLayout->addWidget(widget); }
 
-void MFPMainWindow::loadHistory(QJsonArray history) {
-	QStandardItemModel* ItemModel = new QStandardItemModel(this);
-	for (int i = 0; i < history.size(); i++) {
-		ItemModel->appendRow(new QStandardItem(history[i].toString().section('/', -1)));
+void MFPMainWindow::loadHistory() {
+	for (int i = 0; i < history->size(); i++) {
+		ItemModel->appendRow(new QStandardItem(history->at(i).toString().section('/', -1)));
 	}
 	ui.historyListView->setModel(ItemModel);
 }
 
-void MFPMainWindow::onOpenFileButton()
-{
-	QUrl file_name = QFileDialog::getOpenFileUrl(this, QStringLiteral("选择路径"), QString("../../"), "*.mp4 *.avi", nullptr, QFileDialog::DontUseCustomDirectoryIcons);
+void MFPMainWindow::setHistory(QJsonArray* array) { history = array; }
+
+void MFPMainWindow::onOpenFileButton() {
+	const QString url = QFileDialog::getOpenFileUrl(this, QStringLiteral("选择路径"), QString("../../"), "*.mp4 *.avi",
+	                                                nullptr, QFileDialog::DontUseCustomDirectoryIcons).toLocalFile();
+	ItemModel->appendRow(new QStandardItem(url.section('/', -1)));
+	ui.pathEdit->setText(url);
+	for (int i = 0; i < history->size(); i++) {
+		if (history->at(i).toString() == url) {
+			emit play(i);
+			return;
+		}
+	}
+	history->append(url);
+	emit play(history->size() - 1);
+}
+
+void MFPMainWindow::onActionDelete() {
+	QModelIndex index = ui.historyListView->selectionModel()->currentIndex();
+	ItemModel->removeRow(index.row());
+	history->removeAt(index.row());
+}
+
+void MFPMainWindow::onActionClear() {
+	ItemModel->clear();
+	while (!history->isEmpty())
+		history->removeFirst();
+}
+
+void MFPMainWindow::onListViewRightClickRequest(const QPoint& p) {
+	menu->exec(QCursor::pos());
 }
 
 void MFPMainWindow::onDoubleClicked(const QModelIndex index) {

@@ -29,8 +29,10 @@
     <ClCompile Include="MFPluginBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClInclude Include="MFPluginBase.h">
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="MFPluginBase.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
+    </QtMoc>
   </ItemGroup>
 </Project>

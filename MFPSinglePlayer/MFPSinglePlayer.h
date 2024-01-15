@@ -11,7 +11,7 @@
 #include "MFPlayerThread.h"
 #include "opencv2/highgui/highgui.hpp"
 
-class MFPSINGLEPLAYER_EXPORT MFPSinglePlayer : public QObject, public MFPluginBase {
+class MFPSINGLEPLAYER_EXPORT MFPSinglePlayer :  public MFPluginBase {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID MFPluginBase_IID)
 	Q_INTERFACES(MFPluginBase)

@@ -2,9 +2,10 @@
 
 #include "mfpluginbase_global.h"
 #include "QtPlugin"
-
-class MFPLUGINBASE_EXPORT MFPluginBase
+#include "QObject"
+class MFPLUGINBASE_EXPORT MFPluginBase:public QObject
 {
+    Q_OBJECT
 public:
     MFPluginBase();
     virtual ~MFPluginBase() = default;

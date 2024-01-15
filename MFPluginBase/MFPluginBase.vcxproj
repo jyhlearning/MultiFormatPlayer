@@ -85,7 +85,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MFPluginBase.h" />
+    <QtMoc Include="MFPluginBase.h" />
     <ClInclude Include="mfpluginbase_global.h" />
     <ClCompile Include="MFPluginBase.cpp" />
   </ItemGroup>

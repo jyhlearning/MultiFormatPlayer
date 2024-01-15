@@ -48,7 +48,7 @@ void MFPlayerThread::continousPlayBack() {
 			start = true;
 		}
 		delay(QTime::currentTime().msecsTo(clock->getTime().addMSecs(frame ? frame->pts : 0)));
-		if (frame->data[0])
+		if (frame && frame->data[0])
 			av_frame_free(&frame);
 	}
 }

@@ -19,11 +19,13 @@ private:
 	bool loadPlugin();
 	void init();
 	void read();
+	void write();
 public:
 	MFPMain();
 	~MFPMain();
 	void show();
 private slots:
 	void onPlay(int index);
+	void destroyThread();
 };
 
