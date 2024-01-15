@@ -1,10 +1,10 @@
-#include "MFPMainWindow.h"
+#include "MFPMain.h"
 #include <QtWidgets/QApplication>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    MFPMainWindow w;
-    w.show();
+    MFPMain m;
+    m.show();
     return a.exec();
 }

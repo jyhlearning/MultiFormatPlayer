@@ -9,10 +9,10 @@ private:
 	MFPVideo* mFPVideo;
 	bool isStop;
 	settings s;
-	void init();
 	int writeFrame(AVPacket* packet,AVFrame* frame, AVStream* inStream,AVStream* outStream,AVCodecContext* context,AVFormatContext* fmtCtx);
 
 public:
+	void init();
 	void setFlag(bool flag);
 	void setProfile(const settings& s);
 	settings exportDefaultProfile();

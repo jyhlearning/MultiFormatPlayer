@@ -1,6 +1,11 @@
 ﻿#include "MFPVideo.h"
 
-int MFPVideo::init() {
+int MFPVideo::init(const QString& url) {
+	freeResources();
+
+	const std::string str = url.toStdString();
+
+	videoPath = str.c_str();
 	//创建AVFormatContext
 	pFormatCtx = avformat_alloc_context();
 	//初始化pFormatCtx
@@ -55,8 +60,8 @@ int MFPVideo::init() {
 
 	pCodec = avcodec_find_decoder(pAVctx->codec_id);
 	aCodec = avcodec_find_decoder(aAVctx->codec_id);
-	
-	initHWDecoder(pCodec,pAVctx);
+	if(hwFlag)
+		initHWDecoder(pCodec,pAVctx);
 	if (pCodec == nullptr || aCodec == nullptr) {
 		avcodec_close(pAVctx);
 		avformat_close_input(&pFormatCtx);
@@ -92,32 +97,52 @@ int MFPVideo::init() {
 	
 	totalTime = 1000 * pFormatCtx->duration / AV_TIME_BASE;
 	parse = true;
-	hasFree = false;
 	return 0;
 }
 
 MFPVideo::MFPVideo() {
-	videoPath =
-		"C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-36-48-992.mp4";
+	hwFlag = false;
 	videoIndex = -1;
 	audioIndex = -1;
 	parse = false;
-	hasFree = true;
+	pAVctx = nullptr;
+	aAVctx = nullptr;
+	pAVframe = nullptr;
+	pFormatCtx = nullptr;
+	hwBufferRef = nullptr;
 }
 
 MFPVideo::~MFPVideo() { freeResources(); }
 
 void MFPVideo::freeResources() {
-	if (!hasFree) {
 		
-		//sws_freeContext(avFrameToOpenCVBGRSwsContext);
-		
+	//sws_freeContext(avFrameToOpenCVBGRSwsContext);
+	if(pAVframe)
 		av_frame_free(&pAVframe);
+	if(pAVctx)
 		avcodec_close(pAVctx);
+	if(aAVctx)
+		avcodec_close(aAVctx);
+	if(pFormatCtx)
 		avformat_close_input(&pFormatCtx);
-		parse = false;
-		hasFree = true;
-	}
+	if (hwBufferRef)
+		av_buffer_unref(&hwBufferRef);
+	for (auto a : pQueue)
+		av_frame_free(&a);
+	for (auto a : aQueue)
+		av_frame_free(&a);
+	pQueue.clear();
+	aQueue.clear();
+	parse = false;
+}
+
+void MFPVideo::setHwFlag(bool flag) {
+	hwFlag = flag;
+}
+
+void MFPVideo::setVideoPath(const QString& path) {
+	const std::string str = path.toStdString();
+	videoPath = str.c_str();
 }
 
 AVPixelFormat get_hw_format(AVCodecContext* s, const enum AVPixelFormat* fmt)
@@ -147,7 +172,7 @@ void MFPVideo::initHWDecoder(const AVCodec* codec, AVCodecContext *ctx) {
 		QStringList strTypes;
 		while ((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE)       // 遍历支持的设备类型。
 		{
-			m_HWDeviceTypes.append(type);
+			hwDeviceTypes.append(type);
 			const char* ctype = av_hwdevice_get_type_name(type);  // 获取AVHWDeviceType的字符串名称。
 			if (ctype)
 			{
@@ -160,17 +185,17 @@ void MFPVideo::initHWDecoder(const AVCodec* codec, AVCodecContext *ctx) {
 
 		if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX) // 判断是否是设备类型
 		{
-			for (auto i : m_HWDeviceTypes) {
+			for (auto i : hwDeviceTypes) {
 				if (config->device_type == AVHWDeviceType(i)) // 判断设备类型是否是支持的硬件解码器
 				{
 					g_pixelFormat = config->pix_fmt;
 
 					// 打开指定类型的设备，并为其创建AVHWDeviceContext。
-					int ret = av_hwdevice_ctx_create(&hw_device_ctx, config->device_type, nullptr, nullptr, 0);
+					int ret = av_hwdevice_ctx_create(&hwBufferRef, config->device_type, nullptr, nullptr, 0);
 					if (ret < 0) {
 						return;
 					}
-					ctx->hw_device_ctx = av_buffer_ref(hw_device_ctx); // 创建一个对AVBuffer的新引用。
+					ctx->hw_device_ctx = av_buffer_ref(hwBufferRef); // 创建一个对AVBuffer的新引用。
 					ctx->get_format = get_hw_format; // 由一些解码器调用，以选择将用于输出帧的像素格式
 					return;
 				}
@@ -194,7 +219,6 @@ AVCodecContext* MFPVideo::getVideoCtx() const { return pAVctx; }
 AVStream* MFPVideo::getVideoInStream() const { return pFormatCtx->streams[videoIndex]; }
 
 AVStream* MFPVideo::getAudioInStream() const { return pFormatCtx->streams[audioIndex]; }
-
 
 std::pair<int, int> MFPVideo::getResolution() const { return {pAVctx->width, pAVctx->height}; }
 
@@ -248,6 +272,7 @@ int MFPVideo::getNextInfo(AVFrame* & frame, int option) {
 		pAVpkt->data = nullptr;
 		pAVpkt->size = 0;
 		readFrame(videoIndex,option,pAVctx,pQueue);
+		av_packet_unref(pAVpkt);
 	}
 	if (!pQueue.isEmpty()) {
 		frame = pQueue.front();
@@ -313,7 +338,6 @@ int MFPVideo::readFrame(int index,int option, AVCodecContext* ctx, QQueue<AVFram
 	}
 	return 0;
 }
-
 
 QImage MFPVideo::toQImage(const AVFrame* frame, SwsContext* avFrameToQImageSwsContext) {
 	uchar* buffer = (unsigned char*)

@@ -1,5 +1,7 @@
 ﻿#include "MFPSinglePlayer.h"
 #include "qthread.h"
+#include "QJsonArray"
+#include <QMessageBox>
 
 
 MFPSinglePlayer::MFPSinglePlayer() {
@@ -7,33 +9,12 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	audioQueue = new MFPAudioQueue;
 	clock = new MFPSTDClock;
 	mFPVideo = new MFPVideo;
-	mFPVideo->init();
 
 	mFPlayerWidget = new MFPlayerWidget;
 	mFPlayerThread = new MFPlayerThread(frameQueue, clock);
 	mFPAudioThread = new MFPAudioThread(audioQueue, clock);
 	mFPlayerDecodeThread = new MFPlayerDecodeThread(frameQueue, audioQueue, mFPVideo);
 	mFPlayerEncodeThread = new MFPlayerEncoderThread(mFPVideo);
-
-	resolutions = new QStringList({"320*240", "640*480", "720*480", "1280*720", "1920*1080", "2560*1440"});
-	videoBitrates = new QStringList({"20000000", "7552000", "4992000", "3072000", "2496000"}); //kbps
-	audioBitrates = new QStringList({"320000", "128000", "64000"}); //kbps
-
-
-	frameQueue->setFrameRate(mFPVideo->getFrameRate());
-	frameQueue->setTotalTime(mFPVideo->getTotalTime());
-	audioQueue->setFrameRate(mFPVideo->getFrameRate());
-	audioQueue->setChannels(mFPVideo->getChannels());
-	audioQueue->setSampleRate(mFPVideo->getSampleRate());
-	audioQueue->setSampleFmt(mFPVideo->getSampleFmt());
-
-	mFPlayerWidget->setInformationDialog({
-		mFPVideo->getResolution(), mFPVideo->getTotalTime(), mFPVideo->getFrameRate(), mFPVideo->getChannels()
-	});
-	mFPlayerWidget->setExportDialogAudioBitRates(*audioBitrates);
-	mFPlayerWidget->setExportDialogVideoBitRates(*videoBitrates);
-	mFPlayerWidget->setExportDialogResolution(*resolutions);
-	mFPlayerWidget->setExportDefaultSettings(mFPlayerEncodeThread->exportDefaultProfile());
 
 	mFPlayerThread->moveToThread(new QThread(this));
 
@@ -72,20 +53,13 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	mFPlayerThread->thread()->start();
 	mFPAudioThread->thread()->start();
 	mFPlayerEncodeThread->thread()->start();
-
-	mFPlayerWidget->setSliderRange(0, frameQueue->getTotalTime());
-	mFPlayerWidget->setBackwardLable(frameQueue->getTotalTime());
 }
 
 MFPSinglePlayer::~MFPSinglePlayer() {
-	delete mFPlayerWidget;
 	delete frameQueue;
 	delete audioQueue;
 	delete mFPVideo;
 	delete clock;
-	delete videoBitrates;
-	delete audioBitrates;
-	delete resolutions;
 }
 
 void MFPSinglePlayer::stopThreads() {
@@ -110,6 +84,10 @@ void MFPSinglePlayer::stopThreads() {
 }
 
 void MFPSinglePlayer::startPlay(MFPlayerThreadState::statement state) {
+	if (!mFPVideo->isParse()) {
+		QMessageBox::warning(mFPlayerWidget,tr("warning!"),tr("You didn't choose a reasonable resource"),QMessageBox::Close);
+		return;
+	}
 	//确保完全退出后再执行启动
 	frameQueue->playLock.lock();
 	audioQueue->audioLock.lock();
@@ -140,12 +118,58 @@ void MFPSinglePlayer::stopPlay() {
 	audioQueue->forceGetOut();
 }
 
+void MFPSinglePlayer::readArray(const QString& key, const QJsonObject& obj, QStringList& list) const {
+	list.clear();
+	QJsonArray a = obj.value(key).toArray();
+	for (auto str : a)
+		list.append(str.toString());
+}
+
 void MFPSinglePlayer::show() { mFPlayerWidget->show(); }
+
+void MFPSinglePlayer::init(const QString& url) {
+	stopPlay();
+	frameQueue->playLock.lock();
+	audioQueue->audioLock.lock();
+
+	mFPVideo->init(url);
+	mFPlayerEncodeThread->init();
+	frameQueue->setLastPts(0);
+	audioQueue->setLastPts(0);
+
+	frameQueue->setFrameRate(mFPVideo->getFrameRate());
+	frameQueue->setTotalTime(mFPVideo->getTotalTime());
+	audioQueue->setFrameRate(mFPVideo->getFrameRate());
+	audioQueue->setChannels(mFPVideo->getChannels());
+	audioQueue->setSampleRate(mFPVideo->getSampleRate());
+	audioQueue->setSampleFmt(mFPVideo->getSampleFmt());
+
+	mFPlayerWidget->setInformationDialog({
+		mFPVideo->getResolution(), mFPVideo->getTotalTime(), mFPVideo->getFrameRate(), mFPVideo->getChannels()
+	});
+	mFPlayerWidget->setExportDialogAudioBitRates(audioBitrates);
+	mFPlayerWidget->setExportDialogVideoBitRates(videoBitrates);
+	mFPlayerWidget->setExportDialogResolution(resolutions);
+	mFPlayerWidget->setExportDefaultSettings(mFPlayerEncodeThread->exportDefaultProfile());
+
+	mFPlayerWidget->setSliderRange(0, frameQueue->getTotalTime());
+	mFPlayerWidget->setBackwardLable(frameQueue->getTotalTime());
+
+	frameQueue->playLock.unlock();
+	audioQueue->audioLock.unlock();
+	startPlay(MFPlayerThreadState::NEXTFRAME);
+}
 
 void MFPSinglePlayer::setParent(QWidget* parent) { mFPlayerWidget->setParent(parent); }
 
-QWidget* MFPSinglePlayer::getParent() { return mFPlayerWidget; }
+void MFPSinglePlayer::read(QJsonObject& obj) {
+	mFPVideo->setHwFlag(obj.value("hWDecode").toBool());
+	readArray("resolutions", obj, resolutions);
+	readArray("videoBitrates", obj, videoBitrates);
+	readArray("audioBitrates", obj, audioBitrates);
+}
 
+QWidget* MFPSinglePlayer::getInstance() { return mFPlayerWidget; }
 
 void MFPSinglePlayer::destroyThread() {
 	stopThreads();
@@ -234,6 +258,10 @@ void MFPSinglePlayer::onSpeedChange(double speed) {
 }
 
 void MFPSinglePlayer::onExports(settings s) {
+	if (!mFPVideo->isParse()) {
+		QMessageBox::warning(mFPlayerWidget, tr("warning!"), tr("You didn't choose a reasonable resource"), QMessageBox::Close);
+		return;
+	}
 	stopPlay();
 	mFPVideo->jumpTo(s.startPts);
 	mFPlayerEncodeThread->setProfile(s);
@@ -241,6 +269,4 @@ void MFPSinglePlayer::onExports(settings s) {
 	emit startEncodeThread();
 }
 
-void MFPSinglePlayer::onCancel() {
-	mFPlayerEncodeThread->setFlag(true);
-}
+void MFPSinglePlayer::onCancel() { mFPlayerEncodeThread->setFlag(true); }

@@ -2,10 +2,10 @@
 #include <windows.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <QOpenGLShaderProgram>
-#include <QOpenGLTexture>
+#include <QtOpenGL/QOpenGLShaderProgram>
+#include <QtOpenGL/QOpenGLTexture>
 #include "QImage"
-#include "QOpenGLWidget"
+#include "QtOpenGLWidgets/QOpenGLWidget"
 #include "QOpenGLFunctions"
 class MFPOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
 	Q_OBJECT

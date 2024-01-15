@@ -26,19 +26,22 @@ private:
 	MFPAudioQueue* audioQueue;
 	MFPVideo* mFPVideo;
 	MFPSTDClock* clock;
-	QStringList* resolutions;
-	QStringList* audioBitrates;
-	QStringList* videoBitrates;
+	QStringList resolutions;
+	QStringList audioBitrates;
+	QStringList videoBitrates;
 	MFPlayerThreadState::statement state,stateBefore;
 	void stopThreads();
 	void startPlay(MFPlayerThreadState::statement state);
 	void stopPlay();
+	void readArray(const QString& key, const QJsonObject& obj, QStringList& list)const;
 public:
 	MFPSinglePlayer();
 	~MFPSinglePlayer();
 	void show() override;
+	void init(const QString& url) override;
 	void setParent(QWidget* parent) override;
-	QWidget* getParent() override;
+	void read(QJsonObject& obj) override;
+	QWidget* getInstance() override;
 public slots:
 	void onPlay();
 	void onStop();

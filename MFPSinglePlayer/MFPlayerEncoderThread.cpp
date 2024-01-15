@@ -33,7 +33,6 @@ void MFPlayerEncoderThread::setFlag(bool flag) { isStop = flag; }
 
 MFPlayerEncoderThread::MFPlayerEncoderThread(MFPVideo* mFPVideo) {
 	this->mFPVideo = mFPVideo;
-	init();
 }
 
 void MFPlayerEncoderThread::setProfile(const settings& s) { this->s = s; }

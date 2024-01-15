@@ -96,6 +96,7 @@
     <QtRcc Include="MFPMainWindow.qrc" />
     <QtUic Include="MFPMainWindow.ui" />
     <QtMoc Include="MFPMainWindow.h" />
+    <ClCompile Include="MFPMain.cpp" />
     <ClCompile Include="MFPMainWindow.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -103,6 +104,9 @@
     <ProjectReference Include="..\MFPluginBase\MFPluginBase.vcxproj">
       <Project>{343b7337-621b-4109-bbe2-271e8026f579}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="MFPMain.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

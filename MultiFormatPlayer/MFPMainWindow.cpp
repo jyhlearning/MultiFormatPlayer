@@ -1,51 +1,37 @@
-#include "MFPMainWindow.h"
+﻿#include "MFPMainWindow.h"
+
+#include <QFileDialog>
+
 #include "QMessageBox"
 #include "QDir"
 #include "QPluginLoader"
+#include <qstandarditemmodel.h>
 
-MFPMainWindow::MFPMainWindow(QWidget *parent)
-    : QMainWindow(parent)
-{
-    ui.setupUi(this);
-    if (!loadPlugin()) {
-        QMessageBox::information(this, "Error", "Could not load the plugin");
-    }
-    mFPluginBase->setParent(this);
-    ui.verticalLayout->addWidget(mFPluginBase->getParent());
-    mFPluginBase->show();
+MFPMainWindow::MFPMainWindow(QWidget* parent)
+	: QMainWindow(parent) {
+	ui.setupUi(this);
+	connect(ui.historyListView,SIGNAL(doubleClicked(QModelIndex)), this,SLOT(onDoubleClicked(QModelIndex)));
+	connect(ui.openfileButton, SIGNAL(clicked()), this, SLOT(onOpenFileButton()));
 }
 
 MFPMainWindow::~MFPMainWindow() {
-    if (mFPluginBase)
-        delete mFPluginBase;
 }
 
-bool MFPMainWindow::loadPlugin()
+void MFPMainWindow::addPluginWidget(QWidget* widget) { ui.verticalLayout->addWidget(widget); }
+
+void MFPMainWindow::loadHistory(QJsonArray history) {
+	QStandardItemModel* ItemModel = new QStandardItemModel(this);
+	for (int i = 0; i < history.size(); i++) {
+		ItemModel->appendRow(new QStandardItem(history[i].toString().section('/', -1)));
+	}
+	ui.historyListView->setModel(ItemModel);
+}
+
+void MFPMainWindow::onOpenFileButton()
 {
-    QDir pluginsDir(QCoreApplication::applicationDirPath());
-#if defined(Q_OS_WIN)
-    if (pluginsDir.dirName().toLower() == "debug" || pluginsDir.dirName().toLower() == "release")
-        pluginsDir.cdUp();
-#elif defined(Q_OS_MAC)
-    if (pluginsDir.dirName() == "MacOS") {
-        pluginsDir.cdUp();
-        pluginsDir.cdUp();
-        pluginsDir.cdUp();
-    }
-#endif
-    pluginsDir.cd("Plugins");
-    const QStringList entries = pluginsDir.entryList(QDir::Files);
-    for (const QString& fileName : entries) {
-        QPluginLoader pluginLoader(pluginsDir.absoluteFilePath(fileName));
-        QObject* plugin = pluginLoader.instance();
-        if (plugin) {
-            mFPluginBase = qobject_cast<MFPluginBase*>(plugin);
-            if (mFPluginBase)
-                return true;
-            pluginLoader.unload();
-        }
-    }
-
-    return false;
+	QUrl file_name = QFileDialog::getOpenFileUrl(this, QStringLiteral("选择路径"), QString("../../"), "*.mp4 *.avi", nullptr, QFileDialog::DontUseCustomDirectoryIcons);
 }
 
+void MFPMainWindow::onDoubleClicked(const QModelIndex index) {
+	emit play(index.row());
+}

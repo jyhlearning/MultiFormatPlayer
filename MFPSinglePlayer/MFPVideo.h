@@ -19,9 +19,8 @@ static enum AVPixelFormat g_pixelFormat;
 class MFPVideo {
 private:
 	bool parse;
-	bool hasFree;
+	bool hwFlag;
 	const char* videoPath;
-	unsigned char* buf;
 	int videoIndex, audioIndex;
 	const AVCodec *pCodec, *aCodec;
 	AVPacket* pAVpkt;
@@ -32,8 +31,8 @@ private:
 	qint64 totalTime;
 	//SwsContext* avFrameToOpenCVBGRSwsContext;
 	
-	QList<int> m_HWDeviceTypes;
-	AVBufferRef* hw_device_ctx = nullptr;
+	QList<int> hwDeviceTypes;
+	AVBufferRef* hwBufferRef;
 	void initHWDecoder(const AVCodec* codec, AVCodecContext *ctx);
 public:
 	MFPVideo();
@@ -48,7 +47,7 @@ public:
 	qint64 getChannelsLayout() const;
 	std::pair<int, int> getResolution() const;
 
-	int init();
+	int init(const QString& url);
 	int getNextInfo(AVFrame* &frame,int option=0);
 	int readFrame(int index, int option,AVCodecContext* ctx, QQueue<AVFrame*> &queue) const;
 	int jumpTo(qint64 usec);
@@ -56,6 +55,8 @@ public:
 	qint64 getTotalTime() const;
 	bool isParse() const;
 	void freeResources();
+	void setVideoPath(const QString &path);
+	void setHwFlag(bool flag);
 	static QByteArray toQByteArray(const AVFrame* frame, SwrContext* swr_ctx);
 	static QImage toQImage(const AVFrame* frame,SwsContext* avFrameToQImageSwsContext);
 	static cv::Mat AVFrameToMat(const AVFrame* frame,SwsContext * avFrameToOpenCVBGRSwsContext);

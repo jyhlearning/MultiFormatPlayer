@@ -85,14 +85,17 @@ void MFPlayerWidget::setInformationDialog(const informaion& info) const {
 }
 
 void MFPlayerWidget::setExportDialogResolution(const QStringList& list) const {
+	exportUi.resolutionComboBox->clear();
 	exportUi.resolutionComboBox->addItems(list);
 }
 
 void MFPlayerWidget::setExportDialogVideoBitRates(const QStringList& list) const {
+	exportUi.videoBitRatecomboBox->clear();
 	exportUi.videoBitRatecomboBox->addItems(list);
 }
 
 void MFPlayerWidget::setExportDialogAudioBitRates(const QStringList& list) const {
+	exportUi.audioBitRateComboBox->clear();
 	exportUi.audioBitRateComboBox->addItems(list);
 }
 
@@ -189,7 +192,7 @@ void MFPlayerWidget::onExportButton() {
 		emit exports(s);
 	}
 	else
-		QMessageBox::critical(this, tr("error"), tr("请检查分辨率的配置文件"), QMessageBox::Discard);
+		QMessageBox::critical(this, tr("error"), tr("请检查分辨率配置文件"), QMessageBox::Discard);
 }
 
 void MFPlayerWidget::onOpenFileButton() {
@@ -205,7 +208,6 @@ void MFPlayerWidget::onSliderReleased() {
 void MFPlayerWidget::onSliderPressed() {
 	emit stop();
 }
-
 
 void MFPlayerWidget::onCurrentIndexChanged(int c) {
 	double temp = 1;
@@ -283,7 +285,6 @@ void MFPlayerWidget::onProgress(qint64 p) { progressDialog->setValue(p); }
 void MFPlayerWidget::onCancel() {
 	emit cancel();
 }
-
 
 void MFPlayerWidget::onPlayButton() {
 	emit play(WidgetStete::PLAY);
