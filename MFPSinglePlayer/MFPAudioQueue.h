@@ -9,6 +9,7 @@ private:
 	int sampleRate, channels;
 	qint64 lastPts;
 	qint64 frameRate;
+	qint64 totalTime;
 	double speed;
 	AVSampleFormat sampleFmt;
 public:

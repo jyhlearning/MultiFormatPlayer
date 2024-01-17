@@ -6,6 +6,7 @@
 
 class MFPFrameQueue : public MFPDataBase<AVFrame*> {
 private:
+	qint64 startTime;
 	qint64 totalTime;
 	qint64 lastPts;
 	qint64 frameRate;
@@ -37,4 +38,8 @@ public:
 	void setSpeed(double s);
 
 	double getSpeed() const;
+
+	void setStartTime(qint64 time);
+
+	qint64 getStartTime() const;
 };

@@ -1,20 +1,48 @@
 {
     "history": [
-        "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-39-04-341.mp4",
         "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-23-42-432.mp4",
-        "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-25-23-067.mp4",
-        "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-31-48-151.mp4",
-        "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-34-46-649.mp4",
-        "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-36-48-992.mp4",
         "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-40-48-857.mp4",
-        "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-44-50-992.mp4",
-        ""
+        "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-36-48-992.mp4",
+        "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/1.flv"
     ],
     "singlePlayer": {
         "audioBitrates": [
-            "320000",
+            "64000",
             "128000",
-            "64000"
+            "320000"
+        ],
+        "formats": [
+            "mp4",
+            "flv",
+            "f4v",
+            "webm",
+            "m4v",
+            "mov",
+            "3gp",
+            "3g2",
+            "rm",
+            "rmvb",
+            "wmv",
+            "avi",
+            "asf",
+            "mpg",
+            "mpeg",
+            "mpe",
+            "ts",
+            "div",
+            "dv",
+            "divx",
+            "vob",
+            "dat",
+            "mkv",
+            "lavf",
+            "cpk",
+            "dirac",
+            "ram",
+            "qt",
+            "fli",
+            "flc",
+            "mod"
         ],
         "hWDecode": false,
         "resolutions": [
@@ -26,11 +54,18 @@
             "2560*1440"
         ],
         "videoBitrates": [
-            "20000000",
-            "7552000",
-            "4992000",
+            "576000",
+            "869000",
+            "1088000",
+            "1216000",
+            "1536000",
+            "1856000",
+            "2176000",
+            "2486000",
             "3072000",
-            "2496000"
+            "4992000",
+            "7552000",
+            "20000000"
         ]
     }
 }

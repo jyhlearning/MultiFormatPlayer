@@ -16,9 +16,11 @@ public:
     void addPluginWidget(QWidget *widget);
     void loadHistory();
     void setHistory(QJsonArray *array);
+    void setFilter(const QJsonObject& obj);
 private:
     QStandardItemModel* ItemModel;
     QJsonArray* history;
+    QString filter;
     QAction* actionDelete,*actionClear;
     QMenu* menu;
     Ui::MFPMainWindowClass ui;

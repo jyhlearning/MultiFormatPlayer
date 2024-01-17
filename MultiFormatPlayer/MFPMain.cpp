@@ -39,6 +39,7 @@ void MFPMain::init() {
 	read();
 	w->setHistory(&history);
 	w->loadHistory();
+	w->setFilter(obj.value("singlePlayer").toObject());
 }
 
 void MFPMain::read() {

@@ -39,17 +39,28 @@ void MFPMainWindow::loadHistory() {
 
 void MFPMainWindow::setHistory(QJsonArray* array) { history = array; }
 
+void MFPMainWindow::setFilter(const QJsonObject& obj)
+{
+	QJsonArray temp = obj.value("format").toArray();
+	
+	for (auto s:temp) {
+		filter += " *." + s.toString();
+	}
+}
+
 void MFPMainWindow::onOpenFileButton() {
-	const QString url = QFileDialog::getOpenFileUrl(this, QStringLiteral("选择路径"), QString("../../"), "*.mp4 *.avi",
+	const QString url = QFileDialog::getOpenFileUrl(this, QStringLiteral("选择路径"), QString("../../"), filter,
 	                                                nullptr, QFileDialog::DontUseCustomDirectoryIcons).toLocalFile();
-	ItemModel->appendRow(new QStandardItem(url.section('/', -1)));
+	if (url.size() == 0)return;
 	ui.pathEdit->setText(url);
 	for (int i = 0; i < history->size(); i++) {
+		QString a = history->at(i).toString();
 		if (history->at(i).toString() == url) {
 			emit play(i);
 			return;
 		}
 	}
+	ItemModel->appendRow(new QStandardItem(url.section('/', -1)));
 	history->append(url);
 	emit play(history->size() - 1);
 }

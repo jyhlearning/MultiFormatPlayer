@@ -28,7 +28,7 @@ int MFPVideo::init(const QString& url) {
 			break;
 		}
 	}
-
+	
 	//找到音频流索引
 	for (int i = 0; i < pFormatCtx->nb_streams; i++) {
 		if (pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
@@ -212,6 +212,8 @@ AVSampleFormat MFPVideo::getSampleFmt() const { return aAVctx->sample_fmt; }
 
 qint64 MFPVideo::getChannelsLayout() const { return aAVctx->channel_layout; }
 
+qint64 MFPVideo::getStartTime() const { return pFormatCtx->start_time/1000; }
+
 AVCodecContext* MFPVideo::getAudioCtx() const { return aAVctx; }
 
 AVCodecContext* MFPVideo::getVideoCtx() const { return pAVctx; }
@@ -300,10 +302,9 @@ int MFPVideo::jumpTo(qint64 msec) {
 	qint64 min_timestamp = pFormatCtx->start_time != AV_NOPTS_VALUE ? pFormatCtx->start_time : 0;
 	qint64 max_timestamp = INT64_MAX;
 	//往前推1s,避免找到的关键帧太大
-	msec = msec - 1000 < 0 ? 0 : msec - 1000;
-
+	msec = msec - 1000 < getStartTime() ? getStartTime() : msec - 1000;
 	int ret = avformat_seek_file(pFormatCtx, videoIndex, min_timestamp, av_rescale_q(msec, av_make_q(1, 1000),
-		                             pFormatCtx->streams[videoIndex]->time_base), max_timestamp,
+		pFormatCtx->streams[videoIndex]->time_base), max_timestamp,
 	                             AVSEEK_FLAG_BACKWARD);
 	avcodec_flush_buffers(pAVctx);
 

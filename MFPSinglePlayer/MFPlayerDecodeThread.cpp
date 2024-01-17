@@ -37,7 +37,7 @@ void MFPlayerDecodeThread::decode() {
 				av_frame_unref(frame);
 		}
 	}
-
+	//解码完成，通知播放器，如果播放器在等待数据，解除等待状态
 	if (temp == 0) {
 		frameQueue->frameIsEnd = true;
 		audioQueue->frameIsEnd = true;

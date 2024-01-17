@@ -99,6 +99,12 @@ void MFPlayerWidget::setExportDialogAudioBitRates(const QStringList& list) const
 	exportUi.audioBitRateComboBox->addItems(list);
 }
 
+void MFPlayerWidget::setExportDialogFormat(const QStringList& list) const
+{
+	exportUi.formatComboBox->clear();
+	exportUi.formatComboBox->addItems(list);
+}
+
 void MFPlayerWidget::setExportDefaultSettings(const settings& s) const {
 	exportUi.onlyVideoCheckBox->setChecked(!s.closeVideo);
 	exportUi.onlyAudioCheckBox->setChecked(!s.closeAudio);
@@ -172,11 +178,11 @@ void MFPlayerWidget::onOutputButton() { exportDialog->show(); }
 
 void MFPlayerWidget::onExportButton() {
 	settings s;
-	s.URL = exportUi.fileEdit->text();
-	if (s.URL.size() == 0) {
+	if (!(exportUi.fileEdit->text().size()&&exportUi.nameLineEdit->text().size())) {
 		QMessageBox::critical(this, tr("error"), tr("请设置正确的文件名或文件路径"), QMessageBox::Discard);
 		return;
 	}
+	s.URL = exportUi.fileEdit->text()+"/"+exportUi.nameLineEdit->text()+"."+exportUi.formatComboBox->currentText();
 	s.closeAudio = !exportUi.onlyAudioCheckBox->isChecked();
 	s.closeVideo = !exportUi.onlyVideoCheckBox->isChecked();
 	s.startPts = exportUi.startTimeEdit->time().msecsSinceStartOfDay();
@@ -197,7 +203,7 @@ void MFPlayerWidget::onExportButton() {
 
 void MFPlayerWidget::onOpenFileButton() {
 	exportUi.fileEdit->setText(
-		QFileDialog::getExistingDirectory(this, tr("选择文件保存路径"), "../../", QFileDialog::ShowDirsOnly) + '/');
+		QFileDialog::getExistingDirectory(this, tr("选择文件保存路径"), "../../", QFileDialog::ShowDirsOnly));
 }
 
 void MFPlayerWidget::onSliderReleased() {
@@ -284,6 +290,11 @@ void MFPlayerWidget::onProgress(qint64 p) { progressDialog->setValue(p); }
 
 void MFPlayerWidget::onCancel() {
 	emit cancel();
+}
+
+void MFPlayerWidget::onError(const QString title, const QString info)
+{
+	QMessageBox::warning(this, title, info, QMessageBox::Close);
 }
 
 void MFPlayerWidget::onPlayButton() {

@@ -22,9 +22,9 @@ int MFPAudioThread::playNextFrame(AVFrame* &frame)
 void MFPAudioThread::continousPlayBack()
 {
 	bool start = false;
-	int index = 0;
-	AVFrame* frame;
-	const int delta = audioQueue->getFrameRate() / audioQueue->getSpeed();
+	qint64 index = 0;
+	AVFrame* frame=nullptr;
+	const qint64 delta = audioQueue->getFrameRate() / audioQueue->getSpeed();
 	while (!(audioQueue->frameIsEnd && audioQueue->isEmpty()) && !isStop) {
 		if (audioQueue->getSpeed() < 4) {
 			if (!isStop && !playNextFrame(frame))
@@ -40,7 +40,7 @@ void MFPAudioThread::continousPlayBack()
 				index--;
 			}
 		}
-		const qint64 pts= frame?frame->pts:0;
+		const qint64 pts= frame?frame->pts:audioQueue->getLastPts();
 		if (!start) {
 			clock->setTime( QTime::currentTime().addMSecs(-pts));
 			clock->lock.unlock();
@@ -90,12 +90,16 @@ MFPAudioThread::MFPAudioThread(MFPAudioQueue* audioQueue,MFPSTDClock* clock) {
 	fmt.setSampleRate(44100);
 	fmt.setChannelCount(audioQueue->getChannels());
 	fmt.setSampleFormat(QAudioFormat::Int16);
+	audioSink = new QAudioSink(fmt);
+	io = audioSink->start();
 	swr_ctx = nullptr;
 }
 
 MFPAudioThread::~MFPAudioThread()
 {
+	audioSink->stop();
 	clearAudioQueue();
+	delete audioSink;
 	swr_free(&swr_ctx);
 }
 
@@ -113,8 +117,6 @@ void MFPAudioThread::onPlay(MFPlayerThreadState::statement sig) {
 	if (isStop)
 		return;
 	audioQueue->audioLock.lock();
-	audioSink = new QAudioSink(fmt);
-	io = audioSink->start();
 	AVFrame* frame = nullptr;
 	switch (sig) {
 	case MFPlayerThreadState::CONTINUEPLAY:
@@ -127,8 +129,10 @@ void MFPAudioThread::onPlay(MFPlayerThreadState::statement sig) {
 	default:
 		break;
 	}
-	audioSink->stop();
-	delete audioSink;
+	//说明播放完了
+	if(!isStop&&audioQueue->frameIsEnd) {
+		;
+	}
 	audioQueue->forcePutOut();
 	clearAudioQueue();
 	audioQueue->audioLock.unlock();

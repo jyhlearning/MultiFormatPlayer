@@ -32,6 +32,8 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	        SLOT(onPlay(MFPlayerThreadState::statement)));
 	connect(this, SIGNAL(startPlayThread(MFPlayerThreadState::statement)), mFPlayerThread,
 	        SLOT(onPlay(MFPlayerThreadState::statement)));
+	connect(this, SIGNAL(error(QString, QString)), mFPlayerWidget, SLOT(onError(QString,QString)));
+
 	connect(mFPlayerThread,SIGNAL(sendFrame(QImage)), mFPlayerWidget,SLOT(onFrameChange(QImage)));
 	connect(mFPlayerThread,SIGNAL(stateChange(MFPlayerThreadState::statement)), this,
 	        SLOT(onStateChange(MFPlayerThreadState::statement)));
@@ -85,7 +87,7 @@ void MFPSinglePlayer::stopThreads() {
 
 void MFPSinglePlayer::startPlay(MFPlayerThreadState::statement state) {
 	if (!mFPVideo->isParse()) {
-		QMessageBox::warning(mFPlayerWidget,tr("warning!"),tr("You didn't choose a reasonable resource"),QMessageBox::Close);
+		emit error("warning!", "You didn't choose a reasonable resource");
 		return;
 	}
 	//确保完全退出后再执行启动
@@ -135,15 +137,17 @@ void MFPSinglePlayer::init(const QString& url) {
 	if (ret >= 0) {
 		
 		mFPlayerEncodeThread->init();
-		frameQueue->setLastPts(0);
-		audioQueue->setLastPts(0);
 
 		frameQueue->setFrameRate(mFPVideo->getFrameRate());
 		frameQueue->setTotalTime(mFPVideo->getTotalTime());
+		frameQueue->setStartTime(mFPVideo->getStartTime());
 		audioQueue->setFrameRate(mFPVideo->getFrameRate());
 		audioQueue->setChannels(mFPVideo->getChannels());
 		audioQueue->setSampleRate(mFPVideo->getSampleRate());
 		audioQueue->setSampleFmt(mFPVideo->getSampleFmt());
+
+		frameQueue->setLastPts(frameQueue->getStartTime());
+		audioQueue->setLastPts(frameQueue->getStartTime());
 
 		mFPlayerWidget->setInformationDialog({
 			mFPVideo->getResolution(), mFPVideo->getTotalTime(), mFPVideo->getFrameRate(), mFPVideo->getChannels()
@@ -151,8 +155,8 @@ void MFPSinglePlayer::init(const QString& url) {
 		mFPlayerWidget->setExportDialogAudioBitRates(audioBitrates);
 		mFPlayerWidget->setExportDialogVideoBitRates(videoBitrates);
 		mFPlayerWidget->setExportDialogResolution(resolutions);
+		mFPlayerWidget->setExportDialogFormat(formats);
 		mFPlayerWidget->setExportDefaultSettings(mFPlayerEncodeThread->exportDefaultProfile());
-
 		mFPlayerWidget->setSliderRange(0, frameQueue->getTotalTime());
 		mFPlayerWidget->setBackwardLable(frameQueue->getTotalTime());
 	}
@@ -170,6 +174,7 @@ void MFPSinglePlayer::read(QJsonObject& obj) {
 	readArray("resolutions", obj, resolutions);
 	readArray("videoBitrates", obj, videoBitrates);
 	readArray("audioBitrates", obj, audioBitrates);
+	readArray("formats",obj ,formats);
 }
 
 QWidget* MFPSinglePlayer::getInstance() { return mFPlayerWidget; }
@@ -201,17 +206,17 @@ void MFPSinglePlayer::action(WidgetStete::statement sig) {
 	switch (sig) {
 	case WidgetStete::PLAY:
 		if (frameQueue->getLastPts() == frameQueue->getTotalTime())
-			frameQueue->setLastPts(0);
+			frameQueue->setLastPts(frameQueue->getStartTime());
 		onPlay();
 		break;
 	case WidgetStete::NEXTFRAME:
 		stopPlay();
 		if (frameQueue->getLastPts() == frameQueue->getTotalTime())
-			frameQueue->setLastPts(0);
+			frameQueue->setLastPts(frameQueue->getStartTime());
 		else
 			frameQueue->setLastPts(frameQueue->getLastPts() + 1);
 		if (frameQueue->getLastPts() == frameQueue->getTotalTime())
-			audioQueue->setLastPts(0);
+			audioQueue->setLastPts(frameQueue->getStartTime());
 		else
 			audioQueue->setLastPts(audioQueue->getLastPts() + 1);
 		startPlay(MFPlayerThreadState::NEXTFRAME);
@@ -219,7 +224,7 @@ void MFPSinglePlayer::action(WidgetStete::statement sig) {
 	case WidgetStete::LASTFRAME:
 		stopPlay();
 		lastPts = frameQueue->getLastPts();
-		if (lastPts == 0) { lastPts = frameQueue->getTotalTime(); }
+		if (lastPts == frameQueue->getStartTime()) { lastPts = frameQueue->getTotalTime(); }
 		else if (lastPts == frameQueue->getTotalTime())
 			lastPts -= 2000 / frameQueue->getFrameRate() + 1;
 		else

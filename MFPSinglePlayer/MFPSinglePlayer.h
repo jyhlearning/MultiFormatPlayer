@@ -29,6 +29,7 @@ private:
 	QStringList resolutions;
 	QStringList audioBitrates;
 	QStringList videoBitrates;
+	QStringList formats;
 	MFPlayerThreadState::statement state,stateBefore;
 	void stopThreads();
 	void startPlay(MFPlayerThreadState::statement state);
@@ -59,4 +60,5 @@ signals:
 	void startPlayThread(MFPlayerThreadState::statement sig);
 	void startEncodeThread();
 	void flagChange(bool state);
+	void error(const QString title,const QString info);
 };

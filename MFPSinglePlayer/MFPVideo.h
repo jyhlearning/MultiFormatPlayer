@@ -37,26 +37,35 @@ private:
 public:
 	MFPVideo();
 	~MFPVideo();
+
 	AVCodecContext *getVideoCtx() const;
 	AVCodecContext* getAudioCtx() const;
 	AVStream* getVideoInStream() const;
 	AVStream* getAudioInStream() const;
 	AVSampleFormat getSampleFmt() const;
+
 	int getSampleRate() const;
 	int getChannels() const;
+	int getNextInfo(AVFrame* &frame,int option=0);
+	int getFrameRate() const;
+
 	qint64 getChannelsLayout() const;
+	qint64 getTotalTime() const;
+	qint64 getStartTime() const;
+
+
 	std::pair<int, int> getResolution() const;
 
 	int init(const QString& url);
-	int getNextInfo(AVFrame* &frame,int option=0);
 	int readFrame(int index, int option,AVCodecContext* ctx, QQueue<AVFrame*> &queue) const;
 	int jumpTo(qint64 usec);
-	int getFrameRate() const;
-	qint64 getTotalTime() const;
+
 	bool isParse() const;
+
 	void freeResources();
 	void setVideoPath(const QString &path);
 	void setHwFlag(bool flag);
+
 	static QByteArray toQByteArray(const AVFrame* frame, SwrContext* swr_ctx);
 	static QImage toQImage(const AVFrame* frame,SwsContext* avFrameToQImageSwsContext);
 	static cv::Mat AVFrameToMat(const AVFrame* frame,SwsContext * avFrameToOpenCVBGRSwsContext);

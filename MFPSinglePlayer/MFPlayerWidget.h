@@ -8,6 +8,7 @@
 #include "MFPExportSettings.h"
 #include "QFileDialog"
 #include "QProgressDialog"
+
 namespace WidgetStete {
 	enum statement {
 		PLAY,
@@ -31,11 +32,12 @@ public:
 	MFPlayerWidget(QWidget* parent = nullptr);
 	~MFPlayerWidget();
 	void changeButton(QString qString);
-	void setInformationDialog(const informaion &info) const;
-	void setExportDialogResolution(const QStringList& list)const;
-	void setExportDialogVideoBitRates(const QStringList& list)const;
-	void setExportDialogAudioBitRates(const QStringList& list)const;
-	void setExportDefaultSettings(const settings &s) const;
+	void setInformationDialog(const informaion& info) const;
+	void setExportDialogResolution(const QStringList& list) const;
+	void setExportDialogVideoBitRates(const QStringList& list) const;
+	void setExportDialogAudioBitRates(const QStringList& list) const;
+	void setExportDialogFormat(const QStringList& list) const;
+	void setExportDefaultSettings(const settings& s) const;
 signals:
 	void play(WidgetStete::statement sig);
 	void progress(qint64 msec);
@@ -44,15 +46,17 @@ signals:
 	void volume(int v);
 	void exports(settings s);
 	void cancel();
+
 private:
 	Ui::MFPlayerWidgetClass widgetUi;
 	Ui::infomationDialog infomationDialogUi;
 	Ui::settingsDialog settingsUi;
 	Ui::exportDialog exportUi;
-	QDialog* infomationDialog, * settingsDialog, * exportDialog;
-	QFileDialog *fileOpenDialog;
+	QDialog *infomationDialog, *settingsDialog, *exportDialog;
+	QFileDialog* fileOpenDialog;
 	QProgressDialog* progressDialog;
-	void addExportItem(QComboBox* combox,const QString & text) const;
+	void addExportItem(QComboBox* combox, const QString& text) const;
+
 private slots:
 	void onPlayButton();
 	void onNextFrameButton();
@@ -85,4 +89,5 @@ public slots:
 	void setBackwardLable(qint64 msec) const;
 	void onProgress(qint64 p);
 	void onCancel();
+	void onError(const QString title, const QString info);
 };
