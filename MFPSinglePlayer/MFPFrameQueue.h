@@ -6,12 +6,6 @@
 
 class MFPFrameQueue : public MFPDataBase<AVFrame*> {
 private:
-	qint64 startTime;
-	qint64 totalTime;
-	qint64 lastPts;
-	qint64 frameRate;
-	double speed;
-	double brightness, contrast, hue, saturation;
 
 public:
 	QMutex decodeLock, playLock;
@@ -22,24 +16,4 @@ public:
 	MFPFrameQueue(int c = 30);
 
 	void initQueue();
-
-	void setTotalTime(const qint64 msec);
-
-	qint64 getTotalTime() const;
-
-	void setLastPts(const qint64 pts);
-
-	qint64 getLastPts() const;
-
-	void setFrameRate(qint64 rate);
-
-	qint64 getFrameRate() const;
-
-	void setSpeed(double s);
-
-	double getSpeed() const;
-
-	void setStartTime(qint64 time);
-
-	qint64 getStartTime() const;
 };

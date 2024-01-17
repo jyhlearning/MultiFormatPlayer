@@ -122,7 +122,7 @@ void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
 	frameQueue->forcePutOut();
 	//说明播放完了
 	if (!isStop && frameQueue->frameIsEnd) {
-		frameQueue->setLastPts(frameQueue->getTotalTime());
+		frameQueue->setPlayEnd(true);
 	}
 	clearFrameQueue();
 	frameQueue->playLock.unlock();

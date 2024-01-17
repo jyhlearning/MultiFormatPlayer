@@ -151,12 +151,13 @@ int MFPlayerEncoderThread::encode() {
 			       : temp;
 		emit progress(temp);
 	}
-	//防止中途退出造成内存泄漏
 	emit progress(s.endPts);
+	//防止中途退出造成内存泄漏
 	if (ret > 0)
 		av_frame_free(&frame);
 	writeFrame(packet, nullptr, videoInStream, videoStream, videoEncodeContext, outputFormatContext);
 	writeFrame(packet, nullptr, audioInStream, audioStream, audioEncodeContext, outputFormatContext);
+	mFPVideo->clearBuffer();
 	av_write_trailer(outputFormatContext);
 
 	// 清理资源

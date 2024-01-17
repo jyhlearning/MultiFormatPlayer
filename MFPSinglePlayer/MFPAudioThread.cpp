@@ -131,7 +131,7 @@ void MFPAudioThread::onPlay(MFPlayerThreadState::statement sig) {
 	}
 	//说明播放完了
 	if(!isStop&&audioQueue->frameIsEnd) {
-		;
+		audioQueue->setPlayEnd(true);
 	}
 	audioQueue->forcePutOut();
 	clearAudioQueue();

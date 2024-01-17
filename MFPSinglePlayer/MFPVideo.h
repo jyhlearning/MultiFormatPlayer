@@ -15,6 +15,9 @@ extern "C" {
 #include <libavutil/imgutils.h>
 #include <libswresample/swresample.h>
 }
+#define PRECISE 0
+#define ROUGH 1
+
 static enum AVPixelFormat g_pixelFormat;
 class MFPVideo {
 private:
@@ -51,17 +54,18 @@ public:
 
 	qint64 getChannelsLayout() const;
 	qint64 getTotalTime() const;
-	qint64 getStartTime() const;
-
+	qint64 getVideoStartTime() const;
+	qint64 getAudioStartTime() const;
 
 	std::pair<int, int> getResolution() const;
 
 	int init(const QString& url);
 	int readFrame(int index, int option,AVCodecContext* ctx, QQueue<AVFrame*> &queue) const;
-	int jumpTo(qint64 usec);
+	int jumpTo(qint64 usec,int option=PRECISE);
 
 	bool isParse() const;
 
+	void clearBuffer();
 	void freeResources();
 	void setVideoPath(const QString &path);
 	void setHwFlag(bool flag);

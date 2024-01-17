@@ -28,7 +28,7 @@ int MFPVideo::init(const QString& url) {
 			break;
 		}
 	}
-	
+
 	//找到音频流索引
 	for (int i = 0; i < pFormatCtx->nb_streams; i++) {
 		if (pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
@@ -60,8 +60,8 @@ int MFPVideo::init(const QString& url) {
 
 	pCodec = avcodec_find_decoder(pAVctx->codec_id);
 	aCodec = avcodec_find_decoder(aAVctx->codec_id);
-	if(hwFlag)
-		initHWDecoder(pCodec,pAVctx);
+	if (hwFlag)
+		initHWDecoder(pCodec, pAVctx);
 	if (pCodec == nullptr || aCodec == nullptr) {
 		avcodec_close(pAVctx);
 		avformat_close_input(&pFormatCtx);
@@ -94,7 +94,7 @@ int MFPVideo::init(const QString& url) {
 	//	SWS_FAST_BILINEAR,
 	//	nullptr, nullptr, nullptr
 	//);
-	
+
 	totalTime = 1000 * pFormatCtx->duration / AV_TIME_BASE;
 	parse = true;
 	return 0;
@@ -115,69 +115,51 @@ MFPVideo::MFPVideo() {
 MFPVideo::~MFPVideo() { freeResources(); }
 
 void MFPVideo::freeResources() {
-		
 	//sws_freeContext(avFrameToOpenCVBGRSwsContext);
-	if(pAVframe)
+	if (pAVframe)
 		av_frame_free(&pAVframe);
-	if(pAVctx)
+	if (pAVctx)
 		avcodec_close(pAVctx);
-	if(aAVctx)
+	if (aAVctx)
 		avcodec_close(aAVctx);
-	if(pFormatCtx)
+	if (pFormatCtx)
 		avformat_close_input(&pFormatCtx);
 	if (hwBufferRef)
 		av_buffer_unref(&hwBufferRef);
-	for (auto a : pQueue)
-		av_frame_free(&a);
-	for (auto a : aQueue)
-		av_frame_free(&a);
-	pQueue.clear();
-	aQueue.clear();
+	clearBuffer();
 	parse = false;
 }
 
-void MFPVideo::setHwFlag(bool flag) {
-	hwFlag = flag;
-}
+void MFPVideo::setHwFlag(bool flag) { hwFlag = flag; }
 
 void MFPVideo::setVideoPath(const QString& path) {
 	const std::string str = path.toStdString();
 	videoPath = str.c_str();
 }
 
-AVPixelFormat get_hw_format(AVCodecContext* s, const enum AVPixelFormat* fmt)
-{
+AVPixelFormat get_hw_format(AVCodecContext* s, const enum AVPixelFormat* fmt) {
 	Q_UNUSED(s)
-		const enum AVPixelFormat* p;
+	const enum AVPixelFormat* p;
 
-	for (p = fmt; *p != -1; p++)
-	{
-		if (*p == g_pixelFormat)
-		{
-			return *p;
-		}
-	}
+	for (p = fmt; *p != -1; p++) { if (*p == g_pixelFormat) { return *p; } }
 
 	// 当同时打开太多路视频时，如果超过了GPU的能力，可能会返回找不到解码帧格式
 	return AV_PIX_FMT_NONE;
 }
 
-void MFPVideo::initHWDecoder(const AVCodec* codec, AVCodecContext *ctx) {
+void MFPVideo::initHWDecoder(const AVCodec* codec, AVCodecContext* ctx) {
 	if (!codec) return;
 
 	for (int i = 0; ; i++) {
 		const AVCodecHWConfig* config = avcodec_get_hw_config(codec, i); // 检索编解码器支持的硬件配置。
 
-		AVHWDeviceType type = AV_HWDEVICE_TYPE_NONE;      // ffmpeg支持的硬件解码器
+		AVHWDeviceType type = AV_HWDEVICE_TYPE_NONE; // ffmpeg支持的硬件解码器
 		QStringList strTypes;
-		while ((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE)       // 遍历支持的设备类型。
+		while ((type = av_hwdevice_iterate_types(type)) != AV_HWDEVICE_TYPE_NONE) // 遍历支持的设备类型。
 		{
 			hwDeviceTypes.append(type);
-			const char* ctype = av_hwdevice_get_type_name(type);  // 获取AVHWDeviceType的字符串名称。
-			if (ctype)
-			{
-				strTypes.append(QString(ctype));
-			}
+			const char* ctype = av_hwdevice_get_type_name(type); // 获取AVHWDeviceType的字符串名称。
+			if (ctype) { strTypes.append(QString(ctype)); }
 		}
 		if (!config) {
 			return; // 没有找到支持的硬件配置
@@ -192,15 +174,24 @@ void MFPVideo::initHWDecoder(const AVCodec* codec, AVCodecContext *ctx) {
 
 					// 打开指定类型的设备，并为其创建AVHWDeviceContext。
 					int ret = av_hwdevice_ctx_create(&hwBufferRef, config->device_type, nullptr, nullptr, 0);
-					if (ret < 0) {
-						return;
-					}
+					if (ret < 0) { return; }
 					ctx->hw_device_ctx = av_buffer_ref(hwBufferRef); // 创建一个对AVBuffer的新引用。
 					ctx->get_format = get_hw_format; // 由一些解码器调用，以选择将用于输出帧的像素格式
 					return;
 				}
 			}
 		}
+	}
+}
+
+void MFPVideo::clearBuffer() {
+	while(!pQueue.isEmpty()) {
+		av_frame_free(&pQueue.front());
+		pQueue.pop_front();
+	}
+	while (!aQueue.isEmpty()) {
+		av_frame_free(&aQueue.front());
+		aQueue.pop_front();
 	}
 }
 
@@ -212,7 +203,9 @@ AVSampleFormat MFPVideo::getSampleFmt() const { return aAVctx->sample_fmt; }
 
 qint64 MFPVideo::getChannelsLayout() const { return aAVctx->channel_layout; }
 
-qint64 MFPVideo::getStartTime() const { return pFormatCtx->start_time/1000; }
+qint64 MFPVideo::getVideoStartTime() const { return toMsec(pFormatCtx->streams[videoIndex]->start_time, &pFormatCtx->streams[videoIndex]->time_base); }
+
+qint64 MFPVideo::getAudioStartTime() const { return toMsec(pFormatCtx->streams[audioIndex]->start_time, &pFormatCtx->streams[audioIndex]->time_base);}
 
 AVCodecContext* MFPVideo::getAudioCtx() const { return aAVctx; }
 
@@ -259,7 +252,7 @@ int MFPVideo::getNextInfo(AVFrame* & frame, int option) {
 		//如果是视频数据
 		if (pAVpkt->stream_index == videoIndex) {
 			//解码一帧视频数据
-			ret = readFrame(videoIndex,option,pAVctx,pQueue);
+			ret = readFrame(videoIndex, option, pAVctx, pQueue);
 		}
 		else if (pAVpkt->stream_index == audioIndex) {
 			//解码一帧音频数据
@@ -273,7 +266,7 @@ int MFPVideo::getNextInfo(AVFrame* & frame, int option) {
 		//处理最后buffer中的最后几帧
 		pAVpkt->data = nullptr;
 		pAVpkt->size = 0;
-		readFrame(videoIndex,option,pAVctx,pQueue);
+		readFrame(videoIndex, option, pAVctx, pQueue);
 		av_packet_unref(pAVpkt);
 	}
 	if (!pQueue.isEmpty()) {
@@ -292,26 +285,22 @@ int MFPVideo::getNextInfo(AVFrame* & frame, int option) {
 	return 1; //空帧
 }
 
-int MFPVideo::jumpTo(qint64 msec) {
-	//int ret = av_seek_frame(pFormatCtx, videoIndex,
-	//                        av_rescale_q(msec, av_make_q(1, 1000),
-	//							pFormatCtx->streams[videoIndex]->time_base), AVFMT_SEEK_TO_PTS);
-
-
+int MFPVideo::jumpTo(qint64 msec, int option) {
 	// 使用 avformat_seek_file 定位整个文件
-	qint64 min_timestamp = pFormatCtx->start_time != AV_NOPTS_VALUE ? pFormatCtx->start_time : 0;
-	qint64 max_timestamp = INT64_MAX;
+	const qint64 min_timestamp = pFormatCtx->start_time != AV_NOPTS_VALUE ? pFormatCtx->start_time : 0;
+	const qint64 max_timestamp = INT64_MAX;
 	//往前推1s,避免找到的关键帧太大
-	msec = msec - 1000 < getStartTime() ? getStartTime() : msec - 1000;
+	if (option == PRECISE)
+		msec = msec - 1000 < getVideoStartTime() ? getVideoStartTime() : msec - 1000;
 	int ret = avformat_seek_file(pFormatCtx, videoIndex, min_timestamp, av_rescale_q(msec, av_make_q(1, 1000),
-		pFormatCtx->streams[videoIndex]->time_base), max_timestamp,
+		                             pFormatCtx->streams[videoIndex]->time_base), max_timestamp,
 	                             AVSEEK_FLAG_BACKWARD);
 	avcodec_flush_buffers(pAVctx);
 
 	return ret;
 }
 
-int MFPVideo::readFrame(int index,int option, AVCodecContext* ctx, QQueue<AVFrame*> &queue) const{
+int MFPVideo::readFrame(int index, int option, AVCodecContext* ctx, QQueue<AVFrame*>& queue) const {
 	if (option == 0) {
 		pAVpkt->pts = toMsec(pAVpkt->pts, &pFormatCtx->streams[index]->time_base);
 		pAVpkt->dts = toMsec(pAVpkt->dts, &pFormatCtx->streams[index]->time_base);

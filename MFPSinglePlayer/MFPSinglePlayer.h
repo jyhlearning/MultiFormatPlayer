@@ -32,7 +32,7 @@ private:
 	QStringList formats;
 	MFPlayerThreadState::statement state,stateBefore;
 	void stopThreads();
-	void startPlay(MFPlayerThreadState::statement state);
+	void startPlay(MFPlayerThreadState::statement state,int option=PRECISE);
 	void stopPlay();
 	void readArray(const QString& key, const QJsonObject& obj, QStringList& list)const;
 public:

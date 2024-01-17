@@ -45,6 +45,7 @@ void MFPlayerDecodeThread::decode() {
 		audioQueue->forceGetOut();
 	}
 	else { av_frame_unref(frame); }
+	mFPVideo->clearBuffer();
 	frameQueue->decodeLock.unlock();
 	audioQueue->decodeLock.unlock();
 	//return 0;
