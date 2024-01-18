@@ -13,7 +13,7 @@ MFPlayerDecodeThread::MFPlayerDecodeThread(MFPFrameQueue* frameQueue, MFPAudioQu
 MFPlayerDecodeThread::~MFPlayerDecodeThread() {
 }
 
-void MFPlayerDecodeThread::decode() {
+void MFPlayerDecodeThread::decode(int option) {
 	if (frameQueue->isQuit()||audioQueue->isQuit())
 		return;
 	frameQueue->decodeLock.lock();
@@ -21,11 +21,12 @@ void MFPlayerDecodeThread::decode() {
 	int temp = 1;
 	//循环读取视频数据
 	AVFrame* frame = nullptr;
-	qint64 lPts = frameQueue->getLastPts();
+	const qint64 lPts = frameQueue->getLastPts();
+	const qint64 delta = 1000 / frameQueue->getFrameRate() / 2;
 	while (temp > 0 && !(frameQueue->isQuit()&&audioQueue->isQuit())) {
 		temp = mFPVideo->getNextInfo(frame);
 		if (temp == 2||temp==3) {
-			if (frame->pts >= lPts && !(frameQueue->isQuit() && audioQueue->isQuit())) {
+			if (((option==0&&frame->pts >= lPts)||(option==1&&abs(frame->pts-lPts)<delta)) && !(frameQueue->isQuit() && audioQueue->isQuit())) {
 				if (temp == 2 && !frameQueue->isQuit())
 					frameQueue->safePut(frame);
 				else if (temp == 3 && !audioQueue->isQuit())

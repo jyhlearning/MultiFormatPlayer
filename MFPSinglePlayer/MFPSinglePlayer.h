@@ -56,7 +56,7 @@ public slots:
 private slots:
 	void destroyThread();
 signals:
-	void startDecodeThread();
+	void startDecodeThread(int option);
 	void startPlayThread(MFPlayerThreadState::statement sig);
 	void startEncodeThread();
 	void flagChange(bool state);

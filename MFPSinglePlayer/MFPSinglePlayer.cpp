@@ -27,7 +27,7 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	state = MFPlayerThreadState::PAUSE;
 
 	connect(this, SIGNAL(startEncodeThread()), mFPlayerEncodeThread, SLOT(encode()));
-	connect(this, SIGNAL(startDecodeThread()), mFPlayerDecodeThread, SLOT(decode()));
+	connect(this, SIGNAL(startDecodeThread(int)), mFPlayerDecodeThread, SLOT(decode(int)));
 	connect(this, SIGNAL(startPlayThread(MFPlayerThreadState::statement)), mFPAudioThread,
 	        SLOT(onPlay(MFPlayerThreadState::statement)));
 	connect(this, SIGNAL(startPlayThread(MFPlayerThreadState::statement)), mFPlayerThread,
@@ -109,7 +109,7 @@ void MFPSinglePlayer::startPlay(MFPlayerThreadState::statement state, int option
 		audioQueue->setLastPts(audioQueue->getStartTime());
 	}
 	clock->lock.lock();
-	emit startDecodeThread();
+	emit startDecodeThread(state == MFPlayerThreadState::NEXTFRAME);
 	emit startPlayThread(state);
 	frameQueue->decodeLock.unlock();
 	audioQueue->decodeLock.unlock();
@@ -219,29 +219,15 @@ void MFPSinglePlayer::action(WidgetStete::statement sig) {
 		break;
 	case WidgetStete::NEXTFRAME:
 		stopPlay();
-		if (frameQueue->getPlayEnd() && audioQueue->getPlayEnd()) {
-			frameQueue->setLastPts(frameQueue->getStartTime());
-			audioQueue->setLastPts(frameQueue->getStartTime());
-		}
-		else {
-			frameQueue->setLastPts(frameQueue->getLastPts() + 1);
-			audioQueue->setLastPts(audioQueue->getLastPts() + 1);
-		}
+		frameQueue->setLastPts(frameQueue->getLastPts() + 1000 / frameQueue->getFrameRate());
+		audioQueue->setLastPts(audioQueue->getLastPts() + 1000 / audioQueue->getFrameRate());
 		startPlay(MFPlayerThreadState::NEXTFRAME);
 		break;
 	case WidgetStete::LASTFRAME:
 		stopPlay();
-		if (frameQueue->getLastPts() == frameQueue->getStartTime() || (frameQueue->getPlayEnd() && audioQueue->
-			getPlayEnd())) {
-			frameQueue->setLastPts(frameQueue->getTotalTime());
-			audioQueue->setLastPts(audioQueue->getTotalTime());
-			startPlay(MFPlayerThreadState::NEXTFRAME,ROUGH);
-		}
-		else {
-			frameQueue->setLastPts(frameQueue->getLastPts() - 1000 / frameQueue->getFrameRate() - 1);
-			audioQueue->setLastPts(audioQueue->getLastPts() - 1000 / audioQueue->getFrameRate() - 1);
-			startPlay(MFPlayerThreadState::NEXTFRAME);
-		}
+		frameQueue->setLastPts(frameQueue->getLastPts() - 1000 / frameQueue->getFrameRate());
+		audioQueue->setLastPts(audioQueue->getLastPts() - 1000 / audioQueue->getFrameRate());
+		startPlay(MFPlayerThreadState::NEXTFRAME);
 		break;
 	default: ;
 	}
@@ -263,9 +249,12 @@ void MFPSinglePlayer::onStateChange(MFPlayerThreadState::statement state) {
 void MFPSinglePlayer::onProgress(qint64 msec) {
 	frameQueue->setLastPts(msec);
 	audioQueue->setLastPts(msec);
-	if (stateBefore == MFPlayerThreadState::PLAYING)
-		startPlay(MFPlayerThreadState::CONTINUEPLAY,ROUGH);
-	else { startPlay(MFPlayerThreadState::NEXTFRAME,ROUGH); }
+	//如果跳转的时间超过了总时间，就跳转最近的关键帧，因为最后不一定能跳转，导致在视觉上有差异
+	if (msec >= frameQueue->getTotalTime() || msec >= audioQueue->getTotalTime())
+		startPlay(MFPlayerThreadState::CONTINUEPLAY, ROUGH);
+	else if (stateBefore == MFPlayerThreadState::PLAYING)
+		startPlay(MFPlayerThreadState::CONTINUEPLAY, PRECISE);
+	else startPlay(MFPlayerThreadState::NEXTFRAME, PRECISE);
 }
 
 void MFPSinglePlayer::onSpeedChange(double speed) {
