@@ -5,8 +5,9 @@
 
 
 MFPSinglePlayer::MFPSinglePlayer() {
-	frameQueue = new MFPFrameQueue;
-	audioQueue = new MFPAudioQueue;
+	capacity = 30;
+	frameQueue = new MFPFrameQueue(capacity);
+	audioQueue = new MFPAudioQueue(capacity);
 	clock = new MFPSTDClock;
 	mFPVideo = new MFPVideo;
 
@@ -139,30 +140,36 @@ void MFPSinglePlayer::init(const QString& url) {
 	stopPlay();
 	frameQueue->playLock.lock();
 	audioQueue->audioLock.lock();
+	mFPVideo->setHwFlag(hwDecode);
 	const int ret = mFPVideo->init(url);
 	if (ret >= 0) {
 		mFPlayerEncodeThread->init();
-
+		mFPAudioThread->init();
+		mFPlayerThread->init();
+		frameQueue->setCapacity(capacity);
 		frameQueue->setFrameRate(mFPVideo->getFrameRate());
 		frameQueue->setTotalTime(mFPVideo->getTotalTime());
 		frameQueue->setStartTime(mFPVideo->getVideoStartTime());
+		frameQueue->setLastPts(frameQueue->getStartTime());
+
+		audioQueue->setCapacity(capacity);
 		audioQueue->setStartTime(mFPVideo->getAudioStartTime());
 		audioQueue->setTotalTime(mFPVideo->getTotalTime());
 		audioQueue->setFrameRate(mFPVideo->getFrameRate());
 		audioQueue->setChannels(mFPVideo->getChannels());
 		audioQueue->setSampleRate(mFPVideo->getSampleRate());
 		audioQueue->setSampleFmt(mFPVideo->getSampleFmt());
-
-		frameQueue->setLastPts(frameQueue->getStartTime());
 		audioQueue->setLastPts(audioQueue->getStartTime());
+
 		mFPlayerWidget->setInformationDialog({
 			mFPVideo->getResolution(), mFPVideo->getTotalTime(), mFPVideo->getFrameRate(), mFPVideo->getChannels()
 		});
+		mFPlayerWidget->setExprotDialogDefaultUrl(defaultOutputURL);
 		mFPlayerWidget->setExportDialogAudioBitRates(audioBitrates);
 		mFPlayerWidget->setExportDialogVideoBitRates(videoBitrates);
 		mFPlayerWidget->setExportDialogResolution(resolutions);
 		mFPlayerWidget->setExportDialogFormat(formats);
-		mFPlayerWidget->setExportDefaultSettings(mFPlayerEncodeThread->exportDefaultProfile());
+		mFPlayerWidget->setExportVideoSettings(mFPlayerEncodeThread->exportDefaultProfile());
 		mFPlayerWidget->setSliderRange(0, frameQueue->getTotalTime());
 		mFPlayerWidget->setBackwardLable(frameQueue->getTotalTime());
 	}
@@ -176,7 +183,9 @@ void MFPSinglePlayer::init(const QString& url) {
 void MFPSinglePlayer::setParent(QWidget* parent) { mFPlayerWidget->setParent(parent); }
 
 void MFPSinglePlayer::read(QJsonObject& obj) {
-	mFPVideo->setHwFlag(obj.value("hWDecode").toBool());
+	hwDecode = obj.value("hWDecode").toBool();
+	capacity = obj.value("preLoadFrames").toInt();
+	defaultOutputURL = obj.value("outputUrl").toString();
 	readArray("resolutions", obj, resolutions);
 	readArray("videoBitrates", obj, videoBitrates);
 	readArray("audioBitrates", obj, audioBitrates);

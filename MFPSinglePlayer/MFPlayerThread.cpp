@@ -88,6 +88,14 @@ SwsContext* MFPlayerThread::initSwsctx(AVFrame* frame)
 
 void MFPlayerThread::setFlag(bool flag) { isStop = flag; }
 
+void MFPlayerThread::init()
+{
+	if (avFrameToQImageSwsContext) {
+		sws_freeContext(avFrameToQImageSwsContext);
+		avFrameToQImageSwsContext = nullptr;
+	}
+}
+
 MFPlayerThread::MFPlayerThread(MFPFrameQueue* frame,MFPSTDClock* clock) {
 	isStop = false;
 	frameQueue = frame;

@@ -100,12 +100,21 @@ MFPAudioThread::~MFPAudioThread()
 	audioSink->stop();
 	clearAudioQueue();
 	delete audioSink;
-	swr_free(&swr_ctx);
+	if(swr_ctx)
+		swr_free(&swr_ctx);
 }
 
 void MFPAudioThread::setFlag(bool flag)
 {
 	isStop = flag;
+}
+
+void MFPAudioThread::init()
+{
+	if (swr_ctx) {
+		swr_free(&swr_ctx);
+		swr_ctx = nullptr;
+	}
 }
 
 void MFPAudioThread::onVolume(int v) const

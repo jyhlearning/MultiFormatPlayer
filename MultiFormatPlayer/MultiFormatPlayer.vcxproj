@@ -94,6 +94,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <QtRcc Include="MFPMainWindow.qrc" />
+    <QtUic Include="settingsDialog.ui" />
     <QtUic Include="MFPMainWindow.ui" />
     <QtMoc Include="MFPMainWindow.h" />
     <ClCompile Include="MFPMain.cpp" />

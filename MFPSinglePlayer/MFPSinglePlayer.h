@@ -30,6 +30,9 @@ private:
 	QStringList audioBitrates;
 	QStringList videoBitrates;
 	QStringList formats;
+	int capacity;
+	bool hwDecode;
+	QString defaultOutputURL;
 	MFPlayerThreadState::statement state,stateBefore;
 	void stopThreads();
 	void startPlay(MFPlayerThreadState::statement state,int option=PRECISE);

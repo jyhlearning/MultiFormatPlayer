@@ -37,7 +37,8 @@ public:
 	void setExportDialogVideoBitRates(const QStringList& list) const;
 	void setExportDialogAudioBitRates(const QStringList& list) const;
 	void setExportDialogFormat(const QStringList& list) const;
-	void setExportDefaultSettings(const settings& s) const;
+	void setExprotDialogDefaultUrl(const QString s) const;
+	void setExportVideoSettings(const settings& s) const;
 signals:
 	void play(WidgetStete::statement sig);
 	void progress(qint64 msec);

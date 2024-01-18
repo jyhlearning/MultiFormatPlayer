@@ -34,6 +34,7 @@ private:
 
 public:
 	void setFlag(bool flag);
+	void init();
 	MFPlayerThread(MFPFrameQueue* frame, MFPSTDClock* clock);
 	~MFPlayerThread();
 

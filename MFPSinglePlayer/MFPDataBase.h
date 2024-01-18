@@ -90,6 +90,8 @@ public:
 		lastPts = pts < startTime ? startTime : lastPts;
 	}
 
+	void setCapacity(const qint64 c) { capacity = c; };
+
 	void setTotalTime(const qint64 msec) { totalTime = msec; }
 	qint64 getTotalTime() const { return totalTime; }
 	qint64 getLastPts() const { return lastPts; }

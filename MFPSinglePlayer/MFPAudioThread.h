@@ -24,6 +24,7 @@ public:
 	MFPAudioThread(MFPAudioQueue* audioQueue,MFPSTDClock *clock);
 	~MFPAudioThread();
 	void setFlag(bool flag);
+	void init();
 public slots:
 	void onPlay(MFPlayerThreadState::statement sig);
 	void onVolume(int v) const;

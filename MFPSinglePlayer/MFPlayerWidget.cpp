@@ -105,7 +105,12 @@ void MFPlayerWidget::setExportDialogFormat(const QStringList& list) const
 	exportUi.formatComboBox->addItems(list);
 }
 
-void MFPlayerWidget::setExportDefaultSettings(const settings& s) const {
+void MFPlayerWidget::setExprotDialogDefaultUrl(const QString s) const
+{
+	exportUi.fileEdit->setText(s);
+}
+
+void MFPlayerWidget::setExportVideoSettings(const settings& s) const {
 	exportUi.onlyVideoCheckBox->setChecked(!s.closeVideo);
 	exportUi.onlyAudioCheckBox->setChecked(!s.closeAudio);
 	exportUi.startTimeEdit->setTime(QTime(0, 0, 0).addMSecs(s.startPts));

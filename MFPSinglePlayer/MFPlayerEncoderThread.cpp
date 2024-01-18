@@ -44,6 +44,7 @@ int MFPlayerEncoderThread::encode() {
 	// 1. 创建输出格式上下文
 	AVFormatContext* outputFormatContext = nullptr;
 	avformat_alloc_output_context2(&outputFormatContext, nullptr, nullptr, s.URL.toUtf8());
+	if (!outputFormatContext)return -1;
 	//选择编码器
 	const AVCodec* videoCodec = avcodec_find_encoder(AV_CODEC_ID_H264);
 	const AVCodec* audioCodec = avcodec_find_encoder(AV_CODEC_ID_AAC);
@@ -77,12 +78,12 @@ int MFPlayerEncoderThread::encode() {
 
 	//创建视频流
 	AVStream* videoStream = avformat_new_stream(outputFormatContext, videoCodec);
-	if (avcodec_parameters_from_context(videoStream->codecpar, videoEncodeContext))return -1;;
+	if (avcodec_parameters_from_context(videoStream->codecpar, videoEncodeContext))return -1;
 	videoStream->codecpar->codec_tag = 0;
 
 	//创建音频流
 	AVStream* audioStream = avformat_new_stream(outputFormatContext, audioCodec);
-	if (avcodec_parameters_copy(audioStream->codecpar, audioInStream->codecpar))return -1;;
+	if (avcodec_parameters_copy(audioStream->codecpar, audioInStream->codecpar))return -1;
 	audioStream->codecpar->codec_tag = 0;
 
 
