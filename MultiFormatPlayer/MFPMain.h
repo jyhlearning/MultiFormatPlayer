@@ -27,5 +27,6 @@ public:
 private slots:
 	void onPlay(int index);
 	void destroyThread();
+	void receiveMessage(option o);
 };
 

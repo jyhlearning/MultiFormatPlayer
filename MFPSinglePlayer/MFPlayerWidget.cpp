@@ -3,30 +3,41 @@
 #include <QMessageBox>
 
 #include "QTime"
+#include <QStackedLayout>
 
 MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	: QWidget(parent) {
 	widgetUi.setupUi(this);
 
 	setWindowFlags(Qt::CustomizeWindowHint | Qt::FramelessWindowHint);
-	hide();
-
+	display = false;
 	infomationDialog = new QDialog(this);
-	infomationDialogUi.setupUi(infomationDialog);
 	settingsDialog = new QDialog(this);
-	settingsUi.setupUi(settingsDialog);
 	exportDialog = new QDialog(this);
+	fileOpenDialog = new QFileDialog(this);
+	progressDialog = new QProgressDialog(this);
+
+	const auto verticlLayout = new QStackedLayout(this);
+
+	verticlLayout->setStackingMode(QStackedLayout::StackAll);
+	verticlLayout->addWidget(widgetUi.widget);
+	verticlLayout->addWidget(widgetUi.videoWidget);
+	layout()->addItem(verticlLayout);
+
+	infomationDialogUi.setupUi(infomationDialog);
+	settingsUi.setupUi(settingsDialog);
 	exportDialog->setModal(true);
 	exportUi.setupUi(exportDialog);
-	fileOpenDialog = new QFileDialog(exportDialog);
 	fileOpenDialog->setModal(true);
 	fileOpenDialog->setFileMode(QFileDialog::Directory);
-	progressDialog = new QProgressDialog(exportDialog);
 	progressDialog->close();
 	progressDialog->setModal(true);
 	progressDialog->setWindowTitle(tr("请等待"));
 	progressDialog->setLabelText(tr("导出中..."));
 	progressDialog->setCancelButtonText(tr("终止"));
+
+	loadStyleSheet("MFPStyleSheet.qss");
+
 	connect(widgetUi.playButton,SIGNAL(clicked()), this,SLOT(onPlayButton()));
 	connect(widgetUi.nextFrameButton,SIGNAL(clicked()), this,SLOT(onNextFrameButton()));
 	connect(widgetUi.lastFrameButton, SIGNAL(clicked()), this, SLOT(onLastFrameButton()));
@@ -35,6 +46,7 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	connect(widgetUi.infomationButton,SIGNAL(clicked()), this, SLOT(onInformationButton()));
 	connect(widgetUi.settingButton, SIGNAL(clicked()), this, SLOT(onSettingsButton()));
 	connect(widgetUi.outputButton,SIGNAL(clicked()), this,SLOT(onOutputButton()));
+	connect(widgetUi.fullScreenButton, SIGNAL(clicked()), this, SLOT(onFullScreenButton()));
 
 	connect(widgetUi.timeSlider, SIGNAL(press()), this, SLOT(onSliderPressed()));
 	connect(widgetUi.timeSlider,SIGNAL(release()), this,SLOT(onSliderReleased()));
@@ -42,6 +54,8 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	connect(widgetUi.volumeSlider, SIGNAL(release()), this, SLOT(onSliderMoved()));
 	connect(widgetUi.volumeSlider, SIGNAL(sliderMoved(int)), this, SLOT(onSliderMoved()));
 	connect(widgetUi.speedComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onCurrentIndexChanged(int)));
+
+	connect(widgetUi.test,SIGNAL(clicked()),this,SLOT(onTest()));
 
 	connect(settingsUi.brightnessSlider,SIGNAL(sliderMoved(int)), this,SLOT(onBrightnessSlider()));
 	connect(settingsUi.brightnessSlider, SIGNAL(release()), this, SLOT(onBrightnessSlider()));
@@ -61,6 +75,8 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	widgetUi.speedComboBox->addItem("2");
 	widgetUi.speedComboBox->addItem("4");
 	widgetUi.speedComboBox->setCurrentIndex(1);
+
+	widgetUi.playButton->setProperty("status", "PLAY");
 }
 
 MFPlayerWidget::~MFPlayerWidget() {
@@ -69,8 +85,12 @@ MFPlayerWidget::~MFPlayerWidget() {
 	delete exportDialog;
 }
 
-void MFPlayerWidget::changeButton(QString qString) { widgetUi.playButton->setText(qString); }
-
+void MFPlayerWidget::onChangeButton(QString qString) {
+	widgetUi.playButton->setText(qString);
+	widgetUi.playButton->setProperty("status", qString);
+	this->style()->unpolish(widgetUi.playButton);
+	this->style()->polish(widgetUi.playButton);
+}
 
 void MFPlayerWidget::setInformationDialog(const informaion& info) const {
 	infomationDialogUi.frameRate->setText(QString::number(info.frameRate));
@@ -115,6 +135,8 @@ void MFPlayerWidget::setExportVideoSettings(const settings& s) const {
 	exportUi.onlyAudioCheckBox->setChecked(!s.closeAudio);
 	exportUi.startTimeEdit->setTime(QTime(0, 0, 0).addMSecs(s.startPts));
 	exportUi.endTimeEdit->setTime(QTime(0, 0, 0).addMSecs(s.endPts));
+	exportUi.startTimeEdit->setMaximumTime(QTime(0, 0, 0).addMSecs(s.endPts));
+	exportUi.endTimeEdit->setMaximumTime(QTime(0, 0, 0).addMSecs(s.endPts));
 	addExportItem(exportUi.audioBitRateComboBox, QString::number(s.audioBitRate));
 	addExportItem(exportUi.videoBitRatecomboBox, QString::number(s.videoBitRate));
 	addExportItem(exportUi.resolutionComboBox, QString::number(s.outWidth) + "*" + QString::number(s.outHeight));
@@ -138,6 +160,17 @@ void MFPlayerWidget::addExportItem(QComboBox* combox, const QString& text) const
 	if (!flag) {
 		combox->addItem(text);
 		combox->setCurrentIndex(combox->count() - 1);
+	}
+}
+
+void MFPlayerWidget::loadStyleSheet(const QString fileName)
+{
+	//样式表文件
+	QFile file(fileName);
+	if (file.open(QFile::ReadOnly))
+	{
+		this->setStyleSheet(file.readAll());
+		file.close();
 	}
 }
 
@@ -211,6 +244,11 @@ void MFPlayerWidget::onOpenFileButton() {
 		QFileDialog::getExistingDirectory(this, tr("选择文件保存路径"), "../../", QFileDialog::ShowDirsOnly));
 }
 
+void MFPlayerWidget::onFullScreenButton()
+{
+	emit fullScreen();
+}
+
 void MFPlayerWidget::onSliderReleased() {
 	int a = widgetUi.timeSlider->value();
 	emit progress(widgetUi.timeSlider->value());
@@ -260,7 +298,14 @@ void MFPlayerWidget::onSaturationSlider() {
 	widgetUi.videoWidget->setSaturation(settingsUi.saturationSlider->value() * 2.0 / 100);
 }
 
-void MFPlayerWidget::onFileChoose() {
+void MFPlayerWidget::onTest()
+{
+	setWindowState(Qt::WindowFullScreen);
+	display = !display;
+	if (display)
+		widgetUi.widget->hide();
+	else
+		widgetUi.widget->show();
 }
 
 void MFPlayerWidget::onProgressChange(const qint64 sec) const {
@@ -312,6 +357,5 @@ void MFPlayerWidget::onFrameChange(const QImage qImage) const {
 	//// 缩放图片以适应QLabel，保持纵横比
 	//qImage = qImage.scaled(label_width, label_height, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 	//widgetUi.videoLabel->setPixmap(QPixmap::fromImage(qImage));
-
 	widgetUi.videoWidget->setImage(qImage);
 }

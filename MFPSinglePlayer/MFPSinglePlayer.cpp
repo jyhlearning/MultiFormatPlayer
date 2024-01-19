@@ -34,6 +34,7 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	connect(this, SIGNAL(startPlayThread(MFPlayerThreadState::statement)), mFPlayerThread,
 	        SLOT(onPlay(MFPlayerThreadState::statement)));
 	connect(this, SIGNAL(error(QString, QString)), mFPlayerWidget, SLOT(onError(QString,QString)));
+	connect(this, SIGNAL(changeButton(QString)), mFPlayerWidget, SLOT(onChangeButton(QString)));
 
 	connect(mFPlayerThread,SIGNAL(sendFrame(QImage)), mFPlayerWidget,SLOT(onFrameChange(QImage)));
 	connect(mFPlayerThread,SIGNAL(stateChange(MFPlayerThreadState::statement)), this,
@@ -49,6 +50,7 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	connect(mFPlayerWidget,SIGNAL(exports(settings)), this,SLOT(onExports(settings)));
 	connect(mFPlayerWidget,SIGNAL(volume(int)), mFPAudioThread, SLOT(onVolume(int)));
 	connect(mFPlayerWidget,SIGNAL(cancel()), this, SLOT(onCancel()));
+	connect(mFPlayerWidget, SIGNAL(fullScreen()), this, SLOT(onFullScreen()));
 
 	connect(mFPlayerEncodeThread, SIGNAL(progress(qint64)), mFPlayerWidget, SLOT(onProgress(qint64)));
 
@@ -216,8 +218,11 @@ void MFPSinglePlayer::onPlay() {
 void MFPSinglePlayer::onStop() { stopPlay(); }
 
 void MFPSinglePlayer::action(WidgetStete::statement sig) {
+	if (!mFPVideo->isParse()) {
+		emit error("warning!", "You didn't choose a reasonable resource");
+		return;
+	}
 	qint64 lastPts = 0;
-
 	switch (sig) {
 	case WidgetStete::PLAY:
 		if (frameQueue->getPlayEnd() && audioQueue->getPlayEnd()) {
@@ -246,10 +251,10 @@ void MFPSinglePlayer::onStateChange(MFPlayerThreadState::statement state) {
 	this->state = state;
 	switch (state) {
 	case MFPlayerThreadState::PAUSE:
-		mFPlayerWidget->changeButton("PLAY");
+		emit changeButton("PLAY");
 		break;
 	case MFPlayerThreadState::PLAYING:
-		mFPlayerWidget->changeButton("PAUSE");
+		emit changeButton("PAUSE");
 		break;
 	default: ;
 	}
@@ -288,3 +293,8 @@ void MFPSinglePlayer::onExports(settings s) {
 }
 
 void MFPSinglePlayer::onCancel() { mFPlayerEncodeThread->setFlag(true); }
+
+void MFPSinglePlayer::onFullScreen()
+{
+	emit sendMessage(FULLSCREEN);
+}

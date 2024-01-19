@@ -55,6 +55,7 @@ public slots:
 	void onSpeedChange(double speed);
 	void onExports(settings s);
 	void onCancel();
+	void onFullScreen();
 
 private slots:
 	void destroyThread();
@@ -64,4 +65,6 @@ signals:
 	void startEncodeThread();
 	void flagChange(bool state);
 	void error(const QString title,const QString info);
+	void changeButton(QString s);
+	void sendMessage(option o) override;
 };

@@ -1,0 +1,183 @@
+/* styles.qss */
+
+/* 设置 QPushButton 和 QToolButton 的基本样式 */
+QPushButton#lastFrameButton,
+QPushButton#backwardButton,
+QPushButton#nextFrameButton,
+QPushButton#playButton,
+QPushButton#outputButton,
+QPushButton#settingButton,
+QPushButton#openfileButton,
+QPushButton#forwardButton {
+    background-color: transparent;
+    border-radius: 3%;
+    width: 25px; 
+    height: 25px;
+	color: transparent; /* 隐藏文字 */
+    padding: 0px;
+}
+
+QPushButton#lastFrameButton:hover,
+QPushButton#backwardButton:hover,
+QPushButton#nextFrameButton:hover,
+QPushButton#playButton:hover,
+QPushButton#outputButton:hover,
+QPushButton#settingButton:hover,
+QPushButton#openfileButton:hover,
+QPushButton#forwardButton:hover {
+    border-radius: 3%;
+    background-color: rgb(189, 234, 249); 
+}
+
+QPushButton#lastFrameButton:pressed,
+QPushButton#backwardButton:pressed,
+QPushButton#nextFrameButton:pressed,
+QPushButton#playButton:pressed,
+QPushButton#outputButton:pressed,
+QPushButton#settingButton:pressed,
+QPushButton#openfileButton:pressed,
+QPushButton#forwardButton:pressed {
+    border-radius: 3%;
+    background-color: lightblue;
+}
+
+QPushButton#infomationButton{
+    background-color: transparent;
+    border-radius: 10%;
+    width: 25px; 
+    height: 25px;
+	color: transparent; /* 隐藏文字 */
+    padding: 0px;
+}
+
+
+QPushButton#infomationButton:pressed{
+    border-radius: 12%;
+    background-color: lightblue;
+}
+
+QPushButton#infomationButton:hover{
+    border-radius: 12%;
+    background-color: rgb(189, 234, 249);
+}
+
+QPushButton#openfileButton{
+    border-image: url(../res/button/file.png);
+}
+
+QPushButton#playButton[status="PLAY"] {
+    border-image: url(../res/button/play.png); 
+}
+
+QPushButton#playButton[status="PAUSE"] {
+    border-image: url(../res/button/pause.png);
+}
+
+QPushButton#lastFrameButton{
+    border-image: url(../res/button/lastFrame.png);
+}
+QPushButton#backwardButton{
+    border-image: url(../res/button/back.png);
+}
+QPushButton#nextFrameButton{
+    border-image: url(../res/button/nextFrame.png);
+}
+QPushButton#forwardButton{
+    border-image: url(../res/button/forword.png);
+}
+QPushButton#outputButton{
+    border-image: url(../res/button/output.png);
+}
+QPushButton#settingButton{
+    border-image: url(../res/button/setting.png);
+}
+QPushButton#infomationButton{
+    border-image: url(../res/button/information.png); 
+}
+QComboBox#speedComboBox{
+    background-color: transparent;
+	color: transparent; /* 隐藏文字 */
+    padding: 0px;
+    border-image: url(../res/combox/speed.png); 
+}
+/* styles.qss */
+
+
+
+/* 设置 QSlider 的滑块样式 */
+QSlider::groove:horizontal{ 
+    height: 10px; 
+    left: 0px; 
+    right: 0px; 
+    border:0px;  
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    background:rgba(0,0,0,50);
+ } 
+
+ QSlider::handle:horizontal{ 
+    width: 20px;
+    height: 20px;
+    margin-right: -20px;
+    margin-left: -20px;
+    margin-top: -5px;
+    margin-bottom: -5px;
+    border-image:url(../res/slider/slider.png);
+} 
+QSlider::sub-page:horizontal{
+    margin-left: 10px;
+    background:rgba(80,166,234,1);
+}
+
+QSlider#timeSlider::handle:horizontal{
+    margin-top: -5px;
+    margin-bottom: -2px;
+    border-image:url(../res/slider/locate.png);
+}
+
+QSlider#volumeSlider::handle:horizontal{
+    border-image:url(../res/slider/volume.png);
+}
+
+QLineEdit {
+    border: 1px solid #c4c4c4; 
+    border-radius: 5px; 
+    background: #ffffff; 
+}
+
+
+/* 设置 QListView 的基本样式 */
+QListView#historyListView{
+    border: 1px solid #c4c4c4; 
+    border-radius: 5px; 
+    background-color: #ffffff; 
+    outline: none;
+}
+
+
+QListView#historyListView::item {
+    padding: 5px; 
+}
+
+
+QListView#historyListView::item:hover {
+    border-radius: 5px; 
+    background-color: #e5e5e5; 
+}
+
+
+QListView#historyListView::item:selected {
+    border-radius: 5px; 
+    background-color: #aec7ae; 
+    color: #ffffff;
+}
+
+QWidget#MFPMainWindowClass{
+    background-color: #ddeaea;
+}
+
+QWidget#controlWidget{
+    background-color: rgba(221, 234, 234, 0.765);
+}

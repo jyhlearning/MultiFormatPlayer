@@ -22,6 +22,7 @@ MFPMainWindow::MFPMainWindow(QWidget* parent)
 	menu->addAction(actionClear);
 	menu->addAction(actionDelete);
 	ui.historyListView->setProperty("contextMenuPolicy", Qt::CustomContextMenu);
+	loadStyleSheet("MFPStyleSheet.qss");
 	connect(ui.historyListView,SIGNAL(doubleClicked(QModelIndex)), this,SLOT(onDoubleClicked(QModelIndex)));
 	connect(ui.openfileButton, SIGNAL(clicked()), this, SLOT(onOpenFileButton()));
 	connect(actionDelete, SIGNAL(triggered()), this, SLOT(onActionDelete()));
@@ -38,7 +39,9 @@ MFPMainWindow::MFPMainWindow(QWidget* parent)
 MFPMainWindow::~MFPMainWindow() {
 }
 
-void MFPMainWindow::addPluginWidget(QWidget* widget) { ui.verticalLayout->addWidget(widget); }
+void MFPMainWindow::addPluginWidget(QWidget* widget) {
+	ui.verticalLayout->addWidget(widget);
+}
 
 void MFPMainWindow::loadHistory() {
 	for (int i = 0; i < history->size(); i++) {
@@ -71,6 +74,16 @@ void MFPMainWindow::setSettings(const QJsonObject& obj) {
 	settingsUi.hwDecodeCheckBox->blockSignals(false);
 	settingsUi.frameSpinBox->blockSignals(false);
 	settingsUi.filePathlineEdit->blockSignals(false);
+}
+
+void MFPMainWindow::loadStyleSheet(const QString fileName)
+{
+	QFile file(fileName);
+	if (file.open(QFile::ReadOnly))
+	{
+		this->setStyleSheet(file.readAll());
+		file.close();
+	}
 }
 
 void MFPMainWindow::onOpenFileButton() {

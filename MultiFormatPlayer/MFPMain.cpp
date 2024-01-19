@@ -78,6 +78,9 @@ MFPMain::MFPMain() {
 	path = "settings.json";
 	if(loadPlugin()) {
 		w->addPluginWidget(mFPluginBase->getInstance());
+
+		connect(mFPluginBase,SIGNAL(sendMessage(option)),this,SLOT(receiveMessage(option)));
+
 		mFPluginBase->moveToThread(new QThread(this));
 		mFPluginBase->thread()->start();
 		mFPluginBase->show();
@@ -104,6 +107,11 @@ void MFPMain::destroyThread()
 			mFPluginBase->deleteLater();
 		}
 	}
+}
+
+void MFPMain::receiveMessage(option o)
+{
+
 }
 
 void MFPMain::onPlay(int index) {

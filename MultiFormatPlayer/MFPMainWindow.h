@@ -31,6 +31,7 @@ private:
     QMenu* menu;
     Ui::MFPMainWindowClass ui;
     Ui::settingsDialog settingsUi;
+    void loadStyleSheet(const QString fileName);
 private slots:
     void onDoubleClicked(const QModelIndex index);
     void onOpenFileButton();

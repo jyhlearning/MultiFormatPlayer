@@ -31,7 +31,6 @@ class MFPlayerWidget : public QWidget {
 public:
 	MFPlayerWidget(QWidget* parent = nullptr);
 	~MFPlayerWidget();
-	void changeButton(QString qString);
 	void setInformationDialog(const informaion& info) const;
 	void setExportDialogResolution(const QStringList& list) const;
 	void setExportDialogVideoBitRates(const QStringList& list) const;
@@ -47,6 +46,7 @@ signals:
 	void volume(int v);
 	void exports(settings s);
 	void cancel();
+	void fullScreen();
 
 private:
 	Ui::MFPlayerWidgetClass widgetUi;
@@ -56,7 +56,9 @@ private:
 	QDialog *infomationDialog, *settingsDialog, *exportDialog;
 	QFileDialog* fileOpenDialog;
 	QProgressDialog* progressDialog;
+	bool display;
 	void addExportItem(QComboBox* combox, const QString& text) const;
+	void loadStyleSheet(const QString fileName);
 
 private slots:
 	void onPlayButton();
@@ -69,6 +71,7 @@ private slots:
 	void onOutputButton();
 	void onExportButton();
 	void onOpenFileButton();
+	void onFullScreenButton();
 
 	void onCurrentIndexChanged(int c);
 
@@ -80,8 +83,7 @@ private slots:
 	void onContrastSlider();
 	void onSaturationSlider();
 
-	void onFileChoose();
-
+	void onTest();
 public slots:
 	void onFrameChange(const QImage qImage) const;
 	void onProgressChange(const qint64 sec) const;
@@ -91,4 +93,5 @@ public slots:
 	void onProgress(qint64 p);
 	void onCancel();
 	void onError(const QString title, const QString info);
+	void onChangeButton(QString qString);
 };
