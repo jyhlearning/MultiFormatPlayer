@@ -21,6 +21,8 @@ public:
     void setHistory(QJsonArray *array);
     void setFilter(const QJsonObject& obj);
     void setSettings(const QJsonObject& obj);
+    void fullScreen();
+    void window();
 private:
     QStandardItemModel* ItemModel;
     QJsonArray* history;
@@ -32,6 +34,8 @@ private:
     Ui::MFPMainWindowClass ui;
     Ui::settingsDialog settingsUi;
     void loadStyleSheet(const QString fileName);
+    static void hideLayout(const QLayout* layout);
+    static void showLayout(const QLayout* layout);
 private slots:
     void onDoubleClicked(const QModelIndex index);
     void onOpenFileButton();

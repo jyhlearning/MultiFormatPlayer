@@ -10,14 +10,19 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	widgetUi.setupUi(this);
 
 	setWindowFlags(Qt::CustomizeWindowHint | Qt::FramelessWindowHint);
-	display = false;
+
+	isFullScreen = false;
+
 	infomationDialog = new QDialog(this);
 	settingsDialog = new QDialog(this);
 	exportDialog = new QDialog(this);
 	fileOpenDialog = new QFileDialog(this);
 	progressDialog = new QProgressDialog(this);
-
+	timer = new QTimer(this);
 	const auto verticlLayout = new QStackedLayout(this);
+
+	timer->setInterval(3000);
+	timer->setSingleShot(true);
 
 	verticlLayout->setStackingMode(QStackedLayout::StackAll);
 	verticlLayout->addWidget(widgetUi.widget);
@@ -55,8 +60,6 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	connect(widgetUi.volumeSlider, SIGNAL(sliderMoved(int)), this, SLOT(onSliderMoved()));
 	connect(widgetUi.speedComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onCurrentIndexChanged(int)));
 
-	connect(widgetUi.test,SIGNAL(clicked()),this,SLOT(onTest()));
-
 	connect(settingsUi.brightnessSlider,SIGNAL(sliderMoved(int)), this,SLOT(onBrightnessSlider()));
 	connect(settingsUi.brightnessSlider, SIGNAL(release()), this, SLOT(onBrightnessSlider()));
 	connect(settingsUi.contrastSlider, SIGNAL(sliderMoved(int)), this, SLOT(onContrastSlider()));
@@ -70,6 +73,8 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	connect(exportUi.openFileButton,SIGNAL(clicked()), this,SLOT(onOpenFileButton()));
 
 	connect(progressDialog, SIGNAL(canceled()), this, SLOT(onCancel()));
+
+	connect(timer, SIGNAL(timeout()), this, SLOT(onTimerOut()));
 	widgetUi.speedComboBox->addItem("0.5");
 	widgetUi.speedComboBox->addItem("1");
 	widgetUi.speedComboBox->addItem("2");
@@ -77,6 +82,7 @@ MFPlayerWidget::MFPlayerWidget(QWidget* parent)
 	widgetUi.speedComboBox->setCurrentIndex(1);
 
 	widgetUi.playButton->setProperty("status", "PLAY");
+	widgetUi.fullScreenButton->setProperty("status", false);
 }
 
 MFPlayerWidget::~MFPlayerWidget() {
@@ -119,16 +125,12 @@ void MFPlayerWidget::setExportDialogAudioBitRates(const QStringList& list) const
 	exportUi.audioBitRateComboBox->addItems(list);
 }
 
-void MFPlayerWidget::setExportDialogFormat(const QStringList& list) const
-{
+void MFPlayerWidget::setExportDialogFormat(const QStringList& list) const {
 	exportUi.formatComboBox->clear();
 	exportUi.formatComboBox->addItems(list);
 }
 
-void MFPlayerWidget::setExprotDialogDefaultUrl(const QString s) const
-{
-	exportUi.fileEdit->setText(s);
-}
+void MFPlayerWidget::setExprotDialogDefaultUrl(const QString s) const { exportUi.fileEdit->setText(s); }
 
 void MFPlayerWidget::setExportVideoSettings(const settings& s) const {
 	exportUi.onlyVideoCheckBox->setChecked(!s.closeVideo);
@@ -163,14 +165,20 @@ void MFPlayerWidget::addExportItem(QComboBox* combox, const QString& text) const
 	}
 }
 
-void MFPlayerWidget::loadStyleSheet(const QString fileName)
-{
+void MFPlayerWidget::loadStyleSheet(const QString fileName) {
 	//样式表文件
 	QFile file(fileName);
-	if (file.open(QFile::ReadOnly))
-	{
+	if (file.open(QFile::ReadOnly)) {
 		this->setStyleSheet(file.readAll());
 		file.close();
+	}
+}
+
+void MFPlayerWidget::mouseMoveEvent(QMouseEvent* event) {
+	if (isFullScreen) {
+		widgetUi.widget->show();
+		timer->stop();
+		timer->start();
 	}
 }
 
@@ -216,11 +224,12 @@ void MFPlayerWidget::onOutputButton() { exportDialog->show(); }
 
 void MFPlayerWidget::onExportButton() {
 	settings s;
-	if (!(exportUi.fileEdit->text().size()&&exportUi.nameLineEdit->text().size())) {
+	if (!(exportUi.fileEdit->text().size() && exportUi.nameLineEdit->text().size())) {
 		QMessageBox::critical(this, tr("error"), tr("请设置正确的文件名或文件路径"), QMessageBox::Discard);
 		return;
 	}
-	s.URL = exportUi.fileEdit->text()+"/"+exportUi.nameLineEdit->text()+"."+exportUi.formatComboBox->currentText();
+	s.URL = exportUi.fileEdit->text() + "/" + exportUi.nameLineEdit->text() + "." + exportUi.formatComboBox->
+		currentText();
 	s.closeAudio = !exportUi.onlyAudioCheckBox->isChecked();
 	s.closeVideo = !exportUi.onlyVideoCheckBox->isChecked();
 	s.startPts = exportUi.startTimeEdit->time().msecsSinceStartOfDay();
@@ -244,9 +253,20 @@ void MFPlayerWidget::onOpenFileButton() {
 		QFileDialog::getExistingDirectory(this, tr("选择文件保存路径"), "../../", QFileDialog::ShowDirsOnly));
 }
 
-void MFPlayerWidget::onFullScreenButton()
-{
-	emit fullScreen();
+void MFPlayerWidget::onFullScreenButton() {
+	isFullScreen = !isFullScreen;
+	setMouseTracking(isFullScreen);
+	widgetUi.videoWidget->setMouseTracking(isFullScreen);
+	widgetUi.widget->setMouseTracking(isFullScreen);
+	widgetUi.controlWidget->setMouseTracking(isFullScreen);
+	widgetUi.fullScreenButton->setProperty("status", isFullScreen);
+	this->style()->unpolish(widgetUi.fullScreenButton);
+	this->style()->polish(widgetUi.fullScreenButton);
+	emit fullScreen(isFullScreen);
+	if (isFullScreen) {
+		timer->stop();
+		timer->start();
+	}
 }
 
 void MFPlayerWidget::onSliderReleased() {
@@ -298,15 +318,7 @@ void MFPlayerWidget::onSaturationSlider() {
 	widgetUi.videoWidget->setSaturation(settingsUi.saturationSlider->value() * 2.0 / 100);
 }
 
-void MFPlayerWidget::onTest()
-{
-	setWindowState(Qt::WindowFullScreen);
-	display = !display;
-	if (display)
-		widgetUi.widget->hide();
-	else
-		widgetUi.widget->show();
-}
+void MFPlayerWidget::onTimerOut() { if (isFullScreen) widgetUi.widget->hide(); }
 
 void MFPlayerWidget::onProgressChange(const qint64 sec) const {
 	widgetUi.timeSlider->setValue(sec);
@@ -342,8 +354,7 @@ void MFPlayerWidget::onCancel() {
 	emit cancel();
 }
 
-void MFPlayerWidget::onError(const QString title, const QString info)
-{
+void MFPlayerWidget::onError(const QString title, const QString info) {
 	QMessageBox::warning(this, title, info, QMessageBox::Close);
 }
 

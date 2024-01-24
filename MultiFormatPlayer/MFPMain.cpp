@@ -111,7 +111,15 @@ void MFPMain::destroyThread()
 
 void MFPMain::receiveMessage(option o)
 {
-
+	switch (o) {
+	case FULLSCREEN:
+		w->fullScreen();
+		break;
+	case WINDOW:
+		w->window();
+		break;
+	default:;
+	}
 }
 
 void MFPMain::onPlay(int index) {

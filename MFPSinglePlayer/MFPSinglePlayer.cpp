@@ -50,7 +50,7 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	connect(mFPlayerWidget,SIGNAL(exports(settings)), this,SLOT(onExports(settings)));
 	connect(mFPlayerWidget,SIGNAL(volume(int)), mFPAudioThread, SLOT(onVolume(int)));
 	connect(mFPlayerWidget,SIGNAL(cancel()), this, SLOT(onCancel()));
-	connect(mFPlayerWidget, SIGNAL(fullScreen()), this, SLOT(onFullScreen()));
+	connect(mFPlayerWidget, SIGNAL(fullScreen(bool)), this, SLOT(onFullScreen(bool)));
 
 	connect(mFPlayerEncodeThread, SIGNAL(progress(qint64)), mFPlayerWidget, SLOT(onProgress(qint64)));
 
@@ -294,7 +294,7 @@ void MFPSinglePlayer::onExports(settings s) {
 
 void MFPSinglePlayer::onCancel() { mFPlayerEncodeThread->setFlag(true); }
 
-void MFPSinglePlayer::onFullScreen()
+void MFPSinglePlayer::onFullScreen(bool state)
 {
-	emit sendMessage(FULLSCREEN);
+	emit sendMessage(state?FULLSCREEN:WINDOW);
 }

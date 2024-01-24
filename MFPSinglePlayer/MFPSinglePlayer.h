@@ -55,7 +55,7 @@ public slots:
 	void onSpeedChange(double speed);
 	void onExports(settings s);
 	void onCancel();
-	void onFullScreen();
+	void onFullScreen(bool state);
 
 private slots:
 	void destroyThread();

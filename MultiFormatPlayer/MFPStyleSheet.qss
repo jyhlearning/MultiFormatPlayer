@@ -4,15 +4,24 @@
 QPushButton#lastFrameButton,
 QPushButton#backwardButton,
 QPushButton#nextFrameButton,
-QPushButton#playButton,
 QPushButton#outputButton,
 QPushButton#settingButton,
+QPushButton#fullScreenButton,
 QPushButton#openfileButton,
 QPushButton#forwardButton {
     background-color: transparent;
     border-radius: 3%;
-    width: 25px; 
-    height: 25px;
+    width: 30px; 
+    height: 30px;
+	color: transparent; /* 隐藏文字 */
+    padding: 0px;
+}
+
+QPushButton#playButton{
+    background-color: transparent;
+    border-radius: 3%;
+    width: 45px; 
+    height: 45px;
 	color: transparent; /* 隐藏文字 */
     padding: 0px;
 }
@@ -20,19 +29,19 @@ QPushButton#forwardButton {
 QPushButton#lastFrameButton:hover,
 QPushButton#backwardButton:hover,
 QPushButton#nextFrameButton:hover,
-QPushButton#playButton:hover,
+QPushButton#fullScreenButton:hover,
 QPushButton#outputButton:hover,
 QPushButton#settingButton:hover,
 QPushButton#openfileButton:hover,
 QPushButton#forwardButton:hover {
     border-radius: 3%;
-    background-color: rgb(189, 234, 249); 
+    background-color: #bdeaf9; 
 }
 
 QPushButton#lastFrameButton:pressed,
 QPushButton#backwardButton:pressed,
 QPushButton#nextFrameButton:pressed,
-QPushButton#playButton:pressed,
+QPushButton#fullScreenButton:pressed,
 QPushButton#outputButton:pressed,
 QPushButton#settingButton:pressed,
 QPushButton#openfileButton:pressed,
@@ -40,24 +49,32 @@ QPushButton#forwardButton:pressed {
     border-radius: 3%;
     background-color: lightblue;
 }
+QPushButton#playButton:pressed{
+    border-radius: 22%;
+    background-color: lightblue;
+}
+QPushButton#playButton:hover{
+    border-radius: 22%;
+    background-color: #bdeaf9; 
+}
 
 QPushButton#infomationButton{
     background-color: transparent;
     border-radius: 10%;
-    width: 25px; 
-    height: 25px;
+    width: 30px; 
+    height: 30px;
 	color: transparent; /* 隐藏文字 */
     padding: 0px;
 }
 
 
 QPushButton#infomationButton:pressed{
-    border-radius: 12%;
+    border-radius: 15%;
     background-color: lightblue;
 }
 
 QPushButton#infomationButton:hover{
-    border-radius: 12%;
+    border-radius: 15%;
     background-color: rgb(189, 234, 249);
 }
 
@@ -77,13 +94,13 @@ QPushButton#lastFrameButton{
     border-image: url(../res/button/lastFrame.png);
 }
 QPushButton#backwardButton{
-    border-image: url(../res/button/back.png);
+    border-image: url(../res/button/backward.png);
 }
 QPushButton#nextFrameButton{
     border-image: url(../res/button/nextFrame.png);
 }
 QPushButton#forwardButton{
-    border-image: url(../res/button/forword.png);
+    border-image: url(../res/button/forward.png);
 }
 QPushButton#outputButton{
     border-image: url(../res/button/output.png);
@@ -94,16 +111,20 @@ QPushButton#settingButton{
 QPushButton#infomationButton{
     border-image: url(../res/button/information.png); 
 }
+QPushButton#fullScreenButton[status=false]{
+    border-image: url(../res/button/fullScreen.png);
+}
+QPushButton#fullScreenButton[status=true]{
+    border-image: url(../res/button/window.png);
+}
 QComboBox#speedComboBox{
     background-color: transparent;
 	color: transparent; /* 隐藏文字 */
     padding: 0px;
+    width: 25px;
+    height: 25px;
     border-image: url(../res/combox/speed.png); 
 }
-/* styles.qss */
-
-
-
 /* 设置 QSlider 的滑块样式 */
 QSlider::groove:horizontal{ 
     height: 10px; 
@@ -123,7 +144,7 @@ QSlider::groove:horizontal{
     margin-right: -20px;
     margin-left: -20px;
     margin-top: -5px;
-    margin-bottom: -5px;
+    margin-bottom:-5px;
     border-image:url(../res/slider/slider.png);
 } 
 QSlider::sub-page:horizontal{
@@ -135,6 +156,10 @@ QSlider#timeSlider::handle:horizontal{
     margin-top: -5px;
     margin-bottom: -2px;
     border-image:url(../res/slider/locate.png);
+}
+
+QSlider#volumeSlider::groove:horizontal{
+    height: 7px;
 }
 
 QSlider#volumeSlider::handle:horizontal{
@@ -170,7 +195,7 @@ QListView#historyListView::item:hover {
 
 QListView#historyListView::item:selected {
     border-radius: 5px; 
-    background-color: #aec7ae; 
+    background-color: #5ca8ff; 
     color: #ffffff;
 }
 
@@ -179,5 +204,5 @@ QWidget#MFPMainWindowClass{
 }
 
 QWidget#controlWidget{
-    background-color: rgba(221, 234, 234, 0.765);
+    background-color: rgba(221, 234, 234, 0.856)
 }

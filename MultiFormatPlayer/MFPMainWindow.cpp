@@ -39,9 +39,7 @@ MFPMainWindow::MFPMainWindow(QWidget* parent)
 MFPMainWindow::~MFPMainWindow() {
 }
 
-void MFPMainWindow::addPluginWidget(QWidget* widget) {
-	ui.verticalLayout->addWidget(widget);
-}
+void MFPMainWindow::addPluginWidget(QWidget* widget) { ui.verticalLayout->addWidget(widget); }
 
 void MFPMainWindow::loadHistory() {
 	for (int i = 0; i < history->size(); i++) {
@@ -76,11 +74,52 @@ void MFPMainWindow::setSettings(const QJsonObject& obj) {
 	settingsUi.filePathlineEdit->blockSignals(false);
 }
 
-void MFPMainWindow::loadStyleSheet(const QString fileName)
+void MFPMainWindow::fullScreen()
 {
+	ui.menuBar->hide();
+	hideLayout(ui.rightLayout);
+	ui.centralWidget->layout()->setContentsMargins(0, 0, 0, 0);
+	this->setWindowFlags(Qt::FramelessWindowHint);
+	this->showFullScreen();
+}
+
+void MFPMainWindow::window()
+{
+	ui.menuBar->show();
+	showLayout(ui.rightLayout);
+	ui.centralWidget->layout()->setContentsMargins(11, 11, 11, 11);
+	this->setWindowState(Qt::WindowActive);
+	this->setWindowFlags(Qt::Window);
+	this->showNormal();
+}
+
+void MFPMainWindow::hideLayout(const QLayout* layout) {
+	for (int i = 0; i < layout->count(); i++) {
+		QLayoutItem* item = layout->itemAt(i);
+		if(item->widget()) {
+			item->widget()->hide();
+		}else if(item->layout()) {
+			hideLayout(item->layout());
+		}
+	}
+}
+
+void MFPMainWindow::showLayout(const QLayout* layout)
+{
+	for (int i = 0; i < layout->count(); i++) {
+		QLayoutItem* item = layout->itemAt(i);
+		if (item->widget()) {
+			item->widget()->show();
+		}
+		else if (item->layout()) {
+			showLayout(item->layout());
+		}
+	}
+}
+
+void MFPMainWindow::loadStyleSheet(const QString fileName) {
 	QFile file(fileName);
-	if (file.open(QFile::ReadOnly))
-	{
+	if (file.open(QFile::ReadOnly)) {
 		this->setStyleSheet(file.readAll());
 		file.close();
 	}

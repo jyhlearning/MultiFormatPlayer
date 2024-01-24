@@ -8,6 +8,7 @@
 #include "MFPExportSettings.h"
 #include "QFileDialog"
 #include "QProgressDialog"
+#include "QTimer"
 
 namespace WidgetStete {
 	enum statement {
@@ -46,7 +47,7 @@ signals:
 	void volume(int v);
 	void exports(settings s);
 	void cancel();
-	void fullScreen();
+	void fullScreen(bool state);
 
 private:
 	Ui::MFPlayerWidgetClass widgetUi;
@@ -56,9 +57,11 @@ private:
 	QDialog *infomationDialog, *settingsDialog, *exportDialog;
 	QFileDialog* fileOpenDialog;
 	QProgressDialog* progressDialog;
-	bool display;
+	QTimer* timer;
+	bool isFullScreen;
 	void addExportItem(QComboBox* combox, const QString& text) const;
 	void loadStyleSheet(const QString fileName);
+	void mouseMoveEvent(QMouseEvent* event) override;
 
 private slots:
 	void onPlayButton();
@@ -83,7 +86,8 @@ private slots:
 	void onContrastSlider();
 	void onSaturationSlider();
 
-	void onTest();
+	void onTimerOut();
+
 public slots:
 	void onFrameChange(const QImage qImage) const;
 	void onProgressChange(const qint64 sec) const;

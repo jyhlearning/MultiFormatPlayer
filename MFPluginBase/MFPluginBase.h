@@ -4,7 +4,8 @@
 #include "QtPlugin"
 #include "QObject"
 enum option {
-	FULLSCREEN
+	FULLSCREEN,
+    WINDOW
 };
 class MFPLUGINBASE_EXPORT MFPluginBase:public QObject
 {
