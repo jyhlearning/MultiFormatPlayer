@@ -7,6 +7,12 @@ void MFPOpenGLWidget::initTextures() {
 	texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear); //滤波
 	// 设置双线性过滤模式，以放大纹理
 	texture->setMagnificationFilter(QOpenGLTexture::Linear);
+
+	QImage i;
+	i.load("default.png");
+	if (!i.isNull()) {
+		setImage(i);
+	}
 }
 
 void MFPOpenGLWidget::initShaders() {

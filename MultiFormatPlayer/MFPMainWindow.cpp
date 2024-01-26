@@ -23,6 +23,7 @@ MFPMainWindow::MFPMainWindow(QWidget* parent)
 	menu->addAction(actionDelete);
 	ui.historyListView->setProperty("contextMenuPolicy", Qt::CustomContextMenu);
 	loadStyleSheet("MFPStyleSheet.qss");
+	setWindowIcon(QIcon("logo.png"));
 	connect(ui.historyListView,SIGNAL(doubleClicked(QModelIndex)), this,SLOT(onDoubleClicked(QModelIndex)));
 	connect(ui.openfileButton, SIGNAL(clicked()), this, SLOT(onOpenFileButton()));
 	connect(actionDelete, SIGNAL(triggered()), this, SLOT(onActionDelete()));
