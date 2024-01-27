@@ -79,43 +79,43 @@ QPushButton#infomationButton:hover{
 }
 
 QPushButton#openfileButton{
-    border-image: url(../res/button/file.png);
+    border-image: url(:/res/button/file.png);
 }
 
 QPushButton#playButton[status="PLAY"] {
-    border-image: url(../res/button/play.png); 
+    border-image: url(:/res/button/play.png); 
 }
 
 QPushButton#playButton[status="PAUSE"] {
-    border-image: url(../res/button/pause.png);
+    border-image: url(:/res/button/pause.png);
 }
 
 QPushButton#lastFrameButton{
-    border-image: url(../res/button/lastFrame.png);
+    border-image: url(:/res/button/lastFrame.png);
 }
 QPushButton#backwardButton{
-    border-image: url(../res/button/backward.png);
+    border-image: url(:/res/button/backward.png);
 }
 QPushButton#nextFrameButton{
-    border-image: url(../res/button/nextFrame.png);
+    border-image: url(:/res/button/nextFrame.png);
 }
 QPushButton#forwardButton{
-    border-image: url(../res/button/forward.png);
+    border-image: url(:/res/button/forward.png);
 }
 QPushButton#outputButton{
-    border-image: url(../res/button/output.png);
+    border-image: url(:/res/button/output.png);
 }
 QPushButton#settingButton{
-    border-image: url(../res/button/setting.png);
+    border-image: url(:/res/button/setting.png);
 }
 QPushButton#infomationButton{
-    border-image: url(../res/button/information.png); 
+    border-image: url(:/res/button/information.png); 
 }
 QPushButton#fullScreenButton[status=false]{
-    border-image: url(../res/button/fullScreen.png);
+    border-image: url(:/res/button/fullScreen.png);
 }
 QPushButton#fullScreenButton[status=true]{
-    border-image: url(../res/button/window.png);
+    border-image: url(:/res/button/window.png);
 }
 QComboBox#speedComboBox{
     background-color: transparent;
@@ -123,7 +123,7 @@ QComboBox#speedComboBox{
     padding: 0px;
     width: 25px;
     height: 25px;
-    border-image: url(../res/combox/speed.png); 
+    border-image: url(:/res/combox/speed.png); 
 }
 /* 设置 QSlider 的滑块样式 */
 QSlider::groove:horizontal{ 
@@ -145,7 +145,7 @@ QSlider::groove:horizontal{
     margin-left: -20px;
     margin-top: -5px;
     margin-bottom:-5px;
-    border-image:url(../res/slider/slider.png);
+    border-image:url(:/res/slider/slider.png);
 } 
 QSlider::sub-page:horizontal{
     margin-left: 10px;
@@ -155,7 +155,7 @@ QSlider::sub-page:horizontal{
 QSlider#timeSlider::handle:horizontal{
     margin-top: -5px;
     margin-bottom: -2px;
-    border-image:url(../res/slider/locate.png);
+    border-image:url(:/res/slider/locate.png);
 }
 
 QSlider#volumeSlider::groove:horizontal{
@@ -163,7 +163,7 @@ QSlider#volumeSlider::groove:horizontal{
 }
 
 QSlider#volumeSlider::handle:horizontal{
-    border-image:url(../res/slider/volume.png);
+    border-image:url(:/res/slider/volume.png);
 }
 
 QLineEdit {

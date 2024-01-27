@@ -225,7 +225,7 @@ void MFPlayerWidget::onOutputButton() { exportDialog->show(); }
 void MFPlayerWidget::onExportButton() {
 	settings s;
 	if (!(exportUi.fileEdit->text().size() && exportUi.nameLineEdit->text().size())) {
-		QMessageBox::critical(this, tr("error"), tr("请设置正确的文件名或文件路径"), QMessageBox::Discard);
+		QMessageBox::critical(this, tr("错误"), tr("请设置正确的文件名或文件路径"), QMessageBox::Discard);
 		return;
 	}
 	s.URL = exportUi.fileEdit->text() + "/" + exportUi.nameLineEdit->text() + "." + exportUi.formatComboBox->
@@ -245,7 +245,7 @@ void MFPlayerWidget::onExportButton() {
 		emit exports(s);
 	}
 	else
-		QMessageBox::critical(this, tr("error"), tr("请检查分辨率配置文件"), QMessageBox::Discard);
+		QMessageBox::critical(this, tr("错误"), tr("请检查分辨率配置文件"), QMessageBox::Discard);
 }
 
 void MFPlayerWidget::onOpenFileButton() {

@@ -17,7 +17,6 @@ private:
 	QJsonObject obj;
 
 	bool loadPlugin();
-	void init();
 	void read();
 	void write();
 public:

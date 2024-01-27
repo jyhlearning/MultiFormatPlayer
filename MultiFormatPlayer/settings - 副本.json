@@ -1,26 +1,59 @@
 {
+    "defaultLanguage": "MFPTranslation_en.qm",
     "history": [
+        "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-39-04-341.mp4"
     ],
-    "singlePlayer":{
-        "resolutions":[
-            "320*240","640*480","720*480","1280*720","1920*1080","2560*1440"
+    "languages": [
+        {
+            "name": "简体中文",
+            "suffix": "MFPTranslation_cn.qm"
+        },
+        {
+            "name": "English",
+            "suffix": "MFPTranslation_en.qm"
+        }
+    ],
+    "singlePlayer": {
+        "audioBitrates": [
+            "64000",
+            "128000",
+            "320000"
         ],
-        "videoBitrates":[
-            "576000","869000","1088000","1216000","1536000","1856000","2176000","2486000","3072000","4992000","7552000","20000000"
+        "formats": [
+            "mp4",
+            "flv",
+            "f4v",
+            "m4v",
+            "mov",
+            "3gp",
+            "3g2",
+            "avi",
+            "ts"
         ],
-        "audioBitrates":[
-            "64000","128000","320000"
+        "hWDecode": false,
+        "outputUrl": "",
+        "preLoadFrames": 30,
+        "resolutions": [
+            "320*240",
+            "640*480",
+            "720*480",
+            "1280*720",
+            "1920*1080",
+            "2560*1440"
         ],
-        "formats":[
-            "mp4","flv","f4v","webm",
-            "m4v","mov","3gp","3g2",
-            "rm","rmvb",
-            "wmv","avi","asf",
-            "mpg","mpeg","mpe","ts",
-            "div","dv","divx",
-            "vob","dat","mkv","lavf","cpk","dirac","ram","qt","fli","flc","mod"
-        ],
-        "hWDecode":false
+        "videoBitrates": [
+            "576000",
+            "869000",
+            "1088000",
+            "1216000",
+            "1536000",
+            "1856000",
+            "2176000",
+            "2486000",
+            "3072000",
+            "4992000",
+            "7552000",
+            "20000000"
+        ]
     }
-
 }

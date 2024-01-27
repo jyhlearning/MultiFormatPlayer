@@ -219,7 +219,7 @@ void MFPSinglePlayer::onStop() { stopPlay(); }
 
 void MFPSinglePlayer::action(WidgetStete::statement sig) {
 	if (!mFPVideo->isParse()) {
-		emit error("warning!", "You didn't choose a reasonable resource");
+		emit error(tr("警告!"), tr("请选择可用的资源文件"));
 		return;
 	}
 	qint64 lastPts = 0;
@@ -281,7 +281,7 @@ void MFPSinglePlayer::onSpeedChange(double speed) {
 
 void MFPSinglePlayer::onExports(settings s) {
 	if (!mFPVideo->isParse()) {
-		QMessageBox::warning(mFPlayerWidget, tr("warning!"), tr("You didn't choose a reasonable resource"),
+		QMessageBox::warning(mFPlayerWidget, tr("警告!"), tr("请选择可用的资源文件"),
 		                     QMessageBox::Close);
 		return;
 	}

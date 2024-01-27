@@ -21,6 +21,7 @@ public:
     void setHistory(QJsonArray *array);
     void setFilter(const QJsonObject& obj);
     void setSettings(const QJsonObject& obj);
+    void setLanguage(const QJsonObject& obj);
     void fullScreen();
     void window();
 private:
@@ -31,6 +32,7 @@ private:
     QAction* actionDelete,*actionClear,*actionSetting;
     QDialog* settingsDialog;
     QMenu* menu;
+    QStringList languages;
     Ui::MFPMainWindowClass ui;
     Ui::settingsDialog settingsUi;
     void loadStyleSheet(const QString fileName);

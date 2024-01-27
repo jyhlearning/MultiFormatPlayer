@@ -1,4 +1,26 @@
 <RCC>
-    <qresource prefix="MFPMainWindow">
+    <qresource prefix="/">
+        <file>res/button/backward.png</file>
+        <file>res/button/file.png</file>
+        <file>res/button/forward.png</file>
+        <file>res/button/fullScreen.png</file>
+        <file>res/button/information.png</file>
+        <file>res/button/lastFrame.png</file>
+        <file>res/button/nextFrame.png</file>
+        <file>res/button/output.png</file>
+        <file>res/button/pause.png</file>
+        <file>res/button/play.png</file>
+        <file>res/button/setting.png</file>
+        <file>res/button/speed.png</file>
+        <file>res/button/volume.png</file>
+        <file>res/button/window.png</file>
+        <file>res/combox/speed.png</file>
+        <file>res/edit/url.png</file>
+        <file>res/slider/locate.png</file>
+        <file>res/slider/slider.png</file>
+        <file>res/slider/volume.png</file>
+        <file>res/default.png</file>
+        <file>logo.ico</file>
+        <file>MFPStyleSheet.qss</file>
     </qresource>
 </RCC>

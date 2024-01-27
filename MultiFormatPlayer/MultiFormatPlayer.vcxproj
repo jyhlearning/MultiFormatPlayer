@@ -62,11 +62,17 @@
     <ClCompile>
       <AdditionalIncludeDirectories>..\MFPluginBase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\MFPluginBase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
@@ -93,7 +99,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <QtRcc Include="MFPMainWindow.qrc" />
     <QtUic Include="settingsDialog.ui" />
     <QtUic Include="MFPMainWindow.ui" />
     <QtMoc Include="MFPMainWindow.h" />
@@ -108,6 +113,12 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MFPMain.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtTranslation Include="MFPTranslation_en.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="MFPMainWindow.qrc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

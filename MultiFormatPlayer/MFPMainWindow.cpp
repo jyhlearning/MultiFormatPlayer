@@ -6,24 +6,26 @@
 #include "QDir"
 #include "QPluginLoader"
 #include <qstandarditemmodel.h>
+#include "QTranslator"
 
 MFPMainWindow::MFPMainWindow(QWidget* parent)
 	: QMainWindow(parent) {
 	ui.setupUi(this);
 	ItemModel = new QStandardItemModel(this);
-	actionDelete = new QAction(tr("Delete"), this);
-	actionClear = new QAction(tr("Clear"), this);
-	actionSetting = new QAction(tr("Settings"), this);
 	menu = new QMenu(this);
 	settingsDialog = new QDialog(this);
+	actionDelete = new QAction(tr("删除"), this);
+	actionClear = new QAction(tr("清空"), this);
+	actionSetting = new QAction(tr("设置"), this);
 	settingsDialog->setModal(true);
 	settingsUi.setupUi(settingsDialog);
 	ui.settingsMenu->addAction(actionSetting);
 	menu->addAction(actionClear);
 	menu->addAction(actionDelete);
 	ui.historyListView->setProperty("contextMenuPolicy", Qt::CustomContextMenu);
-	loadStyleSheet("MFPStyleSheet.qss");
-	setWindowIcon(QIcon("logo.png"));
+	loadStyleSheet(":/MFPStyleSheet.qss");
+	setWindowIcon(QIcon(":/logo.ico"));
+
 	connect(ui.historyListView,SIGNAL(doubleClicked(QModelIndex)), this,SLOT(onDoubleClicked(QModelIndex)));
 	connect(ui.openfileButton, SIGNAL(clicked()), this, SLOT(onOpenFileButton()));
 	connect(actionDelete, SIGNAL(triggered()), this, SLOT(onActionDelete()));
@@ -33,6 +35,7 @@ MFPMainWindow::MFPMainWindow(QWidget* parent)
 	connect(settingsUi.frameSpinBox, SIGNAL(editingFinished()), this, SLOT(onSettingsChanged()));
 	connect(settingsUi.filePathlineEdit, SIGNAL(editingFinished()), this, SLOT(onSettingsChanged()));
 	connect(settingsUi.openDirButton, SIGNAL(clicked()), this, SLOT(onOpenDirButton()));
+	connect(settingsUi.languageComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onSettingsChanged()));
 	connect(ui.historyListView, SIGNAL(customContextMenuRequested(const QPoint&)), this,
 	        SLOT(onListViewRightClickRequest(const QPoint&)));
 }
@@ -53,6 +56,7 @@ void MFPMainWindow::read(QJsonObject& obj) {
 	this->obj = &obj;
 	setFilter(obj.value("singlePlayer").toObject());
 	setSettings(obj.value("singlePlayer").toObject());
+	setLanguage(obj);
 }
 
 void MFPMainWindow::setHistory(QJsonArray* array) { history = array; }
@@ -75,8 +79,24 @@ void MFPMainWindow::setSettings(const QJsonObject& obj) {
 	settingsUi.filePathlineEdit->blockSignals(false);
 }
 
-void MFPMainWindow::fullScreen()
-{
+void MFPMainWindow::setLanguage(const QJsonObject& obj) {
+	settingsUi.languageComboBox->blockSignals(true);
+	const QJsonArray temp = obj["languages"].toArray();
+	const QString defaultLanguage = obj["defaultLanguage"].toString();
+	int defaultIndex = 0,i=0;
+	for(auto a:temp) {
+		QJsonObject b= a.toObject();
+		settingsUi.languageComboBox->addItem(b["name"].toString());
+		languages.append(b["suffix"].toString());
+		if (b["suffix"].toString() == defaultLanguage)
+			defaultIndex = i;
+		i++;
+	}
+	settingsUi.languageComboBox->setCurrentIndex(defaultIndex);
+	settingsUi.languageComboBox->blockSignals(false);
+}
+
+void MFPMainWindow::fullScreen() {
 	ui.menuBar->hide();
 	hideLayout(ui.rightLayout);
 	ui.centralWidget->layout()->setContentsMargins(0, 0, 0, 0);
@@ -84,8 +104,7 @@ void MFPMainWindow::fullScreen()
 	this->showFullScreen();
 }
 
-void MFPMainWindow::window()
-{
+void MFPMainWindow::window() {
 	ui.menuBar->show();
 	showLayout(ui.rightLayout);
 	ui.centralWidget->layout()->setContentsMargins(11, 11, 11, 11);
@@ -97,24 +116,16 @@ void MFPMainWindow::window()
 void MFPMainWindow::hideLayout(const QLayout* layout) {
 	for (int i = 0; i < layout->count(); i++) {
 		QLayoutItem* item = layout->itemAt(i);
-		if(item->widget()) {
-			item->widget()->hide();
-		}else if(item->layout()) {
-			hideLayout(item->layout());
-		}
+		if (item->widget()) { item->widget()->hide(); }
+		else if (item->layout()) { hideLayout(item->layout()); }
 	}
 }
 
-void MFPMainWindow::showLayout(const QLayout* layout)
-{
+void MFPMainWindow::showLayout(const QLayout* layout) {
 	for (int i = 0; i < layout->count(); i++) {
 		QLayoutItem* item = layout->itemAt(i);
-		if (item->widget()) {
-			item->widget()->show();
-		}
-		else if (item->layout()) {
-			showLayout(item->layout());
-		}
+		if (item->widget()) { item->widget()->show(); }
+		else if (item->layout()) { showLayout(item->layout()); }
 	}
 }
 
@@ -171,6 +182,7 @@ void MFPMainWindow::onSettingsChanged() {
 	a["outputUrl"] = settingsUi.filePathlineEdit->text();
 	a["preLoadFrames"] = settingsUi.frameSpinBox->value();
 	(*obj)["singlePlayer"] = a;
+	(*obj)["defaultLanguage"] = languages[settingsUi.languageComboBox->currentIndex()];
 }
 
 void MFPMainWindow::onDoubleClicked(const QModelIndex index) {

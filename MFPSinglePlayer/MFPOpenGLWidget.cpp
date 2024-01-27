@@ -9,7 +9,7 @@ void MFPOpenGLWidget::initTextures() {
 	texture->setMagnificationFilter(QOpenGLTexture::Linear);
 
 	QImage i;
-	i.load("default.png");
+	i.load(":/res/default.png");
 	if (!i.isNull()) {
 		setImage(i);
 	}
