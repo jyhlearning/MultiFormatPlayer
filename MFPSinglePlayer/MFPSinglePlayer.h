@@ -9,7 +9,7 @@
 #include "MFPAudioQueue.h"
 #include "MFPAudioThread.h"
 #include "MFPlayerThread.h"
-#include "opencv2/highgui/highgui.hpp"
+//#include "opencv2/highgui/highgui.hpp"
 
 class MFPSINGLEPLAYER_EXPORT MFPSinglePlayer :  public MFPluginBase {
 	Q_OBJECT

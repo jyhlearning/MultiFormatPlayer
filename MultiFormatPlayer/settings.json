@@ -1,18 +1,19 @@
 {
-    "defaultLanguage": "MFPTranslation_en.qm",
+    "defaultLanguage": "cn.qm",
     "history": [
         "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-39-04-341.mp4",
         "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-44-50-992.mp4",
-        "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-34-46-649.mp4"
+        "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-34-46-649.mp4",
+        "C:/Users/jiangyuhao/Videos/Overwolf/Valorant Tracker/VALORANT/VALORANT_07-29-2023_14-20-52-932/VALORANT 07-29-2023 14-40-48-857.mp4"
     ],
     "languages": [
         {
             "name": "简体中文",
-            "suffix": "MFPTranslation_cn.qm"
+            "suffix": "cn.qm"
         },
         {
             "name": "English",
-            "suffix": "MFPTranslation_en.qm"
+            "suffix": "en.qm"
         }
     ],
     "singlePlayer": {

@@ -20,7 +20,9 @@
         <file>res/slider/slider.png</file>
         <file>res/slider/volume.png</file>
         <file>res/default.png</file>
-        <file>logo.ico</file>
         <file>MFPStyleSheet.qss</file>
+        <file>logo.ico</file>
+        <file>res/translate/MFPSingleTranslation_en.qm</file>
+        <file>res/translate/MFPTranslation_en.qm</file>
     </qresource>
 </RCC>

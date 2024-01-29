@@ -4,20 +4,20 @@
 <context>
     <name>MFPMain</name>
     <message>
-        <location filename="MFPMain.cpp" line="41"/>
-        <location filename="MFPMain.cpp" line="50"/>
-        <location filename="MFPMain.cpp" line="61"/>
+        <location filename="MFPMain.cpp" line="33"/>
+        <location filename="MFPMain.cpp" line="42"/>
+        <location filename="MFPMain.cpp" line="53"/>
         <source>提示</source>
         <translation>Warning</translation>
     </message>
     <message>
-        <location filename="MFPMain.cpp" line="41"/>
-        <location filename="MFPMain.cpp" line="61"/>
+        <location filename="MFPMain.cpp" line="33"/>
+        <location filename="MFPMain.cpp" line="53"/>
         <source>请检查settings.json文件</source>
         <translation>Please check settings.json documents</translation>
     </message>
     <message>
-        <location filename="MFPMain.cpp" line="50"/>
+        <location filename="MFPMain.cpp" line="42"/>
         <source>settings.json配置文件解析出错</source>
         <translation>settings.json configuration file parsing error</translation>
     </message>

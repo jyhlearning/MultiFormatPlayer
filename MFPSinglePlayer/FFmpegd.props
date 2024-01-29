@@ -9,15 +9,14 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
-      <AdditionalDependencies>libswscale.lib;libavcodec.lib;libavdevice.lib;libavfilter.lib;libavformat.lib;libavutil.lib;libpostproc.lib;libswresample.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libswscaled.lib;libavcodecd.lib;libavdeviced.lib;libavfilterd.lib;libavformatd.lib;libavutild.lib;libpostprocd.lib;libswresampled.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>D:\Code\Project\MultiFormatPlayer\MFPSinglePlayer\ffmpeg\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalOptions> /ignore:4078 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/ignore:4078 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ClCompile>
       <AdditionalIncludeDirectories>D:\Code\Project\MultiFormatPlayer\MFPSinglePlayer\ffmpeg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>
-      </DisableSpecificWarnings>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />

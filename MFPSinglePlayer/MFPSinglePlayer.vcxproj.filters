@@ -124,7 +124,7 @@
     </QtUic>
   </ItemGroup>
   <ItemGroup>
-    <QtTranslation Include="MFPTranslation_en.ts">
+    <QtTranslation Include="MFPSingleTranslation_en.ts">
       <Filter>Translation Files</Filter>
     </QtTranslation>
   </ItemGroup>

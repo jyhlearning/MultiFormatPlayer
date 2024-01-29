@@ -347,24 +347,24 @@ QImage MFPVideo::toQImage(const AVFrame* frame, SwsContext* avFrameToQImageSwsCo
 	return re;
 }
 
-cv::Mat MFPVideo::AVFrameToMat(const AVFrame* frame, SwsContext* avFrameToOpenCVBGRSwsContext) {
-	const int image_width = frame->width;
-	const int image_height = frame->height;
-
-	cv::Mat resMat(image_height, image_width, CV_8UC3);
-	int cvLinesizes[1];
-	cvLinesizes[0] = resMat.step1();
-
-	sws_scale(avFrameToOpenCVBGRSwsContext,
-	          frame->data,
-	          frame->linesize,
-	          0,
-	          image_height,
-	          &resMat.data,
-	          cvLinesizes);
-
-	return resMat;
-}
+//cv::Mat MFPVideo::AVFrameToMat(const AVFrame* frame, SwsContext* avFrameToOpenCVBGRSwsContext) {
+//	const int image_width = frame->width;
+//	const int image_height = frame->height;
+//
+//	cv::Mat resMat(image_height, image_width, CV_8UC3);
+//	int cvLinesizes[1];
+//	cvLinesizes[0] = resMat.step1();
+//
+//	sws_scale(avFrameToOpenCVBGRSwsContext,
+//	          frame->data,
+//	          frame->linesize,
+//	          0,
+//	          image_height,
+//	          &resMat.data,
+//	          cvLinesizes);
+//
+//	return resMat;
+//}
 
 qint64 MFPVideo::toMsec(const qint64 msec, const AVRational* rational) {
 	return qRound64(

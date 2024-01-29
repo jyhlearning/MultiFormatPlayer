@@ -36,6 +36,7 @@
     <QtBuildConfig>debug</QtBuildConfig>
     <QMakeCodeLines>
     </QMakeCodeLines>
+    <QtPlugin>true</QtPlugin>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>6.6.1_msvc2019_64</QtInstall>
@@ -43,6 +44,7 @@
     <QtBuildConfig>release</QtBuildConfig>
     <QMakeCodeLines>
     </QMakeCodeLines>
+    <QtPlugin>true</QtPlugin>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
     <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
@@ -52,14 +54,12 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(QtMsBuild)\Qt.props" />
-    <Import Project="FFmpeg.props" />
-    <Import Project="OpenCV.props" />
+    <Import Project="FFmpegd.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(QtMsBuild)\Qt.props" />
     <Import Project="FFmpeg.props" />
-    <Import Project="OpenCV.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
@@ -78,11 +78,16 @@
     <Link>
       <AdditionalDependencies>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x64\OpenGL32.Lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <QtTranslation>
+      <QmOutputDir>$(SolutionDir)res\translate</QmOutputDir>
+    </QtTranslation>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>D:\Code\Project\MultiFormatPlayer\MFPluginBase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalDependencies>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x64\OpenGL32.Lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -155,7 +160,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <QtTranslation Include="MFPTranslation_en.ts" />
+    <QtTranslation Include="MFPSingleTranslation_en.ts">
+      <IdBased Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</IdBased>
+      <BuildAction Condition="'$(Configuration)|$(Platform)'=='Release|x64'">lupdate_lrelease</BuildAction>
+    </QtTranslation>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

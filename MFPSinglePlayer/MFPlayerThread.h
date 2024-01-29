@@ -1,5 +1,5 @@
 #pragma once
-#include <core/mat.hpp>
+//#include <core/mat.hpp>
 
 #include "QObject"
 #include "MFPVideo.h"

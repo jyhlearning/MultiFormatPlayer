@@ -9,15 +9,8 @@
 
 bool MFPMain::loadPlugin() {
 	QDir pluginsDir(QCoreApplication::applicationDirPath());
-#if defined(Q_OS_WIN)
-	if (pluginsDir.dirName().toLower() == "debug" || pluginsDir.dirName().toLower() == "release")
-#elif defined(Q_OS_MAC)
-    if (pluginsDir.dirName() == "MacOS") {
-        pluginsDir.cdUp();
-        pluginsDir.cdUp();
-        pluginsDir.cdUp();
-    }
-#endif
+	//fuckkkkkkkkkkkkkkkkk,我说怎么安装包运行不了，这里忘记删了，所在在vs里面有debug和release可以运行，外面就运行不了艹
+	//if (pluginsDir.dirName().toLower() == "debug" || pluginsDir.dirName().toLower() == "release")
 	pluginsDir.cd("Plugins");
 	const QStringList entries = pluginsDir.entryList(QDir::Files);
 	for (const QString& fileName : entries) {
@@ -69,9 +62,10 @@ MFPMain::MFPMain() {
 	read();
 
 	QTranslator translator1, translator2;
-	if (translator1.load(obj["defaultLanguage"].toString()))
+	QString a = ":/res/translate/MFPTranslation_" + obj["defaultLanguage"].toString();
+	if (translator1.load(":/res/translate/MFPTranslation_" + obj["defaultLanguage"].toString()))
 		qApp->installTranslator(&translator1);
-	if (translator2.load("../MFPSinglePlayer/" + obj["defaultLanguage"].toString()))
+	if (translator2.load(":/res/translate/MFPSingleTranslation_" + obj["defaultLanguage"].toString()))
 		qApp->installTranslator(&translator2);
 
 	w = new MFPMainWindow;

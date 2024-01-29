@@ -1,7 +1,7 @@
 #pragma once
 #include "QImage"
 #include <QQueue>
-#include <core/mat.hpp>
+//#include <core/mat.hpp>
 #include <QByteArray>
 
 extern "C" {
@@ -72,7 +72,7 @@ public:
 
 	static QByteArray toQByteArray(const AVFrame* frame, SwrContext* swr_ctx);
 	static QImage toQImage(const AVFrame* frame,SwsContext* avFrameToQImageSwsContext);
-	static cv::Mat AVFrameToMat(const AVFrame* frame,SwsContext * avFrameToOpenCVBGRSwsContext);
+	//static cv::Mat AVFrameToMat(const AVFrame* frame,SwsContext * avFrameToOpenCVBGRSwsContext);
 	static qreal rationalToDouble(const AVRational* rational);
 	static qint64 toMsec(const qint64 msec, const AVRational* rational);
 };

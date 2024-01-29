@@ -39,6 +39,13 @@
     <QtInstall>6.6.1_msvc2019_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
+    <QMakeExtraArgs>
+    </QMakeExtraArgs>
+    <QtOptionsBuildLog>false</QtOptionsBuildLog>
+    <QMakeCodeLines>
+    </QMakeCodeLines>
+    <QtExcludedOptions>
+    </QtExcludedOptions>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
     <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
@@ -61,6 +68,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\MFPluginBase;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
@@ -73,6 +82,10 @@
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <QtTranslation>
+      <QmOutputDir>$(SolutionDir)res\translate</QmOutputDir>
+      <BuildAction>lrelease</BuildAction>
+    </QtTranslation>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
@@ -110,15 +123,30 @@
     <ProjectReference Include="..\MFPluginBase\MFPluginBase.vcxproj">
       <Project>{343b7337-621b-4109-bbe2-271e8026f579}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\MFPSinglePlayer\MFPSinglePlayer.vcxproj">
+      <Project>{3a908acd-8f39-44ed-91b0-ebc66aa33006}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MFPMain.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtTranslation Include="MFPTranslation_en.ts" />
+    <QtTranslation Include="MFPTranslation_en.ts">
+      <IdBased Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</IdBased>
+      <BuildAction Condition="'$(Configuration)|$(Platform)'=='Release|x64'">lupdate_lrelease</BuildAction>
+    </QtTranslation>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="MFPMainWindow.qrc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MultiFormatPlayer.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="logo.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
