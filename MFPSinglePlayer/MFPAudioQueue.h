@@ -1,18 +1,15 @@
 #pragma once
 #include "MFPDataBase.h"
-#include "QMutex"
-#include "MFPVideo.h"
-
 class MFPAudioQueue:public MFPDataBase<AVFrame*>
 {
 private:
 	int sampleRate, channels;
 	AVSampleFormat sampleFmt;
 public:
-	bool frameIsEnd;
-	QMutex decodeLock, audioLock;
 
 	MFPAudioQueue(int c = 30);
+
+	~MFPAudioQueue();
 
 	void initQueue();
 

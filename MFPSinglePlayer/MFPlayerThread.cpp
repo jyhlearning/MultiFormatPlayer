@@ -1,14 +1,9 @@
 ﻿#include "MFPlayerThread.h"
 #include <qeventloop.h>
-#include <QTime>
+#include <QTimer>
 #include <qcoreapplication.h>
 #include "QThread"
 
-void MFPlayerThread::delay(int msec) {
-	QTime dieTime = QTime::currentTime().addMSecs(msec);
-	while (QTime::currentTime() < dieTime && !isStop)
-		QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-}
 int temp = 0;
 int MFPlayerThread::playNextFrame(AVFrame* &frame) {
 	if (isStop || frameQueue->safeGet(frame)==-1)
@@ -16,18 +11,17 @@ int MFPlayerThread::playNextFrame(AVFrame* &frame) {
 	/*cv::Mat mat = MFPVideo::AVFrameToMat(frame, frameQueue->getSwsctx());
 	cv::cvtColor(mat, mat, cv::COLOR_BGR2RGB);
 	QImage image(mat.data, mat.cols, mat.rows, mat.step, QImage::Format_RGB888);*/
-	frameQueue->setLastPts(frame->pts);
+	clock->setLastPts(frame->pts);
 	emit sendFrame(MFPVideo::toQImage(frame, initSwsctx(frame)));
 	emit sendProgress(frame->pts);
 	return 0;
 }
 
 void MFPlayerThread::continousPlayBack() {
-	bool start = false;
 	int index = 0;
 	AVFrame* frame = nullptr;
 	const int delta = frameQueue->getFrameRate() / frameQueue->getSpeed();
-	while (!(frameQueue->frameIsEnd && frameQueue->isEmpty()) && !isStop) {
+	while (!(frameQueue->getIsEnd() && frameQueue->isEmpty()) && !isStop) {
 		if (frameQueue->getSpeed() < 4) {
 			if (!isStop && !playNextFrame(frame))
 				frame->pts /= frameQueue->getSpeed();
@@ -42,31 +36,12 @@ void MFPlayerThread::continousPlayBack() {
 				index--;
 			}
 		}
-		if (!start) {
-			clock->lock.lock();
-			clock->lock.unlock();
-			start = true;
-		}
-		delay(QTime::currentTime().msecsTo(clock->getTime().addMSecs(frame ? frame->pts : 0)));
+		const qint64 pts = frame ? frame->pts : clock->getLastPts();
+		clock->setStartTime(pts);
+		MFPSTDClock::delay(clock->getDelayTime(pts));
 		if (frame && frame->data[0])
 			av_frame_free(&frame);
 	}
-}
-
-void MFPlayerThread::clearFrameQueue() {
-	//由播放器负责清理
-	//frameQueue->playLock.lock();
-	frameQueue->decodeLock.lock();
-	if (!frameQueue->isEmpty()) {
-		while (!frameQueue->isEmpty()) {
-			AVFrame* frame = frameQueue->front();
-			av_frame_free(&frame);
-			frameQueue->pop();
-		}
-	}
-	frameQueue->initQueue();
-	frameQueue->decodeLock.unlock();
-	//frameQueue->playLock.unlock();
 }
 
 SwsContext* MFPlayerThread::initSwsctx(AVFrame* frame)
@@ -104,37 +79,34 @@ MFPlayerThread::MFPlayerThread(MFPFrameQueue* frame,MFPSTDClock* clock) {
 }
 
 MFPlayerThread::~MFPlayerThread() {
-	clearFrameQueue();
 	if(avFrameToQImageSwsContext)
 		sws_freeContext(avFrameToQImageSwsContext);
 }
 
 void MFPlayerThread::onPlay(MFPlayerThreadState::statement sig) {
-	if (isStop)
-		return;
-	frameQueue->playLock.lock();
-	emit stateChange(MFPlayerThreadState::PLAYING);
-	AVFrame* frame = nullptr;
+	//frameQueue->playLock.lock();
+	if (!isStop) {
+		emit stateChange(MFPlayerThreadState::PLAYING);
+		AVFrame* frame = nullptr;
 
-	switch (sig) {
-	case MFPlayerThreadState::CONTINUEPLAY:
-		continousPlayBack();
-		break;
-	case MFPlayerThreadState::NEXTFRAME:
-		playNextFrame(frame);
-		av_frame_free(&frame);
-		break;
-	default:
-		break;
+		switch (sig) {
+		case MFPlayerThreadState::CONTINUEPLAY:
+			continousPlayBack();
+			break;
+		case MFPlayerThreadState::NEXTFRAME:
+			playNextFrame(frame);
+			av_frame_free(&frame);
+			break;
+		default:
+			break;
+		}
+		frameQueue->forcePutOut();
+		//说明播放完了
+		if (!isStop && frameQueue->getIsEnd()) {
+			frameQueue->setPlayEnd(true);
+		}
+		emit release();
+		emit stateChange(MFPlayerThreadState::PAUSE);
 	}
-	frameQueue->forcePutOut();
-	//说明播放完了
-	if (!isStop && frameQueue->frameIsEnd) {
-		frameQueue->setPlayEnd(true);
-	}
-	clearFrameQueue();
-	frameQueue->playLock.unlock();
-	clock->lock.tryLock();
-	clock->lock.unlock();
-	emit stateChange(MFPlayerThreadState::PAUSE);
+	//frameQueue->playLock.unlock();
 }

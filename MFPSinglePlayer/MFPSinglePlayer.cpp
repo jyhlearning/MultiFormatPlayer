@@ -3,7 +3,6 @@
 #include "QJsonArray"
 #include <QMessageBox>
 
-
 MFPSinglePlayer::MFPSinglePlayer() {
 	capacity = 30;
 	frameQueue = new MFPFrameQueue(capacity);
@@ -28,7 +27,7 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	state = MFPlayerThreadState::PAUSE;
 
 	connect(this, SIGNAL(startEncodeThread()), mFPlayerEncodeThread, SLOT(encode()));
-	connect(this, SIGNAL(startDecodeThread(int)), mFPlayerDecodeThread, SLOT(decode(int)));
+	connect(this, SIGNAL(startDecodeThread(int,qint64)), mFPlayerDecodeThread, SLOT(decode(int,qint64)));
 	connect(this, SIGNAL(startPlayThread(MFPlayerThreadState::statement)), mFPAudioThread,
 	        SLOT(onPlay(MFPlayerThreadState::statement)));
 	connect(this, SIGNAL(startPlayThread(MFPlayerThreadState::statement)), mFPlayerThread,
@@ -36,20 +35,22 @@ MFPSinglePlayer::MFPSinglePlayer() {
 	connect(this, SIGNAL(error(QString, QString)), mFPlayerWidget, SLOT(onError(QString,QString)));
 	connect(this, SIGNAL(changeButton(QString)), mFPlayerWidget, SLOT(onChangeButton(QString)));
 
-	connect(mFPlayerThread,SIGNAL(sendFrame(QImage)), mFPlayerWidget,SLOT(onFrameChange(QImage)));
-	connect(mFPlayerThread,SIGNAL(stateChange(MFPlayerThreadState::statement)), this,
+	connect(mFPlayerThread, SIGNAL(sendFrame(QImage)), mFPlayerWidget,SLOT(onFrameChange(QImage)));
+	connect(mFPlayerThread, SIGNAL(stateChange(MFPlayerThreadState::statement)), this,
 	        SLOT(onStateChange(MFPlayerThreadState::statement)));
-	connect(mFPlayerThread,SIGNAL(sendProgress(const qint64)), mFPlayerWidget,
+	connect(mFPlayerThread, SIGNAL(sendProgress(const qint64)), mFPlayerWidget,
 	        SLOT(onProgressChange(const qint64)));
+	connect(mFPlayerThread, SIGNAL(release()), this,SLOT(onVideoRelease()), Qt::DirectConnection);
+	connect(mFPAudioThread, SIGNAL(release()), this,SLOT(onAudioRelease()), Qt::DirectConnection);
 
-	connect(mFPlayerWidget,SIGNAL(destroyed()), this, SLOT(destroyThread()));
-	connect(mFPlayerWidget,SIGNAL(stop()), this,SLOT(onStop()));
-	connect(mFPlayerWidget,SIGNAL(play(WidgetStete::statement)), this,SLOT(action(WidgetStete::statement)));
-	connect(mFPlayerWidget,SIGNAL(progress(qint64)), this, SLOT(onProgress(qint64)));
-	connect(mFPlayerWidget,SIGNAL(speed(double)), this, SLOT(onSpeedChange(double)));
-	connect(mFPlayerWidget,SIGNAL(exports(settings)), this,SLOT(onExports(settings)));
-	connect(mFPlayerWidget,SIGNAL(volume(int)), mFPAudioThread, SLOT(onVolume(int)));
-	connect(mFPlayerWidget,SIGNAL(cancel()), this, SLOT(onCancel()));
+	connect(mFPlayerWidget, SIGNAL(destroyed()), this, SLOT(destroyThread()));
+	connect(mFPlayerWidget, SIGNAL(stop()), this,SLOT(onStop()));
+	connect(mFPlayerWidget, SIGNAL(play(WidgetStete::statement)), this,SLOT(action(WidgetStete::statement)));
+	connect(mFPlayerWidget, SIGNAL(progress(qint64)), this, SLOT(onProgress(qint64)));
+	connect(mFPlayerWidget, SIGNAL(speed(double)), this, SLOT(onSpeedChange(double)));
+	connect(mFPlayerWidget, SIGNAL(exports(settings)), this,SLOT(onExports(settings)));
+	connect(mFPlayerWidget, SIGNAL(volume(int)), mFPAudioThread, SLOT(onVolume(int)));
+	connect(mFPlayerWidget, SIGNAL(cancel()), this, SLOT(onCancel()));
 	connect(mFPlayerWidget, SIGNAL(fullScreen(bool)), this, SLOT(onFullScreen(bool)));
 
 	connect(mFPlayerEncodeThread, SIGNAL(progress(qint64)), mFPlayerWidget, SLOT(onProgress(qint64)));
@@ -93,35 +94,25 @@ void MFPSinglePlayer::startPlay(MFPlayerThreadState::statement state, int option
 		emit error("warning!", "You didn't choose a reasonable resource");
 		return;
 	}
+	frameQueue->frameLock.lock();
+	audioQueue->frameLock.lock();
 	//确保完全退出后再执行启动
-	frameQueue->playLock.lock();
-	audioQueue->audioLock.lock();
-	frameQueue->decodeLock.lock();
-	audioQueue->decodeLock.lock();
 	mFPlayerThread->setFlag(false);
 	mFPAudioThread->setFlag(false);
 	mFPlayerDecodeThread->setFlag(false);
 	frameQueue->initQueue();
 	audioQueue->initQueue();
+	clock->init();
 	frameQueue->setPlayEnd(false);
 	audioQueue->setPlayEnd(false);
 	//查看上一个pts
-	mFPVideo->jumpTo(frameQueue->getLastPts(), option);
-	if (option == ROUGH) {
-		frameQueue->setLastPts(frameQueue->getStartTime());
-		audioQueue->setLastPts(audioQueue->getStartTime());
-	}
-	clock->lock.lock();
-	emit startDecodeThread(state == MFPlayerThreadState::NEXTFRAME);
+	mFPVideo->jumpTo(clock->getLastPts(), option);
+	if (option == ROUGH) { clock->setLastPts(clock->getStartPts()); }
+	emit startDecodeThread(state == MFPlayerThreadState::NEXTFRAME, clock->getLastPts());
 	emit startPlayThread(state);
-	frameQueue->decodeLock.unlock();
-	audioQueue->decodeLock.unlock();
-	frameQueue->playLock.unlock();
-	audioQueue->audioLock.unlock();
 }
 
 void MFPSinglePlayer::stopPlay() {
-	stateBefore = state;
 	//mFPlayerDecodeThread->setFlag(true);
 	mFPlayerThread->setFlag(true);
 	mFPAudioThread->setFlag(true);
@@ -140,28 +131,27 @@ void MFPSinglePlayer::show() { mFPlayerWidget->show(); }
 
 void MFPSinglePlayer::init(const QString& url) {
 	stopPlay();
-	frameQueue->playLock.lock();
-	audioQueue->audioLock.lock();
 	mFPVideo->setHwFlag(hwDecode);
 	const int ret = mFPVideo->init(url);
 	if (ret >= 0) {
 		mFPlayerEncodeThread->init();
 		mFPAudioThread->init();
 		mFPlayerThread->init();
+
 		frameQueue->setCapacity(capacity);
 		frameQueue->setFrameRate(mFPVideo->getFrameRate());
-		frameQueue->setTotalTime(mFPVideo->getTotalTime());
-		frameQueue->setStartTime(mFPVideo->getVideoStartTime());
-		frameQueue->setLastPts(frameQueue->getStartTime());
 
 		audioQueue->setCapacity(capacity);
-		audioQueue->setStartTime(mFPVideo->getAudioStartTime());
-		audioQueue->setTotalTime(mFPVideo->getTotalTime());
 		audioQueue->setFrameRate(mFPVideo->getFrameRate());
 		audioQueue->setChannels(mFPVideo->getChannels());
 		audioQueue->setSampleRate(mFPVideo->getSampleRate());
 		audioQueue->setSampleFmt(mFPVideo->getSampleFmt());
-		audioQueue->setLastPts(audioQueue->getStartTime());
+
+		clock->setTotalTime(mFPVideo->getTotalTime());
+		const qint64 a = mFPVideo->getAudioStartTime(), b = mFPVideo->getVideoStartTime();
+		clock->setStartPts(a >= b ? a : b);
+		clock->setLastPts(clock->getStartPts());
+
 
 		mFPlayerWidget->setInformationDialog({
 			mFPVideo->getResolution(), mFPVideo->getTotalTime(), mFPVideo->getFrameRate(), mFPVideo->getChannels()
@@ -172,12 +162,9 @@ void MFPSinglePlayer::init(const QString& url) {
 		mFPlayerWidget->setExportDialogResolution(resolutions);
 		mFPlayerWidget->setExportDialogFormat(formats);
 		mFPlayerWidget->setExportVideoSettings(mFPlayerEncodeThread->exportDefaultProfile());
-		mFPlayerWidget->setSliderRange(0, frameQueue->getTotalTime());
-		mFPlayerWidget->setBackwardLable(frameQueue->getTotalTime());
+		mFPlayerWidget->setSliderRange(0, clock->getTotalTime());
+		mFPlayerWidget->setBackwardLable(clock->getTotalTime());
 	}
-
-	frameQueue->playLock.unlock();
-	audioQueue->audioLock.unlock();
 	if (ret >= 0)
 		startPlay(MFPlayerThreadState::NEXTFRAME);
 }
@@ -215,32 +202,29 @@ void MFPSinglePlayer::onPlay() {
 	}
 }
 
-void MFPSinglePlayer::onStop() { stopPlay(); }
+void MFPSinglePlayer::onStop() {
+	stateBefore = state;
+	stopPlay();
+}
 
 void MFPSinglePlayer::action(WidgetStete::statement sig) {
 	if (!mFPVideo->isParse()) {
 		emit error(tr("警告!"), tr("请选择可用的资源文件"));
 		return;
 	}
-	qint64 lastPts = 0;
 	switch (sig) {
 	case WidgetStete::PLAY:
-		if (frameQueue->getPlayEnd() && audioQueue->getPlayEnd()) {
-			frameQueue->setLastPts(frameQueue->getStartTime());
-			audioQueue->setLastPts(frameQueue->getStartTime());
-		}
+		if (frameQueue->getPlayEnd() && audioQueue->getPlayEnd()) { clock->setLastPts(clock->getStartPts()); }
 		onPlay();
 		break;
 	case WidgetStete::NEXTFRAME:
 		stopPlay();
-		frameQueue->setLastPts(frameQueue->getLastPts() + 1000 / frameQueue->getFrameRate());
-		audioQueue->setLastPts(audioQueue->getLastPts() + 1000 / audioQueue->getFrameRate());
+		clock->setLastPts(clock->getLastPts() + 1000 / frameQueue->getFrameRate());
 		startPlay(MFPlayerThreadState::NEXTFRAME);
 		break;
 	case WidgetStete::LASTFRAME:
 		stopPlay();
-		frameQueue->setLastPts(frameQueue->getLastPts() - 1000 / frameQueue->getFrameRate());
-		audioQueue->setLastPts(audioQueue->getLastPts() - 1000 / audioQueue->getFrameRate());
+		clock->setLastPts(clock->getLastPts() - 1000 / frameQueue->getFrameRate());
 		startPlay(MFPlayerThreadState::NEXTFRAME);
 		break;
 	default: ;
@@ -261,10 +245,9 @@ void MFPSinglePlayer::onStateChange(MFPlayerThreadState::statement state) {
 }
 
 void MFPSinglePlayer::onProgress(qint64 msec) {
-	frameQueue->setLastPts(msec);
-	audioQueue->setLastPts(msec);
+	clock->setLastPts(msec);
 	//如果跳转的时间超过了总时间，就跳转最近的关键帧，因为最后不一定能跳转，导致在视觉上有差异
-	if (msec >= frameQueue->getTotalTime() || msec >= audioQueue->getTotalTime())
+	if (msec >= clock->getTotalTime())
 		startPlay(MFPlayerThreadState::CONTINUEPLAY, ROUGH);
 	else if (stateBefore == MFPlayerThreadState::PLAYING)
 		startPlay(MFPlayerThreadState::CONTINUEPLAY, PRECISE);
@@ -272,7 +255,7 @@ void MFPSinglePlayer::onProgress(qint64 msec) {
 }
 
 void MFPSinglePlayer::onSpeedChange(double speed) {
-	stopPlay();
+	onStop();
 	frameQueue->setSpeed(speed);
 	audioQueue->setSpeed(speed);
 	if (stateBefore == MFPlayerThreadState::PLAYING)
@@ -286,15 +269,36 @@ void MFPSinglePlayer::onExports(settings s) {
 		return;
 	}
 	stopPlay();
+	frameQueue->frameLock.lock();
+	audioQueue->frameLock.lock();
 	mFPVideo->jumpTo(s.startPts);
 	mFPlayerEncodeThread->setProfile(s);
 	mFPlayerEncodeThread->setFlag(false);
 	emit startEncodeThread();
+	frameQueue->frameLock.unlock();
+	audioQueue->frameLock.unlock();
 }
 
 void MFPSinglePlayer::onCancel() { mFPlayerEncodeThread->setFlag(true); }
 
-void MFPSinglePlayer::onFullScreen(bool state)
-{
-	emit sendMessage(state?FULLSCREEN:WINDOW);
+void MFPSinglePlayer::onFullScreen(bool state) {
+	emit sendMessage(state ? FULLSCREEN : WINDOW);
+}
+
+void MFPSinglePlayer::onVideoRelease() {
+	if (!audioQueue->isQuit()) {
+		mFPAudioThread->setFlag(true);
+		audioQueue->forceGetOut();
+	}
+	frameQueue->frameLock.tryLock();
+	frameQueue->frameLock.unlock();
+}
+
+void MFPSinglePlayer::onAudioRelease() {
+	if (frameQueue->isQuit()) {
+		mFPlayerThread->setFlag(true);
+		frameQueue->forceGetOut();
+	}
+	audioQueue->frameLock.tryLock();
+	audioQueue->frameLock.unlock();
 }

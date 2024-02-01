@@ -2,15 +2,11 @@
 
 #include "QMutex"
 #include "MFPDataBase.h"
-#include <libswscale/swscale.h>
-
 class MFPFrameQueue : public MFPDataBase<AVFrame*> {
 private:
+	void clearFrameQueue();
 
 public:
-	QMutex decodeLock, playLock;
-	bool frameIsEnd;
-
 	~MFPFrameQueue();
 
 	MFPFrameQueue(int c = 30);

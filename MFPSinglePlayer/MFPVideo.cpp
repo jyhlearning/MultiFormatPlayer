@@ -324,7 +324,7 @@ int MFPVideo::readFrame(int index, int option, AVCodecContext* ctx, QQueue<AVFra
 	}
 	else {
 		qDebug("Decode Error.\n");
-		return -1;
+		
 	}
 	return 0;
 }

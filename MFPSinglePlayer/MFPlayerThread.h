@@ -26,10 +26,8 @@ private:
 	MFPFrameQueue* frameQueue;
 	MFPSTDClock* clock;
 	SwsContext* avFrameToQImageSwsContext;
-	void delay(int msec);
 	int playNextFrame(AVFrame* & frame);
 	void continousPlayBack();
-	void clearFrameQueue();
 	SwsContext* initSwsctx(AVFrame* frame);
 
 public:
@@ -44,4 +42,5 @@ signals:
 	void sendFrame(QImage image);
 	void stateChange(MFPlayerThreadState::statement state);
 	void sendProgress(const qint64 sec);
+	void release();
 };

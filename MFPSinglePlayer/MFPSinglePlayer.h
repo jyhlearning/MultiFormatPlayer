@@ -30,9 +30,9 @@ private:
 	QStringList audioBitrates;
 	QStringList videoBitrates;
 	QStringList formats;
+	QString defaultOutputURL;
 	int capacity;
 	bool hwDecode;
-	QString defaultOutputURL;
 	MFPlayerThreadState::statement state,stateBefore;
 	void stopThreads();
 	void startPlay(MFPlayerThreadState::statement state,int option=PRECISE);
@@ -56,11 +56,13 @@ public slots:
 	void onExports(settings s);
 	void onCancel();
 	void onFullScreen(bool state);
+	void onVideoRelease();
+	void onAudioRelease();
 
 private slots:
 	void destroyThread();
 signals:
-	void startDecodeThread(int option);
+	void startDecodeThread(const int option, const qint64 lPts);
 	void startPlayThread(MFPlayerThreadState::statement sig);
 	void startEncodeThread();
 	void flagChange(bool state);

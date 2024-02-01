@@ -15,7 +15,7 @@ public:
 	bool getFlag();
 
 public slots:
-	void decode(int option);
+	void decode(const int option, const qint64 lPts);
 
 private:
 	bool isStop;

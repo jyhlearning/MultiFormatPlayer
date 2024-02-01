@@ -1,4 +1,4 @@
-#include "MFPAudioQueue.h"
+﻿#include "MFPAudioQueue.h"
 
 MFPAudioQueue::MFPAudioQueue(int c) : MFPDataBase<AVFrame*>(c) {
 	channels = 2;
@@ -6,8 +6,9 @@ MFPAudioQueue::MFPAudioQueue(int c) : MFPDataBase<AVFrame*>(c) {
 	initQueue();
 }
 
+MFPAudioQueue::~MFPAudioQueue() { }
+
 void MFPAudioQueue::initQueue() {
-	frameIsEnd = false;
 	init();
 }
 
@@ -19,13 +20,6 @@ int MFPAudioQueue::getSampleRate() const { return sampleRate; }
 
 void MFPAudioQueue::setSampleRate(int s) { sampleRate = s; }
 
-void MFPAudioQueue::setSampleFmt(const AVSampleFormat fmt) 
-{
-	sampleFmt = fmt;
-}
+void MFPAudioQueue::setSampleFmt(const AVSampleFormat fmt) { sampleFmt = fmt; }
 
-AVSampleFormat MFPAudioQueue::getSampleFmt() const
-{
-	return sampleFmt;
-}
-
+AVSampleFormat MFPAudioQueue::getSampleFmt() const { return sampleFmt; }
