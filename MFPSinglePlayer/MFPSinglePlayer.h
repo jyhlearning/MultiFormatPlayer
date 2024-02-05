@@ -5,10 +5,11 @@
 #include "MFPlayerWidget.h"
 #include "MFPlayerDecodeThread.h"
 #include "MFPlayerEncoderThread.h"
-#include "MFPFrameQueue.h"
+#include "MFPVideoQueue.h"
 #include "MFPAudioQueue.h"
 #include "MFPAudioThread.h"
-#include "MFPlayerThread.h"
+#include "MFPVideoThread.h"
+#include "MFPlayBase.h"
 //#include "opencv2/highgui/highgui.hpp"
 
 class MFPSINGLEPLAYER_EXPORT MFPSinglePlayer :  public MFPluginBase {
@@ -19,10 +20,10 @@ class MFPSINGLEPLAYER_EXPORT MFPSinglePlayer :  public MFPluginBase {
 private:
 	MFPlayerDecodeThread* mFPlayerDecodeThread;
 	MFPlayerEncoderThread* mFPlayerEncodeThread;
-	MFPAudioThread* mFPAudioThread;
-	MFPlayerThread* mFPlayerThread;
+	MFPlayBase* mFPAudioThread;
+	MFPlayBase* mFPVideoThread;
 	MFPlayerWidget* mFPlayerWidget;
-	MFPFrameQueue* frameQueue;
+	MFPVideoQueue* videoQueue;
 	MFPAudioQueue* audioQueue;
 	MFPVideo* mFPVideo;
 	MFPSTDClock* clock;
@@ -33,9 +34,9 @@ private:
 	QString defaultOutputURL;
 	int capacity;
 	bool hwDecode;
-	MFPlayerThreadState::statement state,stateBefore;
+	MFPlayState::statement state,stateBefore;
 	void stopThreads();
-	void startPlay(MFPlayerThreadState::statement state,int option=PRECISE);
+	void startPlay(MFPlayState::statement state,int option=PRECISE);
 	void stopPlay();
 	void readArray(const QString& key, const QJsonObject& obj, QStringList& list)const;
 public:
@@ -50,7 +51,7 @@ public slots:
 	void onPlay();
 	void onStop();
 	void action(WidgetStete::statement sig);
-	void onStateChange(MFPlayerThreadState::statement state);
+	void onStateChange(MFPlayState::statement state);
 	void onProgress(qint64 msec);
 	void onSpeedChange(double speed);
 	void onExports(settings s);
@@ -63,7 +64,7 @@ private slots:
 	void destroyThread();
 signals:
 	void startDecodeThread(const int option, const qint64 lPts);
-	void startPlayThread(MFPlayerThreadState::statement sig);
+	void startPlayThread(MFPlayState::statement sig);
 	void startEncodeThread();
 	void flagChange(bool state);
 	void error(const QString title,const QString info);

@@ -32,7 +32,7 @@
     <ClInclude Include="MFPVideo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MFPFrameQueue.h">
+    <ClInclude Include="MFPVideoQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MFPDataBase.h">
@@ -55,13 +55,7 @@
     <QtMoc Include="MFPlayerDecodeThread.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="MFPlayerThread.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="MFPControlSilder.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="MFPAudioThread.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="MFPOpenGLWidget.h">
@@ -71,6 +65,15 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="MFPSinglePlayer.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="MFPlayBase.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="MFPVideoThread.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="MFPAudioThread.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -84,13 +87,13 @@
     <ClCompile Include="MFPVideo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MFPlayerThread.cpp">
+    <ClCompile Include="MFPVideoThread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MFPControlSilder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MFPFrameQueue.cpp">
+    <ClCompile Include="MFPVideoQueue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MFPAudioQueue.cpp">
@@ -106,6 +109,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MFPlayerEncoderThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MFPlayBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,15 +1,15 @@
 #pragma once
 #include "MFPDataBase.h"
-class MFPAudioQueue:public MFPDataBase<AVFrame*>
-{
+
+class MFPAudioQueue : public MFPDataBase<AVFrame*> {
 private:
 	int sampleRate, channels;
 	AVSampleFormat sampleFmt;
-public:
 
+public:
 	MFPAudioQueue(int c = 30);
 
-	~MFPAudioQueue();
+	~MFPAudioQueue() = default;
 
 	void initQueue();
 
@@ -23,6 +23,5 @@ public:
 
 	void setSampleFmt(const AVSampleFormat fmt);
 
-	AVSampleFormat getSampleFmt()const;
+	AVSampleFormat getSampleFmt() const;
 };
-

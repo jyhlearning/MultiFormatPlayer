@@ -6,8 +6,6 @@ MFPAudioQueue::MFPAudioQueue(int c) : MFPDataBase<AVFrame*>(c) {
 	initQueue();
 }
 
-MFPAudioQueue::~MFPAudioQueue() { }
-
 void MFPAudioQueue::initQueue() {
 	init();
 }

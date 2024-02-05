@@ -4,14 +4,14 @@
 <context>
     <name>MFPSinglePlayer</name>
     <message>
-        <location filename="MFPSinglePlayer.cpp" line="222"/>
-        <location filename="MFPSinglePlayer.cpp" line="284"/>
+        <location filename="MFPSinglePlayer.cpp" line="212"/>
+        <location filename="MFPSinglePlayer.cpp" line="267"/>
         <source>警告!</source>
         <translation>Warning！</translation>
     </message>
     <message>
-        <location filename="MFPSinglePlayer.cpp" line="222"/>
-        <location filename="MFPSinglePlayer.cpp" line="284"/>
+        <location filename="MFPSinglePlayer.cpp" line="212"/>
+        <location filename="MFPSinglePlayer.cpp" line="267"/>
         <source>请选择可用的资源文件</source>
         <translation>Please select an available resource file</translation>
     </message>

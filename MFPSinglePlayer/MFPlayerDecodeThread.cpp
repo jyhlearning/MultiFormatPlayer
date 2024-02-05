@@ -3,7 +3,7 @@
 
 MFPlayerDecodeThread::MFPlayerDecodeThread() { isStop = false; }
 
-MFPlayerDecodeThread::MFPlayerDecodeThread(MFPFrameQueue* frameQueue, MFPAudioQueue* audioQueue,MFPVideo* mFPVideo) {
+MFPlayerDecodeThread::MFPlayerDecodeThread(MFPVideoQueue* frameQueue, MFPAudioQueue* audioQueue,MFPVideo* mFPVideo) {
 	isStop = false;
 	this->frameQueue = frameQueue;
 	this->mFPVideo = mFPVideo;

@@ -37,8 +37,8 @@ int MFPVideo::init(const QString& url) {
 		}
 	}
 
-	//没有视频流或者音频流就退出
-	if (videoIndex == -1 || audioIndex == -1) {
+	//没有视频流并且音频流就退出
+	if (videoIndex == -1 && audioIndex == -1) {
 		avformat_close_input(&pFormatCtx);
 		qDebug("nb_streams err.");
 		return -3;
@@ -79,10 +79,10 @@ int MFPVideo::init(const QString& url) {
 
 	//初始化pAVpkt
 	pAVpkt = av_packet_alloc();
-
+	if (!pAVctx)return -6;
 	//初始化数据帧空间
 	pAVframe = av_frame_alloc();
-
+	if (!pAVframe)return -7;
 	//暂时用不到
 	//avFrameToOpenCVBGRSwsContext = sws_getContext(
 	//	pAVctx->width,
@@ -292,7 +292,7 @@ int MFPVideo::jumpTo(qint64 msec, int option) {
 	//往前推1s,避免找到的关键帧太大
 	if (option == PRECISE)
 		msec = msec - 1000 < getVideoStartTime() ? getVideoStartTime() : msec - 1000;
-	int ret = avformat_seek_file(pFormatCtx, videoIndex, min_timestamp, av_rescale_q(msec, av_make_q(1, 1000),
+	const int ret = avformat_seek_file(pFormatCtx, videoIndex, min_timestamp, av_rescale_q(msec, av_make_q(1, 1000),
 		                             pFormatCtx->streams[videoIndex]->time_base), max_timestamp,
 	                             AVSEEK_FLAG_BACKWARD);
 	avcodec_flush_buffers(pAVctx);

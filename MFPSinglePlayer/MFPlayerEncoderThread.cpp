@@ -44,16 +44,12 @@ settings MFPlayerEncoderThread::exportDefaultProfile() { return s; }
 
 int MFPlayerEncoderThread::encode() {
 	if (isStop)return 0;
-	QFile file(s.URL);
-	if (!file.open(QIODevice::ReadWrite))
-		return -1;
-	file.close();
 	// 1. 创建输出格式上下文
 	AVFormatContext* outputFormatContext = nullptr;
 	avformat_alloc_output_context2(&outputFormatContext, nullptr, nullptr, s.URL.toUtf8());
-	int index = s.URL.lastIndexOf('.');
-	auto o = av_guess_format(s.URL.mid(index+1).toUtf8(),s.URL.toUtf8(),nullptr);
 	if (!outputFormatContext)return -1;
+	const auto o = av_guess_format(s.URL.mid(s.URL.lastIndexOf('.') +1).toUtf8(),nullptr,nullptr);
+	if (!o)return -1;
 	//选择编码器
 	const AVCodec* videoCodec = avcodec_find_encoder(o->video_codec);
 	const AVCodec* audioCodec = avcodec_find_encoder(o->audio_codec);
