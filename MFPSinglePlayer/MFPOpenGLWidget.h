@@ -33,4 +33,5 @@ public:
 	void setBrightness(const float v);
 	void setContrast(const float v);
 	void setSaturation(const float v);
+	void loadInitPic();
 };

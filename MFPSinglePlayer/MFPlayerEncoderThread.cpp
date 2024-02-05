@@ -5,10 +5,13 @@
 
 void MFPlayerEncoderThread::init() {
 	isStop = false;
-	s.outWidth = mFPVideo->getVideoCtx()->width;
-	s.outHeight = mFPVideo->getVideoCtx()->height;
-	s.videoBitRate = mFPVideo->getVideoCtx()->bit_rate;
-	s.audioBitRate = mFPVideo->getAudioCtx()->bit_rate;
+	if(mFPVideo->getVideoCtx()) {
+		s.outWidth = mFPVideo->getVideoCtx()->width;
+		s.outHeight = mFPVideo->getVideoCtx()->height;
+		s.videoBitRate = mFPVideo->getVideoCtx()->bit_rate;
+	}
+	if(mFPVideo->getAudioCtx())
+		s.audioBitRate = mFPVideo->getAudioCtx()->bit_rate;
 	s.startPts = 0;
 	s.endPts = mFPVideo->getTotalTime();
 	s.closeAudio = s.closeVideo = false;

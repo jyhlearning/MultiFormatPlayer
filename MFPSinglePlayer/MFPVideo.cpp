@@ -20,7 +20,8 @@ int MFPVideo::init(const QString& url) {
 		qDebug("avformat_find_stream_info err.");
 		return -2;
 	}
-
+	videoIndex = -1;
+	audioIndex = -1;
 	//找到视频流的索引
 	for (int i = 0; i < pFormatCtx->nb_streams; i++) {
 		if (pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
@@ -38,44 +39,44 @@ int MFPVideo::init(const QString& url) {
 	}
 
 	//没有视频流并且音频流就退出
-	if (videoIndex == -1 && audioIndex == -1) {
+	if (videoIndex < 0 && audioIndex < 0) {
 		avformat_close_input(&pFormatCtx);
 		qDebug("nb_streams err.");
 		return -3;
 	}
 
-	//获取视频流编码
-	pAVctx = avcodec_alloc_context3(nullptr);
-	aAVctx = avcodec_alloc_context3(nullptr);
-
-	pAVctx->thread_count = 4;
-	pAVctx->flags2 |= AV_CODEC_FLAG2_FAST;
-	aAVctx->thread_count = 4;
-	aAVctx->flags2 |= AV_CODEC_FLAG2_FAST;
-
-
 	//查找解码器
-	avcodec_parameters_to_context(pAVctx, pFormatCtx->streams[videoIndex]->codecpar);
-	avcodec_parameters_to_context(aAVctx, pFormatCtx->streams[audioIndex]->codecpar);
-
-	pCodec = avcodec_find_decoder(pAVctx->codec_id);
-	aCodec = avcodec_find_decoder(aAVctx->codec_id);
-	if (hwFlag)
-		initHWDecoder(pCodec, pAVctx);
-	if (pCodec == nullptr || aCodec == nullptr) {
-		avcodec_close(pAVctx);
-		avformat_close_input(&pFormatCtx);
-		qDebug("avcodec_find_decoder err.");
-		return -4;
+	if (videoIndex >= 0) {
+		pAVctx = avcodec_alloc_context3(nullptr);
+		pAVctx->thread_count = 4;
+		pAVctx->flags2 |= AV_CODEC_FLAG2_FAST;
+		avcodec_parameters_to_context(pAVctx, pFormatCtx->streams[videoIndex]->codecpar);
+		pCodec = avcodec_find_decoder(pAVctx->codec_id);
+		if (hwFlag)
+			initHWDecoder(pCodec, pAVctx);
+		//初始化pAVctx,aAVctx
+		if (!pCodec || avcodec_open2(pAVctx, pCodec, nullptr) < 0) {
+			avcodec_close(pAVctx);
+			avformat_close_input(&pFormatCtx);
+			qDebug("avcodec_open2 err.");
+			return -5;
+		}
+	}
+	if (audioIndex >= 0) {
+		aAVctx = avcodec_alloc_context3(nullptr);
+		aAVctx->thread_count = 4;
+		aAVctx->flags2 |= AV_CODEC_FLAG2_FAST;
+		avcodec_parameters_to_context(aAVctx, pFormatCtx->streams[audioIndex]->codecpar);
+		aCodec = avcodec_find_decoder(aAVctx->codec_id);
+		//初始化pAVctx,aAVctx
+		if (!aCodec || avcodec_open2(aAVctx, aCodec, nullptr) < 0) {
+			avcodec_close(aAVctx);
+			avformat_close_input(&pFormatCtx);
+			qDebug("avcodec_open2 err.");
+			return -5;
+		}
 	}
 
-	//初始化pAVctx,aAVctx
-	if (avcodec_open2(pAVctx, pCodec, nullptr) < 0 || avcodec_open2(aAVctx, aCodec, nullptr) < 0) {
-		avcodec_close(pAVctx);
-		avformat_close_input(&pFormatCtx);
-		qDebug("avcodec_open2 err.");
-		return -5;
-	}
 
 	//初始化pAVpkt
 	pAVpkt = av_packet_alloc();
@@ -110,6 +111,11 @@ MFPVideo::MFPVideo() {
 	pAVframe = nullptr;
 	pFormatCtx = nullptr;
 	hwBufferRef = nullptr;
+	videoPath = nullptr;
+	pCodec = nullptr;
+	aCodec = nullptr;
+	pAVpkt = nullptr;
+	totalTime = 0;
 }
 
 MFPVideo::~MFPVideo() { freeResources(); }
@@ -118,14 +124,19 @@ void MFPVideo::freeResources() {
 	//sws_freeContext(avFrameToOpenCVBGRSwsContext);
 	if (pAVframe)
 		av_frame_free(&pAVframe);
-	if (pAVctx)
+	if (pAVctx) {
 		avcodec_close(pAVctx);
-	if (aAVctx)
+		avcodec_free_context(&pAVctx);
+	}
+	if (aAVctx) {
 		avcodec_close(aAVctx);
-	if (pFormatCtx)
+		avcodec_free_context(&aAVctx);
+	}
+	if (pFormatCtx) {
 		avformat_close_input(&pFormatCtx);
-	if (hwBufferRef)
-		av_buffer_unref(&hwBufferRef);
+		avformat_free_context(pFormatCtx);
+	}
+	if (hwBufferRef) { av_buffer_unref(&hwBufferRef); }
 	clearBuffer();
 	parse = false;
 }
@@ -185,7 +196,7 @@ void MFPVideo::initHWDecoder(const AVCodec* codec, AVCodecContext* ctx) {
 }
 
 void MFPVideo::clearBuffer() {
-	while(!pQueue.isEmpty()) {
+	while (!pQueue.isEmpty()) {
 		av_frame_free(&pQueue.front());
 		pQueue.pop_front();
 	}
@@ -203,9 +214,13 @@ AVSampleFormat MFPVideo::getSampleFmt() const { return aAVctx->sample_fmt; }
 
 qint64 MFPVideo::getChannelsLayout() const { return aAVctx->channel_layout; }
 
-qint64 MFPVideo::getVideoStartTime() const { return toMsec(pFormatCtx->streams[videoIndex]->start_time, &pFormatCtx->streams[videoIndex]->time_base); }
+qint64 MFPVideo::getVideoStartTime() const {
+	return toMsec(pFormatCtx->streams[videoIndex]->start_time, &pFormatCtx->streams[videoIndex]->time_base);
+}
 
-qint64 MFPVideo::getAudioStartTime() const { return toMsec(pFormatCtx->streams[audioIndex]->start_time, &pFormatCtx->streams[audioIndex]->time_base);}
+qint64 MFPVideo::getAudioStartTime() const {
+	return toMsec(pFormatCtx->streams[audioIndex]->start_time, &pFormatCtx->streams[audioIndex]->time_base);
+}
 
 AVCodecContext* MFPVideo::getAudioCtx() const { return aAVctx; }
 
@@ -223,8 +238,11 @@ qreal MFPVideo::rationalToDouble(const AVRational* rational) {
 }
 
 int MFPVideo::getFrameRate() const {
-	return pFormatCtx->streams[videoIndex]->avg_frame_rate.num / pFormatCtx->streams[videoIndex]->avg_frame_rate.
-		den;
+	return pFormatCtx->streams[videoIndex]->avg_frame_rate.
+	                                        den
+		       ? pFormatCtx->streams[videoIndex]->avg_frame_rate.num / pFormatCtx->streams[videoIndex]->avg_frame_rate.
+		       den
+		       : 0;
 }
 
 qint64 MFPVideo::getTotalTime() const { return totalTime; }
@@ -244,11 +262,11 @@ QByteArray MFPVideo::toQByteArray(const AVFrame* frame, SwrContext* swr_ctx) {
 bool MFPVideo::isParse() const { return parse; }
 
 int MFPVideo::getNextInfo(AVFrame* & frame, int option) {
-	bool flag1 = true, flag2 = true;
-	int ret = 0;
+	bool flag = true;
 	if (av_read_frame(pFormatCtx, pAVpkt) >= 0) {
+		int ret = 0;
 		//读取一帧未解码的数据
-		flag1 = false;
+		flag = false;
 		//如果是视频数据
 		if (pAVpkt->stream_index == videoIndex) {
 			//解码一帧视频数据
@@ -279,7 +297,7 @@ int MFPVideo::getNextInfo(AVFrame* & frame, int option) {
 		aQueue.pop_front();
 		return 3; //正常帧
 	}
-	else if (flag1 && flag2) {
+	else if (flag) {
 		return 0; //放完了
 	}
 	return 1; //空帧
@@ -290,13 +308,45 @@ int MFPVideo::jumpTo(qint64 msec, int option) {
 	const qint64 min_timestamp = pFormatCtx->start_time != AV_NOPTS_VALUE ? pFormatCtx->start_time : 0;
 	const qint64 max_timestamp = INT64_MAX;
 	//往前推1s,避免找到的关键帧太大
-	if (option == PRECISE)
-		msec = msec - 1000 < getVideoStartTime() ? getVideoStartTime() : msec - 1000;
-	const int ret = avformat_seek_file(pFormatCtx, videoIndex, min_timestamp, av_rescale_q(msec, av_make_q(1, 1000),
-		                             pFormatCtx->streams[videoIndex]->time_base), max_timestamp,
-	                             AVSEEK_FLAG_BACKWARD);
-	avcodec_flush_buffers(pAVctx);
-
+	/*if (option == PRECISE)
+		msec = msec - 1000 < pFormatCtx->start_time ? pFormatCtx->start_time : msec - 1000;*/
+	//av_rescale_q(msec, av_make_q(1, 1000),pFormatCtx->streams[videoIndex]->time_base)
+	int i = 1, ret = 0, r = 0;
+	qint64 a = Q_INT64_C(9223372036854775807), b = Q_INT64_C(9223372036854775807), pts = 0;
+	if (pAVctx)a = getVideoStartTime();
+	if (aAVctx)b = getAudioStartTime();
+	const qint64 s = a >= b ? b : a;
+	const qint64 delta = 1000;
+	const int streamIndex = -1;
+	AVFrame* frame = nullptr;
+	do {
+		const qint64 temp = msec - delta * i < pFormatCtx->start_time ? pFormatCtx->start_time : msec - delta * i;
+		ret = avformat_seek_file(pFormatCtx, streamIndex, min_timestamp, temp * 1000, max_timestamp,
+		                         AVSEEK_FLAG_FRAME | AVSEEK_FLAG_BACKWARD);
+		if (aAVctx)
+			avcodec_flush_buffers(aAVctx);
+		if (pAVctx)
+			avcodec_flush_buffers(pAVctx);
+		do {
+			if (frame)
+				av_frame_free(&frame);
+			r = getNextInfo(frame);
+		}
+		while (r != (pAVctx&&option==PRECISE ? 2 : 1));
+		pts = frame ? frame->pts : pts;
+		if (frame)av_frame_free(&frame);
+		if (pts < msec || msec == s) {
+			/*ret = avformat_seek_file(pFormatCtx, streamIndex, min_timestamp, temp * 1000, max_timestamp,
+			                         AVSEEK_FLAG_FRAME | AVSEEK_FLAG_BACKWARD);
+			if (aAVctx)
+				avcodec_flush_buffers(aAVctx);
+			if (pAVctx)
+				avcodec_flush_buffers(pAVctx);*/
+			break;
+		}
+		i++;
+	}
+	while (pts>=msec);
 	return ret;
 }
 
@@ -317,15 +367,12 @@ int MFPVideo::readFrame(int index, int option, AVCodecContext* ctx, QQueue<AVFra
 				av_frame_copy_props(dst, pAVframe);
 				dst->width = pAVframe->width;
 				dst->height = pAVframe->height;
-				av_frame_unref(pAVframe);
 			}
+			av_frame_unref(pAVframe);
 			queue.push_back(dst);
 		}
 	}
-	else {
-		qDebug("Decode Error.\n");
-		
-	}
+	else { qDebug("Decode Error.\n"); }
 	return 0;
 }
 
@@ -365,6 +412,14 @@ QImage MFPVideo::toQImage(const AVFrame* frame, SwsContext* avFrameToQImageSwsCo
 //
 //	return resMat;
 //}
+
+qint64 MFPVideo::getAudioTotalTime() const {
+	return toMsec(pFormatCtx->streams[audioIndex]->start_time, &pFormatCtx->streams[audioIndex]->time_base);
+}
+
+qint64 MFPVideo::getVideoTotalTime() const {
+	return toMsec(pFormatCtx->streams[videoIndex]->start_time, &pFormatCtx->streams[videoIndex]->time_base);
+}
 
 qint64 MFPVideo::toMsec(const qint64 msec, const AVRational* rational) {
 	return qRound64(

@@ -9,7 +9,8 @@ namespace MFPlayState {
 		PAUSE,
 		NEXTFRAME,
 		CONTINUEPLAY,
-		LASTFRAME
+		LASTFRAME,
+		NONE
 	};
 }
 

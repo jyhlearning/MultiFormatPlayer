@@ -35,10 +35,11 @@ private:
 	int capacity;
 	bool hwDecode;
 	MFPlayState::statement state,stateBefore;
+	void stopPlay();
 	void stopThreads();
 	void startPlay(MFPlayState::statement state,int option=PRECISE);
-	void stopPlay();
 	void readArray(const QString& key, const QJsonObject& obj, QStringList& list)const;
+	static bool judge(const bool a,const bool b,const bool q1,const bool q2);
 public:
 	MFPSinglePlayer();
 	~MFPSinglePlayer();
@@ -64,10 +65,12 @@ private slots:
 	void destroyThread();
 signals:
 	void startDecodeThread(const int option, const qint64 lPts);
-	void startPlayThread(MFPlayState::statement sig);
+	void startAudioThread(MFPlayState::statement sig);
+	void startVideoThread(MFPlayState::statement sig);
 	void startEncodeThread();
 	void flagChange(bool state);
 	void error(const QString title,const QString info);
 	void changeButton(QString s);
 	void sendMessage(option o) override;
+	void loadInitPic();
 };

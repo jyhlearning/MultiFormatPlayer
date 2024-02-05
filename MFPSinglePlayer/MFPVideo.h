@@ -56,6 +56,8 @@ public:
 	qint64 getTotalTime() const;
 	qint64 getVideoStartTime() const;
 	qint64 getAudioStartTime() const;
+	qint64 getVideoTotalTime() const;
+	qint64 getAudioTotalTime() const;
 
 	std::pair<int, int> getResolution() const;
 

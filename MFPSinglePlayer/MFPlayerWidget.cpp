@@ -1,6 +1,7 @@
 ﻿#include "MFPlayerWidget.h"
 #include <QCloseEvent>
 #include <QMessageBox>
+#include <QMutex>
 
 #include "QTime"
 #include <QStackedLayout>
@@ -98,6 +99,8 @@ void MFPlayerWidget::onChangeButton(QString qString) {
 	this->style()->polish(widgetUi.playButton);
 }
 
+void MFPlayerWidget::onloadInitPic() const { widgetUi.videoWidget->loadInitPic(); }
+
 void MFPlayerWidget::setInformationDialog(const informaion& info) const {
 	infomationDialogUi.frameRate->setText(QString::number(info.frameRate));
 	infomationDialogUi.channels->setText(QString::number(info.channels));
@@ -149,6 +152,8 @@ void MFPlayerWidget::setExportVideoSettings(const settings& s) const {
 		}
 	}
 }
+
+void MFPlayerWidget::setTimeSlider(const qint64 pts) const { widgetUi.timeSlider->setValue(pts); }
 
 void MFPlayerWidget::addExportItem(QComboBox* combox, const QString& text) const {
 	bool flag = false;
@@ -204,9 +209,9 @@ void MFPlayerWidget::onBackwardButton() {
 	emit progress(value);
 }
 
-void MFPlayerWidget::onInformationButton() { infomationDialog->show(); }
+void MFPlayerWidget::onInformationButton() const { infomationDialog->show(); }
 
-void MFPlayerWidget::onResetButton() {
+void MFPlayerWidget::onResetButton() const {
 	settingsUi.brightnessSlider->setValue(50);
 	settingsUi.contrastSlider->setValue(50);
 	settingsUi.saturationSlider->setValue(50);
@@ -220,7 +225,7 @@ void MFPlayerWidget::onResetButton() {
 	widgetUi.videoWidget->setContrast(1);
 }
 
-void MFPlayerWidget::onOutputButton() { exportDialog->show(); }
+void MFPlayerWidget::onOutputButton() const { exportDialog->show(); }
 
 void MFPlayerWidget::onExportButton() {
 	settings s;
@@ -321,9 +326,12 @@ void MFPlayerWidget::onSaturationSlider() {
 void MFPlayerWidget::onTimerOut() { if (isFullScreen) widgetUi.widget->hide(); }
 
 void MFPlayerWidget::onProgressChange(const qint64 sec) const {
+	static QMutex lock;
+	lock.lock();
 	widgetUi.timeSlider->setValue(sec);
 	setForwardLable(sec);
 	setBackwardLable(widgetUi.timeSlider->maximum() - sec);
+	lock.unlock();
 }
 
 void MFPlayerWidget::setSliderRange(const qint64 min, const qint64 max) const {

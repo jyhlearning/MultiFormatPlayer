@@ -39,6 +39,7 @@ public:
 	void setExportDialogFormat(const QStringList& list) const;
 	void setExprotDialogDefaultUrl(const QString s) const;
 	void setExportVideoSettings(const settings& s) const;
+	void setTimeSlider(const qint64 pts) const;
 signals:
 	void play(WidgetStete::statement sig);
 	void progress(qint64 msec);
@@ -69,9 +70,9 @@ private slots:
 	void onLastFrameButton();
 	void onForwardButton();
 	void onBackwardButton();
-	void onInformationButton();
-	void onResetButton();
-	void onOutputButton();
+	void onInformationButton() const;
+	void onResetButton() const;
+	void onOutputButton() const;
 	void onExportButton();
 	void onOpenFileButton();
 	void onFullScreenButton();
@@ -98,4 +99,5 @@ public slots:
 	void onCancel();
 	void onError(const QString title, const QString info);
 	void onChangeButton(QString qString);
+	void onloadInitPic() const;
 };

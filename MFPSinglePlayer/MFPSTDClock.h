@@ -24,6 +24,6 @@ public:
 	qint64 getTotalTime() const;
 	qint64 getDeltaTimer() const;
 	qint64 getStartPts() const;
-	static void delay(const qint64 msec);
+	static void delay(const qint64 msec, const qint64 frameRate);
 };
 

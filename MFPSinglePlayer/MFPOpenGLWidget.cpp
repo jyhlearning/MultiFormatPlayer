@@ -8,11 +8,7 @@ void MFPOpenGLWidget::initTextures() {
 	// 设置双线性过滤模式，以放大纹理
 	texture->setMagnificationFilter(QOpenGLTexture::Linear);
 
-	QImage i;
-	i.load(":/res/default.png");
-	if (!i.isNull()) {
-		setImage(i);
-	}
+	loadInitPic();
 }
 
 void MFPOpenGLWidget::initShaders() {
@@ -153,5 +149,11 @@ void MFPOpenGLWidget::setImage(const QImage& image) {
 void MFPOpenGLWidget::setContrast(const float v) { contrast = v; } //[0,2]
 
 void MFPOpenGLWidget::setSaturation(const float v) { saturation = v; } //[0,2]
+
+void MFPOpenGLWidget::loadInitPic() {
+	QImage i;
+	i.load(":/res/default.png");
+	if (!i.isNull()) { setImage(i); }
+}
 
 void MFPOpenGLWidget::setBrightness(const float v) { brightness = v; } //[-1,1]
