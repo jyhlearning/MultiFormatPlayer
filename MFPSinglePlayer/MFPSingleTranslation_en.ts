@@ -4,14 +4,16 @@
 <context>
     <name>MFPSinglePlayer</name>
     <message>
-        <location filename="MFPSinglePlayer.cpp" line="212"/>
-        <location filename="MFPSinglePlayer.cpp" line="267"/>
+        <location filename="MFPSinglePlayer.cpp" line="92"/>
+        <location filename="MFPSinglePlayer.cpp" line="251"/>
+        <location filename="MFPSinglePlayer.cpp" line="307"/>
         <source>警告!</source>
         <translation>Warning！</translation>
     </message>
     <message>
-        <location filename="MFPSinglePlayer.cpp" line="212"/>
-        <location filename="MFPSinglePlayer.cpp" line="267"/>
+        <location filename="MFPSinglePlayer.cpp" line="92"/>
+        <location filename="MFPSinglePlayer.cpp" line="251"/>
+        <location filename="MFPSinglePlayer.cpp" line="307"/>
         <source>请选择可用的资源文件</source>
         <translation>Please select an available resource file</translation>
     </message>
@@ -19,38 +21,38 @@
 <context>
     <name>MFPlayerWidget</name>
     <message>
-        <location filename="MFPlayerWidget.cpp" line="40"/>
+        <location filename="MFPlayerWidget.cpp" line="41"/>
         <source>请等待</source>
         <translation>Please wait</translation>
     </message>
     <message>
-        <location filename="MFPlayerWidget.cpp" line="41"/>
+        <location filename="MFPlayerWidget.cpp" line="42"/>
         <source>导出中...</source>
         <translation>Exporting...</translation>
     </message>
     <message>
-        <location filename="MFPlayerWidget.cpp" line="42"/>
+        <location filename="MFPlayerWidget.cpp" line="43"/>
         <source>终止</source>
         <translation>Terminate</translation>
     </message>
     <message>
-        <location filename="MFPlayerWidget.cpp" line="228"/>
-        <location filename="MFPlayerWidget.cpp" line="248"/>
+        <location filename="MFPlayerWidget.cpp" line="233"/>
+        <location filename="MFPlayerWidget.cpp" line="253"/>
         <source>错误</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="MFPlayerWidget.cpp" line="228"/>
+        <location filename="MFPlayerWidget.cpp" line="233"/>
         <source>请设置正确的文件名或文件路径</source>
         <translation>Please set the correct file name or file path</translation>
     </message>
     <message>
-        <location filename="MFPlayerWidget.cpp" line="248"/>
+        <location filename="MFPlayerWidget.cpp" line="253"/>
         <source>请检查分辨率配置文件</source>
         <translation>Please check the resolution profile</translation>
     </message>
     <message>
-        <location filename="MFPlayerWidget.cpp" line="253"/>
+        <location filename="MFPlayerWidget.cpp" line="258"/>
         <source>选择文件保存路径</source>
         <translation>Select a path to save the file</translation>
     </message>

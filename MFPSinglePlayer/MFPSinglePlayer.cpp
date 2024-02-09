@@ -89,7 +89,7 @@ void MFPSinglePlayer::stopThreads() {
 
 void MFPSinglePlayer::startPlay(MFPlayState::statement state, int option) {
 	if (!mFPVideo->isParse()) {
-		emit error("warning!", "You didn't choose a reasonable resource");
+		emit error(tr("警告!"), tr("请选择可用的资源文件"));
 		return;
 	}
 	videoQueue->frameLock.lock();

@@ -284,8 +284,10 @@ int MFPVideo::getNextInfo(AVFrame* & frame, int option) {
 		//处理最后buffer中的最后几帧
 		pAVpkt->data = nullptr;
 		pAVpkt->size = 0;
-		readFrame(videoIndex, option, pAVctx, pQueue);
+		int ret = readFrame(videoIndex, option, pAVctx, pQueue);
 		av_packet_unref(pAVpkt);
+		if (ret < 0)
+			return -1;
 	}
 	if (!pQueue.isEmpty()) {
 		frame = pQueue.front();
@@ -332,7 +334,7 @@ int MFPVideo::jumpTo(qint64 msec, int option) {
 				av_frame_free(&frame);
 			r = getNextInfo(frame);
 		}
-		while (r != (pAVctx&&option==PRECISE ? 2 : 1));
+		while (r != (pAVctx && option == PRECISE ? 2 : 1)&&r>=0);
 		pts = frame ? frame->pts : pts;
 		if (frame)av_frame_free(&frame);
 		if (pts < msec || msec == s) {
@@ -346,7 +348,7 @@ int MFPVideo::jumpTo(qint64 msec, int option) {
 		}
 		i++;
 	}
-	while (pts>=msec);
+	while (pts >= msec);
 	return ret;
 }
 
@@ -372,7 +374,10 @@ int MFPVideo::readFrame(int index, int option, AVCodecContext* ctx, QQueue<AVFra
 			queue.push_back(dst);
 		}
 	}
-	else { qDebug("Decode Error.\n"); }
+	else {
+		qDebug("Decode Error.\n");
+		return -1;
+	}
 	return 0;
 }
 

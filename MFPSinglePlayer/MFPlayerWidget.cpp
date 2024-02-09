@@ -182,6 +182,7 @@ void MFPlayerWidget::loadStyleSheet(const QString fileName) {
 void MFPlayerWidget::mouseMoveEvent(QMouseEvent* event) {
 	if (isFullScreen) {
 		widgetUi.widget->show();
+		this->setCursor(Qt::ArrowCursor); //显示鼠标
 		timer->stop();
 		timer->start();
 	}
@@ -323,7 +324,12 @@ void MFPlayerWidget::onSaturationSlider() {
 	widgetUi.videoWidget->setSaturation(settingsUi.saturationSlider->value() * 2.0 / 100);
 }
 
-void MFPlayerWidget::onTimerOut() { if (isFullScreen) widgetUi.widget->hide(); }
+void MFPlayerWidget::onTimerOut() {
+	if (isFullScreen) {
+		widgetUi.widget->hide();
+		this->setCursor(Qt::BlankCursor);
+	} 
+}
 
 void MFPlayerWidget::onProgressChange(const qint64 sec) const {
 	static QMutex lock;
