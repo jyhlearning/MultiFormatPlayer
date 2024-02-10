@@ -1,5 +1,5 @@
 # MultiFormatPlayer
-使用[ffmpeg](https://ffmpeg.org)和[Qt](https://www.qt.io)开发视频的播放器。目前支持的视频格式有mp4 ,flv,f4v,m4v,mov,3gp，3g2，avi,asf,ts。
+使用[ffmpeg](https://ffmpeg.org)和[Qt](https://www.qt.io)开发视频的播放器。支持多种视频格式，如mp4，avi,flv,f4v,ts,mov,wmv,3gp,3g2等，编码格式支持mp4,avi,flv,f4v,mov,ts等，如果想要自定义视频格式，请调整ffmpeg的编译选项以支持更多视频格式，它处于MultiFormatPlayer\MFPSinglePlayer\ffmpeg目录下，在源码中不提供完全静态链接库lib，所以你需要自己编译ffmpeg，然后将lib文件添加其中（注意，必须是包含所有数据的lib，在编译ffmpeg时需要注意）。当然你也可以用ffmpeg的lib与dll，但是必须注意，这个dll必须在运行目录下。本项目采用插件式开发，很容易将播放窗口嵌入到任意窗口中。
 ## 功能
     1.播放，暂停，快进，快退，上一帧，下一帧等基本视频播放功能。
     2.播放中调整视频的饱和度，亮度，对比度。
@@ -17,7 +17,6 @@ MultiFormatPlayer
 ├─ MFPluginBase
 |  ├─ x64
 |  |  ├─ Debug
-|  |  ├─ Plugins
 |  |  └─ Release
 │  ├─ MFPluginBase.cpp
 │  ├─ MFPluginBase.h
@@ -27,7 +26,6 @@ MultiFormatPlayer
 ├─ MFPSinglePlayer
 |  ├─ x64
 |  |  ├─ Debug
-|  |  ├─ Plugins
 |  |  └─ Release
 │  ├─ ffmpeg
 │  ├─ FFmpeg.props
@@ -72,7 +70,6 @@ MultiFormatPlayer
 ├─ MultiFormatPlayer
 |  ├─ x64
 |  |  ├─ Debug
-|  |  ├─ Plugins
 |  |  └─ Release
 │  ├─ default.png
 │  ├─ DialogButtonRight.ui
@@ -98,10 +95,10 @@ MultiFormatPlayer
 
 ## 使用
 
-播放器采用插件式开发，如果想要在大型项目中使用（不建议，目前不是很稳定，开发中），你只需要将MFPluginBase以及MFPSinglePlayer导入到自己的项目中，将生成的两个名为MFPluginBase.dll和MFPSinglePlayer.dll文件放入你的项目目录（如x64/Debug或x64/Release）中然后加载插件即可。
+播放器采用插件式开发，如果想要在大型项目中使用（不建议），你只需要将MFPluginBase以及MFPSinglePlayer导入到自己的项目中，将生成的两个名为MFPluginBase.dll和MFPSinglePlayer.dll文件放入你的项目目录（如x64/Debug，x64/Debug/Plugins或x64/Release,x64/Release/Plugins）中然后加载插件即可。
 
 你可以像我这样加载插件，在VS中，添加MFPluginBase到自己的项目中，然后将输出文件位置指向`$(SolutionDir)$(Platform)\$(Configuration)\`。
-为了方便后续开发，我在x64子目录中创建了Plugins文件夹用于放置各种插件（.dll），所以在引入MFPSinglePlayer时，需要将输出指向`$(SolutionDir)$(Platform)\Plugins\`。
+为了方便后续开发，在引入MFPSinglePlayer时，需要将输出指向`$(SolutionDir)$(Platform)\$(Configuration)\Plugins\`。
 
 你也可以像添加MFPluginBase一样指向相同的路径，当然这样比较混乱。使用一下代码加载插件（这个代码只能加载一个插件，因为只有一个实例，所以提前返回了）。
 

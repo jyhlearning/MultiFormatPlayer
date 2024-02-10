@@ -36,23 +36,23 @@
         <translation>Terminate</translation>
     </message>
     <message>
-        <location filename="MFPlayerWidget.cpp" line="233"/>
-        <location filename="MFPlayerWidget.cpp" line="253"/>
+        <location filename="MFPlayerWidget.cpp" line="234"/>
+        <location filename="MFPlayerWidget.cpp" line="254"/>
         <source>错误</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="MFPlayerWidget.cpp" line="233"/>
+        <location filename="MFPlayerWidget.cpp" line="234"/>
         <source>请设置正确的文件名或文件路径</source>
         <translation>Please set the correct file name or file path</translation>
     </message>
     <message>
-        <location filename="MFPlayerWidget.cpp" line="253"/>
+        <location filename="MFPlayerWidget.cpp" line="254"/>
         <source>请检查分辨率配置文件</source>
         <translation>Please check the resolution profile</translation>
     </message>
     <message>
-        <location filename="MFPlayerWidget.cpp" line="258"/>
+        <location filename="MFPlayerWidget.cpp" line="259"/>
         <source>选择文件保存路径</source>
         <translation>Select a path to save the file</translation>
     </message>
