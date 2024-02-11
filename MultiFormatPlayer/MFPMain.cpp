@@ -60,13 +60,12 @@ void MFPMain::write() {
 MFPMain::MFPMain() {
 	path = "settings.json";
 	read();
-
-	QTranslator translator1, translator2;
-	QString a = ":/res/translate/MFPTranslation_" + obj["defaultLanguage"].toString();
-	if (translator1.load(":/res/translate/MFPTranslation_" + obj["defaultLanguage"].toString()))
-		qApp->installTranslator(&translator1);
-	if (translator2.load(":/res/translate/MFPSingleTranslation_" + obj["defaultLanguage"].toString()))
-		qApp->installTranslator(&translator2);
+	bool a;
+	auto *translator1=new QTranslator(this), *translator2=new QTranslator(this);
+	if (translator1->load(":res/translate/MFPTranslation_" + obj["defaultLanguage"].toString()))
+		a = qApp->installTranslator(translator1);
+	if (translator2->load(":res/translate/MFPSingleTranslation_" + obj["defaultLanguage"].toString()))
+		a = qApp->installTranslator(translator2);
 
 	w = new MFPMainWindow;
 	w->setHistory(&history);

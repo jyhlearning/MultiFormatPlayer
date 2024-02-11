@@ -163,8 +163,10 @@
   </ItemGroup>
   <ItemGroup>
     <QtTranslation Include="MFPSingleTranslation_en.ts">
-      <IdBased Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</IdBased>
+      <IdBased Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</IdBased>
       <BuildAction Condition="'$(Configuration)|$(Platform)'=='Release|x64'">lupdate_lrelease</BuildAction>
+      <QmOutputDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)res\translate</QmOutputDir>
+      <BuildAction Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">lupdate_lrelease</BuildAction>
     </QtTranslation>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

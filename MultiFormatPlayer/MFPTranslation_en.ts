@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="en_US">
+<TS version="2.1" language="en_US" sourcelanguage="zh_CN">
 <context>
     <name>MFPMain</name>
     <message>
@@ -8,7 +8,7 @@
         <location filename="MFPMain.cpp" line="42"/>
         <location filename="MFPMain.cpp" line="53"/>
         <source>提示</source>
-        <translation>Warning</translation>
+        <translation>Language</translation>
     </message>
     <message>
         <location filename="MFPMain.cpp" line="33"/>
@@ -19,7 +19,7 @@
     <message>
         <location filename="MFPMain.cpp" line="42"/>
         <source>settings.json配置文件解析出错</source>
-        <translation>settings.json configuration file parsing error</translation>
+        <translation type="unfinished">Please check settings.json documents</translation>
     </message>
 </context>
 <context>
